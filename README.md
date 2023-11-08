@@ -1,2 +1,1 @@
-# riscript
 RiScript v3
