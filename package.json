@@ -1,15 +1,19 @@
 {
   "name": "riscript",
   "version": "1.0.19",
-  "url": "https://github.com/dhowe/riscript",
-  "main": "./dist/riscript.js",
+  "author": "Daniel C Howe",
+  "description": "generative language scripting",
+  "homepage": "https://github.com/dhowe/riscript",
+  "license": "GPL-3.0",
   "type": "module",
-  "files": [
-    "dist"
-  ],
-  "engines": {
-    "node": ">=14.0"
+  "scripts": {
+    "test": "NODE_ENV=dev mocha",
+    "test:dist": "NODE_ENV=dev mocha test/dist",
+    "build": "rm -rf ./dist/ && npx tsup",
+    "pub": "np patch --no-tests",
+    "types": "npx tsc"
   },
+  "main": "./dist/riscript.js",
   "exports": {
     ".": {
       "import": "./dist/riscript.js",
@@ -17,12 +21,23 @@
       "types": "./dist/riscript.d.ts"
     }
   },
-  "scripts": {
-    "test": "NODE_ENV=dev mocha",
-    "test:dist": "NODE_ENV=dev mocha test/dist",
-    "build": "rm -rf ./dist/ && npx tsup",
-    "pub": "np patch --no-tests",
-    "types": "npx tsc"
+  "files": [
+    "dist"
+  ],
+  "unpkg": "./dist/riscript.iife.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dhowe/riscript.git"
+  },
+  "engines": {
+    "node": ">=14.0"
+  },
+  "keywords": [
+    "natural language generation",
+    "generative text"
+  ],
+  "bugs": {
+    "url": "https://github.com/dhowe/riscript/issues"
   },
   "devDependencies": {
     "@types/chai": "^4.3.9",
@@ -39,5 +54,13 @@
     "chevrotain": "^11.0.3",
     "he": "^1.2.0",
     "mingo": "^6.4.8"
+  },
+  "peerDependencies": {
+    "rita": "^3.0"
+  },
+  "peerDependenciesMeta": {
+    "rita": {
+      "optional": true
+    }
   }
 }
