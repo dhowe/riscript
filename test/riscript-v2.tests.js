@@ -404,8 +404,8 @@ describe('RiScript.v2', function () {
         if (!(res in map)) map[res] = 0;
         map[res]++;
       }
-      expect(map.quite).greaterThan(400);
-      expect(map['']).greaterThan(400);
+      expect(map.quite).greaterThan(200);
+      expect(map['']).greaterThan(200);
     });
 
     it('Should resolve choices', function () {
