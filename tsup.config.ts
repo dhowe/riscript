@@ -13,7 +13,9 @@ const opts: Options = {
   bundle: true,
   dts: false,
   target: 'es2020',
-  esbuildPlugins: [esbuildPluginVersionInjector()],
+  esbuildPlugins: [
+    esbuildPluginVersionInjector(),
+  ],
   outExtension({ format }) { return { js: `.js` } },
   // skipNodeModulesBundle: true, // ?
 }
@@ -29,13 +31,14 @@ const cjs: Options = {
   noExternal: ['chevrotain'],
   platform: "node",
   cjsInterop: true,
+  splitting: true,
   outExtension({ format }) { return { js: `.cjs` } },
 }
 
 const iife: Options = {
   format: ['iife'],
   ...opts,
-  minify: true,
+  minify: false, // tmp
   platform: "browser",
   globalName: "RiScript",
   outExtension({ format }) { return { js: `.iife.min.js` } },
