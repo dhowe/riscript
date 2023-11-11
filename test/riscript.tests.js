@@ -1085,6 +1085,8 @@ describe('RiScript.v3', function () {
     it('Should resolve transforms', function () {
       let ctx = {};
 
+      expect(riscript.evaluate('[This].uc() is an acronym.', ctx)).eq('THIS is an acronym.');
+
       expect(riscript.evaluate('[BAZ].toLowerCase().ucf()', ctx)).eq('Baz');
       expect(riscript.evaluate('[c].toUpperCase()', ctx)).eq('C'); // on str
       expect(riscript.evaluate('[c].toUpperCase', ctx)).eq('C'); // no parens
@@ -1727,7 +1729,7 @@ describe('RiScript.v3', function () {
         'FAIL\n' + gr1 + '\n' + gr2 + '\n'
       );
 
-      expect(() => new RiGrammar(json)).to.throw();
+      expect(() => new RiGrammar("notjson")).to.throw();
     });
 
     it('should call static expandFrom', function () {
@@ -1916,10 +1918,10 @@ describe('RiScript.v3', function () {
       expect(() => new RiGrammar({ $start: 'pet' })).to.throw();
       expect(() => new RiGrammar('"{start": "pet" }')).to.throw();
       expect(() => new RiGrammar().addRule('$$rule', 'pet')).to.throw();
-      expect(() => new RiGrammar('{ "start": "pet" }')).to.throw();
-      expect(() => new RiGrammar('{ "#start": "pet" }')).to.throw();
+      expect(() => new RiGrammar('pet')).to.throw();
 
       expect(() => new RiGrammar({ a: 'pet' })).not.to.throw();
+      expect(() => new RiGrammar('{ "a": "pet" }')).not.to.throw();
       expect(() => new RiGrammar({ start: 'pet' })).not.to.throw();
       expect(() => new RiGrammar().addRule('rule', 'pet')).not.to.throw();
       expect(() => new RiGrammar().removeRule('rule')).not.to.throw();

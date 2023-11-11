@@ -10,7 +10,9 @@ const opts: Options = {
   clean: true,
   minify: false,
   sourcemap: true,
+  bundle: true,
   dts: false,
+  target: 'es2020',
   esbuildPlugins: [esbuildPluginVersionInjector()],
   outExtension({ format }) { return { js: `.js` } },
   // skipNodeModulesBundle: true, // ?
@@ -19,30 +21,24 @@ const opts: Options = {
 const esm: Options = {
   format: ['esm'],
   ...opts,
-  target: 'es2020',
-  splitting: true
 }
 
 const cjs: Options = {
   format: ['cjs'],
   ...opts,
-  target: 'es2020', // ?
-  noExternal: ['chevrotain'], // ?
+  noExternal: ['chevrotain'],
   platform: "node",
   cjsInterop: true,
-  splitting: true,
   outExtension({ format }) { return { js: `.cjs` } },
 }
 
 const iife: Options = {
   format: ['iife'],
   ...opts,
-  bundle: true,
   minify: true,
-  target: 'es2020', // ?
   platform: "browser",
   globalName: "RiScript",
-  outExtension({ format }) { return { js: `.iife.js` } },
+  outExtension({ format }) { return { js: `.iife.min.js` } },
   footer: { js: "window.RiScript = RiScript.default" }
 }
 

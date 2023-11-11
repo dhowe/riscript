@@ -802,7 +802,7 @@ var RiQuery = class extends Query {
 };
 var _RiScript = class _RiScript {
   static evaluate(script, context, opts = {}) {
-    return new _RiScript().evaluate(script, context, opts);
+    return new _RiScript(opts).evaluate(script, context, opts);
   }
   constructor(opts = {}) {
     this.visitor = 0;
@@ -1078,7 +1078,7 @@ Final: '${result}'`);
   }
 };
 __publicField(_RiScript, "Query", RiQuery);
-__publicField(_RiScript, "VERSION", "1.0.20");
+__publicField(_RiScript, "VERSION", "1.0.21");
 __publicField(_RiScript, "RiTaWarnings", { plurals: false, phones: false });
 var RiScript = _RiScript;
 RiScript.transforms = {
@@ -1130,6 +1130,9 @@ function charCount(str, c) {
 // src/grammar.js
 var RiGrammar = class _RiGrammar {
   constructor(rules = {}, context = {}) {
+    if (typeof rules === "string") {
+      rules = parseJSON(rules);
+    }
     if (typeof rules !== "object") {
       throw Error("RiGrammar: expecting object, found " + typeof rules);
     }
@@ -1164,14 +1167,15 @@ var RiGrammar = class _RiGrammar {
   addRule(name, def) {
     this._validateRule(name, def);
     this.rules[name] = def;
+    return this;
   }
   setRules(rules) {
     if (typeof rules === "undefined")
       throw Error("undefined rules");
     this.rules = {};
     let incoming = typeof rules === "string" ? parseJSON(rules) : rules;
-    let self = this;
-    Object.entries(incoming).forEach((e) => self.addRule(...e));
+    Object.entries(incoming).forEach((e) => this.addRule(...e));
+    return this;
   }
   removeRule(name) {
     if (name in this.rules) {

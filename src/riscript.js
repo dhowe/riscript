@@ -69,7 +69,7 @@ class RiScript {
   static RiTaWarnings = { plurals: false, phones: false };
 
   static evaluate(script, context, opts = {}) {
-    return new RiScript().evaluate(script, context, opts);
+    return new RiScript(opts).evaluate(script, context, opts);
   }
 
   constructor(opts = {}) { // private ?

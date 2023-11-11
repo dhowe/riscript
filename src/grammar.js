@@ -3,6 +3,10 @@ import { RiScript } from './riscript.js'
 class RiGrammar {
 
   constructor(rules = {}, context = {}) {
+    if (typeof rules === 'string') {
+      rules = parseJSON(rules);
+    }
+    
     if (typeof rules !== 'object') {
       throw Error('RiGrammar: expecting object, found ' + typeof rules);
     }
@@ -39,7 +43,6 @@ class RiGrammar {
     opts.visitor = opts.visitor || new RiScript.Visitor(this.scripting);
     opts.visitor.context = this.context || {};
     opts.input = this._toScript(opts);
-    // opts.noAddedSilence = true;
 
     return this.scripting._evaluate(opts);
   }
@@ -47,14 +50,15 @@ class RiGrammar {
   addRule(name, def) {
     this._validateRule(name, def);
     this.rules[name] = def;
+    return this;
   }
 
   setRules(rules) {
     if (typeof rules === 'undefined') throw Error('undefined rules');
     this.rules = {};
     let incoming = typeof rules === 'string' ? parseJSON(rules) : rules;
-    let self = this;
-    Object.entries(incoming).forEach((e) => self.addRule(...e));
+    Object.entries(incoming).forEach((e) => this.addRule(...e));
+    return this;
   }
 
   removeRule(name) {
