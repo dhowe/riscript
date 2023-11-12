@@ -14,6 +14,7 @@
     "types": "npx tsc"
   },
   "main": "./dist/riscript.js",
+  "browser": "./dist/riscript.iife.min.js",
   "exports": {
     ".": {
       "import": "./dist/riscript.js",
