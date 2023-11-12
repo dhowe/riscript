@@ -36,6 +36,7 @@ function getTokens(v2Compatible) {
   const Escaped = {};
   Object.entries(Symbols).forEach(([k, v]) => { Escaped[k] = escapeRegex(v) });
 
+  const ENTITY_PATTERN = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/i;
   const PENDING_GATE_PATTERN = new RegExp(`${Escaped.PENDING_GATE}([0-9]{9,11})`)
 
   Escaped.SPECIAL = Object.values(Escaped).join('').replace(/[<>]/g, ''); // allow <>& for html 
@@ -72,11 +73,11 @@ function getTokens(v2Compatible) {
   const TF = createToken({ name: "TF", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
   const OS = createToken({ name: "OS", pattern: new RegExp(`${Escaped.OPEN_SILENT}\\s*`) });
   const CS = createToken({ name: "CS", pattern: new RegExp(`\\s*${Escaped.CLOSE_SILENT}`) });
-  const SYM = createToken({ name: "SYM", pattern: new RegExp(`[${Escaped.DYNAMIC}${Escaped.STATIC}][A-Za-z_0-9]*`) });
+  const SYM = createToken({ name: "SYM", pattern: new RegExp(`[${Escaped.DYNAMIC}${Escaped.STATIC}][A-Za-z_0-9]+`) });
 
-  const Entity = createToken({ name: "Entity", pattern: /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/i });
+  const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
-  const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
+  const Raw = createToken({ name: "Raw", pattern: new RegExp(`(#|[^${Escaped.SPECIAL}])+`) });
 
   const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, TF, OS, CS, PendingGate, Raw, EnterGate];
   const gateMode = [Gate, ExitGate];

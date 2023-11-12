@@ -83,6 +83,8 @@ class RiScript {
     const open = Constants.Escaped.OPEN_CHOICE;
     const close = Constants.Escaped.CLOSE_CHOICE;
 
+    // this.EntityRE = tokens.normal.Entity.PATTERN;
+    this.EntityRE = tokens.modes.normal.filter(t => t.name === 'Entity')[0].PATTERN;
     this.JSOLIdentRE = new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g');
     this.RawAssignRE = new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`);
     this.ChoiceWrapRE = new RegExp('^' + open + '[^' + open + close + ']*' + close + '$');
@@ -90,7 +92,7 @@ class RiScript {
     this.SpecialRE = new RegExp(`[${this.Escaped.SPECIAL.replace('&', '')}]`);
     this.ContinueRE = new RegExp(this.Escaped.CONTINUATION + '\\r?\\n', 'g');
     this.WhitespaceRE = /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g;
-    this.AnySymbolRE = new RegExp(`[${anysym}]`); // added
+    this.AnySymbolRE = new RegExp(`[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*`); // added
 
     this.silent = false;
     this.lexer = new Lexer(tokens);

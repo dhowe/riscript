@@ -259,6 +259,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (ctx.SYM.length !== 1) throw Error('[1] invalid symbol');
 
     const original = this.nodeText;
+    console.log('orig', original);
     const symbol = ctx.SYM[0].image;
     const ident = symbol.replace(this.scripting.AnySymbolRE, '');
 
