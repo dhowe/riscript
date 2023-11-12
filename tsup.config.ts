@@ -50,7 +50,7 @@ const testEsm: Options = {
   target: 'es2020', // ?
   platform: "node",
   name: "test",
-  entry: ['test/riscript*.js'],
+  entry: ['test/*.tests.js'],
   outDir: 'test/dist',
   watch: false,
   clean: false,
