@@ -164,7 +164,8 @@ class RiScript {
     for (let i = 1; expr !== last && i <= 10; i++) {
       last = expr;
 
-      if (opts.trace) console.log('-'.repeat(20) + ' Pass#' + i + ' ' + '-'.repeat(20));
+      if (opts.trace) console.log('-'.repeat(20)
+        + ' Pass#' + i + ' ' + '-'.repeat(20));
 
       opts.input = expr;
       expr = this.lexParseVisit(opts); // do it
@@ -181,7 +182,8 @@ class RiScript {
     // check for unresolved symbols ([$#]) after removing HTML entities
     if (!this.silent && !this.RiTa.SILENT) {
       if (this.ValidSymbolRE.test(expr.replace(HtmlEntities, ''))) {
-        console.warn('[WARN] Unresolved symbol(s) in "' + expr.replace(/\n/g, '\\n') + '" ');
+        console.warn('[WARN] Unresolved symbol(s) in "'
+          + expr.replace(/\n/g, '\\n') + '" ');
       }
     }
 
