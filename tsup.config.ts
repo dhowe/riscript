@@ -45,7 +45,7 @@ const iife: Options = {
   minify: false, // tmp
   platform: "browser",
   globalName: "RiScript",
-  outExtension({ format }) { return { js: `.iife.min.js` } },
+  outExtension({ format }) { return { js: `.min.js` } },
   footer: { js: footer }
 }
 
