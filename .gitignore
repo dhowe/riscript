@@ -1,4 +1,4 @@
-test/dist/riscript*
+dist
 misc
 node_modules
 .DS_Store
