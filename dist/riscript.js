@@ -45,6 +45,7 @@ function getTokens(v2Compatible) {
   Object.entries(Symbols).forEach(([k, v]) => {
     Escaped[k] = escapeRegex(v);
   });
+  const ENTITY_PATTERN = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/i;
   const PENDING_GATE_PATTERN = new RegExp(`${Escaped.PENDING_GATE}([0-9]{9,11})`);
   Escaped.SPECIAL = Object.values(Escaped).join("").replace(/[<>]/g, "");
   Symbols.PENDING_GATE_RE = new RegExp(PENDING_GATE_PATTERN.source, "g");
@@ -66,6 +67,8 @@ function getTokens(v2Compatible) {
     pattern: new RegExp(`${Escaped.OPEN_GATE}\\s*`),
     push_mode: "gate_mode"
   });
+  const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
+  const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
   const OC = createToken({ name: "OC", pattern: new RegExp(Escaped.OPEN_CHOICE + "\\s*") });
   const CC = createToken({ name: "CC", pattern: new RegExp(`\\s*${Escaped.CLOSE_CHOICE}`) });
   const OR = createToken({ name: "OR", pattern: /\s*\|\s*/ });
@@ -74,11 +77,11 @@ function getTokens(v2Compatible) {
   const TF = createToken({ name: "TF", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
   const OS = createToken({ name: "OS", pattern: new RegExp(`${Escaped.OPEN_SILENT}\\s*`) });
   const CS = createToken({ name: "CS", pattern: new RegExp(`\\s*${Escaped.CLOSE_SILENT}`) });
-  const SYM = createToken({ name: "SYM", pattern: new RegExp(`[${Escaped.DYNAMIC}${Escaped.STATIC}][A-Za-z_0-9]*`) });
-  const Entity = createToken({ name: "Entity", pattern: /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/i });
+  const SYM = createToken({ name: "SYM", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*`) });
+  const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
-  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, TF, OS, CS, PendingGate, Raw, EnterGate];
+  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, DYN, STAT, TF, OS, CS, PendingGate, Raw, EnterGate];
   const gateMode = [Gate, ExitGate];
   const multiMode = {
     modes: {
@@ -99,6 +102,7 @@ var RiScriptParser = class extends CstParser {
   constructor(allTokens) {
     super(allTokens, { nodeLocationTracking: "full" });
     this.atomTypes = ["silent", "assign", "symbol", "choice", "pgate", "text", "entity"];
+    this.rawTypes = ["Raw", "STAT"];
     this.buildRules();
   }
   parse(opts) {
@@ -182,7 +186,7 @@ var RiScriptParser = class extends CstParser {
       $.OR(this.atomTypes.map((t) => ({ ALT: () => $.SUBRULE($[t]) })));
     });
     $.RULE("text", () => {
-      $.CONSUME(Tokens.Raw);
+      $.OR(this.rawTypes.map((t) => ({ ALT: () => $.CONSUME(Tokens[t]) })));
     });
     this.performSelfAnalysis();
   }
@@ -386,11 +390,10 @@ RootCause -> ${e}`);
     return result;
   }
   text(ctx) {
-    if (ctx.Raw.length !== 1)
-      throw Error("[1] invalid text");
     if (Object.keys(ctx).length !== 1)
       throw Error("[2] invalid text");
-    const image = ctx.Raw[0].image;
+    const tok = ctx?.Raw || ctx?.STAT;
+    const image = tok[0].image;
     this.print("text", this.RiScript._escapeText("'" + image + "'"));
     return image;
   }
@@ -409,7 +412,7 @@ RootCause -> ${e}`);
       return original;
     }
     let { result, isStatic, isUser, resolved } = this.checkContext(ident);
-    if (!isStatic && symbol.startsWith(this.symbols.STATIC)) {
+    if (!isStatic && this.scripting.StaticSymbol.test(symbol)) {
       if (!this.scripting.EntityRE.test(symbol)) {
         throw Error(`Attempt to refer to dynamic symbol '${ident}' as ${this.symbols.STATIC}${ident}, did you mean $${ident}?`);
       }
@@ -808,17 +811,21 @@ var _RiScript = class _RiScript {
     this.visitor = 0;
     this.v2Compatible = opts.compatibility === 2;
     const { Constants, tokens } = getTokens(this.v2Compatible);
-    this.Escaped = Constants.Escaped;
-    this.Symbols = Constants.Symbols;
-    const anysym = Constants.Escaped.STATIC + Constants.Escaped.DYNAMIC;
-    const open = Constants.Escaped.OPEN_CHOICE;
-    const close = Constants.Escaped.CLOSE_CHOICE;
+    const { Escaped, Symbols } = Constants;
+    this.Escaped = Escaped;
+    this.Symbols = Symbols;
+    const open = Escaped.OPEN_CHOICE;
+    const close = Escaped.CLOSE_CHOICE;
+    const anysym = Escaped.STATIC + Escaped.DYNAMIC;
     this.JSOLIdentRE = new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, "g");
     this.RawAssignRE = new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`);
     this.ChoiceWrapRE = new RegExp("^" + open + "[^" + open + close + "]*" + close + "$");
-    this.SpecialRE = new RegExp(`[${this.Escaped.SPECIAL.replace("&", "")}]`);
-    this.ContinueRE = new RegExp(this.Escaped.CONTINUATION + "\\r?\\n", "g");
+    this.EntityRE = tokens.modes.normal.filter((t) => t.name === "Entity")[0].PATTERN;
+    this.SpecialRE = new RegExp(`[${Escaped.SPECIAL.replace("&", "")}]`);
+    this.ContinueRE = new RegExp(Escaped.CONTINUATION + "\\r?\\n", "g");
     this.WhitespaceRE = /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g;
+    this.StaticSymbol = new RegExp(Escaped.STATIC + "[A-Za-z_0-9][A-Za-z_0-9]*");
+    this.ValidSymbolRE = new RegExp("(" + Escaped.DYNAMIC + "|" + Escaped.STATIC + "[A-Za-z_0-9])[A-Za-z_0-9]*");
     this.AnySymbolRE = new RegExp(`[${anysym}]`);
     this.silent = false;
     this.lexer = new Lexer(tokens);
@@ -888,7 +895,7 @@ Input:  '${_RiScript._escapeText(input)}'`);
         break;
     }
     if (!this.silent && !this.RiTa.SILENT) {
-      if (this.AnySymbolRE.test(expr.replace(HtmlEntities, ""))) {
+      if (this.ValidSymbolRE.test(expr.replace(HtmlEntities, ""))) {
         console.warn('[WARN] Unresolved symbol(s) in "' + expr.replace(/\n/g, "\\n") + '" ');
       }
     }
@@ -1078,7 +1085,7 @@ Final: '${result}'`);
   }
 };
 __publicField(_RiScript, "Query", RiQuery);
-__publicField(_RiScript, "VERSION", "1.0.22");
+__publicField(_RiScript, "VERSION", "1.0.23");
 __publicField(_RiScript, "RiTaWarnings", { plurals: false, phones: false });
 var RiScript = _RiScript;
 RiScript.transforms = {

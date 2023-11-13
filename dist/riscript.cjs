@@ -9223,6 +9223,7 @@ function getTokens(v2Compatible) {
   Object.entries(Symbols).forEach(([k, v]) => {
     Escaped[k] = escapeRegex(v);
   });
+  const ENTITY_PATTERN = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/i;
   const PENDING_GATE_PATTERN = new RegExp(`${Escaped.PENDING_GATE}([0-9]{9,11})`);
   Escaped.SPECIAL = Object.values(Escaped).join("").replace(/[<>]/g, "");
   Symbols.PENDING_GATE_RE = new RegExp(PENDING_GATE_PATTERN.source, "g");
@@ -9244,6 +9245,8 @@ function getTokens(v2Compatible) {
     pattern: new RegExp(`${Escaped.OPEN_GATE}\\s*`),
     push_mode: "gate_mode"
   });
+  const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
+  const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
   const OC = createToken({ name: "OC", pattern: new RegExp(Escaped.OPEN_CHOICE + "\\s*") });
   const CC = createToken({ name: "CC", pattern: new RegExp(`\\s*${Escaped.CLOSE_CHOICE}`) });
   const OR = createToken({ name: "OR", pattern: /\s*\|\s*/ });
@@ -9252,11 +9255,11 @@ function getTokens(v2Compatible) {
   const TF = createToken({ name: "TF", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
   const OS = createToken({ name: "OS", pattern: new RegExp(`${Escaped.OPEN_SILENT}\\s*`) });
   const CS = createToken({ name: "CS", pattern: new RegExp(`\\s*${Escaped.CLOSE_SILENT}`) });
-  const SYM = createToken({ name: "SYM", pattern: new RegExp(`[${Escaped.DYNAMIC}${Escaped.STATIC}][A-Za-z_0-9]*`) });
-  const Entity = createToken({ name: "Entity", pattern: /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/i });
+  const SYM = createToken({ name: "SYM", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*`) });
+  const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
-  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, TF, OS, CS, PendingGate, Raw, EnterGate];
+  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, DYN, STAT, TF, OS, CS, PendingGate, Raw, EnterGate];
   const gateMode = [Gate, ExitGate];
   const multiMode = {
     modes: {
@@ -9276,6 +9279,7 @@ var RiScriptParser = class extends CstParser {
   constructor(allTokens) {
     super(allTokens, { nodeLocationTracking: "full" });
     this.atomTypes = ["silent", "assign", "symbol", "choice", "pgate", "text", "entity"];
+    this.rawTypes = ["Raw", "STAT"];
     this.buildRules();
   }
   parse(opts) {
@@ -9359,7 +9363,7 @@ var RiScriptParser = class extends CstParser {
       $.OR(this.atomTypes.map((t) => ({ ALT: () => $.SUBRULE($[t]) })));
     });
     $.RULE("text", () => {
-      $.CONSUME(Tokens.Raw);
+      $.OR(this.rawTypes.map((t) => ({ ALT: () => $.CONSUME(Tokens[t]) })));
     });
     this.performSelfAnalysis();
   }
@@ -9563,11 +9567,10 @@ RootCause -> ${e}`);
     return result;
   }
   text(ctx) {
-    if (ctx.Raw.length !== 1)
-      throw Error("[1] invalid text");
     if (Object.keys(ctx).length !== 1)
       throw Error("[2] invalid text");
-    const image = ctx.Raw[0].image;
+    const tok = _optionalChain([ctx, 'optionalAccess', _3 => _3.Raw]) || _optionalChain([ctx, 'optionalAccess', _4 => _4.STAT]);
+    const image = tok[0].image;
     this.print("text", this.RiScript._escapeText("'" + image + "'"));
     return image;
   }
@@ -9586,7 +9589,7 @@ RootCause -> ${e}`);
       return original;
     }
     let { result, isStatic, isUser, resolved } = this.checkContext(ident);
-    if (!isStatic && symbol.startsWith(this.symbols.STATIC)) {
+    if (!isStatic && this.scripting.StaticSymbol.test(symbol)) {
       if (!this.scripting.EntityRE.test(symbol)) {
         throw Error(`Attempt to refer to dynamic symbol '${ident}' as ${this.symbols.STATIC}${ident}, did you mean $${ident}?`);
       }
@@ -9601,10 +9604,10 @@ RootCause -> ${e}`);
       throw Error(msg);
     }
     if (typeof result === "undefined") {
-      this.print("symbol", symbol + " -> '" + original + "' ctx=" + this.lookupsToString(), "[deferred]", _optionalChain([opts, 'optionalAccess', _3 => _3.silent]) ? "{silent}" : "");
+      this.print("symbol", symbol + " -> '" + original + "' ctx=" + this.lookupsToString(), "[deferred]", _optionalChain([opts, 'optionalAccess', _5 => _5.silent]) ? "{silent}" : "");
       return original;
     }
-    let info = original + " -> '" + result + "'" + (_optionalChain([opts, 'optionalAccess', _4 => _4.silent]) ? " {silent}" : "");
+    let info = original + " -> '" + result + "'" + (_optionalChain([opts, 'optionalAccess', _6 => _6.silent]) ? " {silent}" : "");
     if (typeof result === "string" && !resolved) {
       if (isStatic) {
         this.pendingSymbols.add(ident);
@@ -9672,7 +9675,7 @@ RootCause -> ${e}`);
       throw Error("noRepeat() not allowed on choice (use a $variable instead): " + original);
     }
     let decision = "accept";
-    if (_optionalChain([opts, 'optionalAccess', _5 => _5.forceReject])) {
+    if (_optionalChain([opts, 'optionalAccess', _7 => _7.forceReject])) {
       decision = "reject";
     } else {
       if (ctx.gate) {
@@ -9695,7 +9698,7 @@ RootCause -> ${e}`);
     if (decision === "reject" && !("reject" in ctx)) {
       return "";
     }
-    const orExpr = _optionalChain([ctx, 'access', _6 => _6[decision], 'optionalAccess', _7 => _7[0], 'optionalAccess', _8 => _8.children, 'optionalAccess', _9 => _9.or_expr, 'optionalAccess', _10 => _10[0]]);
+    const orExpr = _optionalChain([ctx, 'access', _8 => _8[decision], 'optionalAccess', _9 => _9[0], 'optionalAccess', _10 => _10.children, 'optionalAccess', _11 => _11.or_expr, 'optionalAccess', _12 => _12[0]]);
     const options = this.parseOptions(orExpr);
     if (!options)
       throw Error("No options in choice: " + original);
@@ -9772,7 +9775,7 @@ RootCause -> ${e}`);
   }
   parseOptions(ctx) {
     const options = [];
-    if (ctx && _optionalChain([ctx, 'optionalAccess', _11 => _11.children, 'optionalAccess', _12 => _12.wexpr])) {
+    if (ctx && _optionalChain([ctx, 'optionalAccess', _13 => _13.children, 'optionalAccess', _14 => _14.wexpr])) {
       const wexprs = ctx.children.wexpr;
       for (let i = 0; i < wexprs.length; i++) {
         const wexpr = wexprs[i];
@@ -9962,7 +9965,7 @@ var RiQuery = class extends _mingo.Query {
   operands() {
     const stack = [this.condition];
     const keys2 = /* @__PURE__ */ new Set();
-    while (_optionalChain([stack, 'optionalAccess', _13 => _13.length]) > 0) {
+    while (_optionalChain([stack, 'optionalAccess', _15 => _15.length]) > 0) {
       const currentObj = stack.pop();
       Object.keys(currentObj).forEach((key) => {
         const value = currentObj[key];
@@ -9985,17 +9988,21 @@ var _RiScript = class _RiScript {
     this.visitor = 0;
     this.v2Compatible = opts.compatibility === 2;
     const { Constants, tokens } = getTokens(this.v2Compatible);
-    this.Escaped = Constants.Escaped;
-    this.Symbols = Constants.Symbols;
-    const anysym = Constants.Escaped.STATIC + Constants.Escaped.DYNAMIC;
-    const open = Constants.Escaped.OPEN_CHOICE;
-    const close = Constants.Escaped.CLOSE_CHOICE;
+    const { Escaped, Symbols } = Constants;
+    this.Escaped = Escaped;
+    this.Symbols = Symbols;
+    const open = Escaped.OPEN_CHOICE;
+    const close = Escaped.CLOSE_CHOICE;
+    const anysym = Escaped.STATIC + Escaped.DYNAMIC;
     this.JSOLIdentRE = new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, "g");
     this.RawAssignRE = new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`);
     this.ChoiceWrapRE = new RegExp("^" + open + "[^" + open + close + "]*" + close + "$");
-    this.SpecialRE = new RegExp(`[${this.Escaped.SPECIAL.replace("&", "")}]`);
-    this.ContinueRE = new RegExp(this.Escaped.CONTINUATION + "\\r?\\n", "g");
+    this.EntityRE = tokens.modes.normal.filter((t) => t.name === "Entity")[0].PATTERN;
+    this.SpecialRE = new RegExp(`[${Escaped.SPECIAL.replace("&", "")}]`);
+    this.ContinueRE = new RegExp(Escaped.CONTINUATION + "\\r?\\n", "g");
     this.WhitespaceRE = /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g;
+    this.StaticSymbol = new RegExp(Escaped.STATIC + "[A-Za-z_0-9][A-Za-z_0-9]*");
+    this.ValidSymbolRE = new RegExp("(" + Escaped.DYNAMIC + "|" + Escaped.STATIC + "[A-Za-z_0-9])[A-Za-z_0-9]*");
     this.AnySymbolRE = new RegExp(`[${anysym}]`);
     this.silent = false;
     this.lexer = new Lexer(tokens);
@@ -10065,7 +10072,7 @@ Input:  '${_RiScript._escapeText(input)}'`);
         break;
     }
     if (!this.silent && !this.RiTa.SILENT) {
-      if (this.AnySymbolRE.test(expr.replace(HtmlEntities, ""))) {
+      if (this.ValidSymbolRE.test(expr.replace(HtmlEntities, ""))) {
         console.warn('[WARN] Unresolved symbol(s) in "' + expr.replace(/\n/g, "\\n") + '" ');
       }
     }
@@ -10190,7 +10197,7 @@ Final: '${result}'`);
     if (!s || !s.length)
       return "";
     let first2 = s.split(/\s+/)[0];
-    if (!_optionalChain([_RiScript, 'access', _14 => _14.RiTa, 'optionalAccess', _15 => _15.phones])) {
+    if (!_optionalChain([_RiScript, 'access', _16 => _16.RiTa, 'optionalAccess', _17 => _17.phones])) {
       if (!_RiScript.RiTaWarnings.phones) {
         console.warn("[WARN] Install RiTa for proper phonemes");
         _RiScript.RiTaWarnings.phones = true;
@@ -10214,7 +10221,7 @@ Final: '${result}'`);
   }
   // Default transform that pluralizes a string (requires RiTa)
   static pluralize(s) {
-    if (!_optionalChain([_RiScript, 'access', _16 => _16.RiTa, 'optionalAccess', _17 => _17.pluralize])) {
+    if (!_optionalChain([_RiScript, 'access', _18 => _18.RiTa, 'optionalAccess', _19 => _19.pluralize])) {
       if (!_RiScript.RiTaWarnings.plurals) {
         _RiScript.RiTaWarnings.plurals = true;
         console.warn("[WARN] Install RiTa for proper pluralization");
@@ -10255,7 +10262,7 @@ Final: '${result}'`);
   }
 };
 __publicField(_RiScript, "Query", RiQuery);
-__publicField(_RiScript, "VERSION", "1.0.22");
+__publicField(_RiScript, "VERSION", "1.0.23");
 __publicField(_RiScript, "RiTaWarnings", { plurals: false, phones: false });
 var RiScript = _RiScript;
 RiScript.transforms = {
@@ -10365,7 +10372,7 @@ var RiGrammar = class _RiGrammar {
   toString(opts = {}) {
     let replacer = opts.replacer || 0;
     let space = opts.space || 2;
-    let lb = _optionalChain([opts, 'optionalAccess', _18 => _18.linebreak]);
+    let lb = _optionalChain([opts, 'optionalAccess', _20 => _20.linebreak]);
     let res = this.toJSON(replacer, space);
     if (lb)
       res = res.replace(/\n/g, lb);
