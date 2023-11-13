@@ -1,6 +1,10 @@
 import type { Options } from 'tsup';
 import { defineConfig } from 'tsup';
 import { esbuildPluginVersionInjector } from 'esbuild-plugin-version-injector';
+// import { umdWrapper } from "esbuild-plugin-umd-wrapper"
+
+const footer = "if (typeof window !== 'undefined') window.RiScript = RiScript.default;"
+  + "if (typeof module !== 'undefined') module.exports = RiScript.default;";
 
 const opts: Options = {
   name: "riscript",
@@ -15,9 +19,9 @@ const opts: Options = {
   target: 'es2020',
   esbuildPlugins: [
     esbuildPluginVersionInjector(),
+    // umdWrapper(),
   ],
   outExtension({ format }) { return { js: `.js` } },
-  // skipNodeModulesBundle: true, // ?
 }
 
 const esm: Options = {
@@ -42,7 +46,7 @@ const iife: Options = {
   platform: "browser",
   globalName: "RiScript",
   outExtension({ format }) { return { js: `.iife.min.js` } },
-  footer: { js: "window.RiScript = RiScript.default" }
+  footer: { js: footer }
 }
 
 const testEsm: Options = {

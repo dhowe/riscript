@@ -1085,7 +1085,7 @@ Final: '${result}'`);
   }
 };
 __publicField(_RiScript, "Query", RiQuery);
-__publicField(_RiScript, "VERSION", "1.0.23");
+__publicField(_RiScript, "VERSION", "1.0.25");
 __publicField(_RiScript, "RiTaWarnings", { plurals: false, phones: false });
 var RiScript = _RiScript;
 RiScript.transforms = {
