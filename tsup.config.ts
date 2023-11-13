@@ -6,7 +6,7 @@ import { esbuildPluginVersionInjector } from 'esbuild-plugin-version-injector';
 const footer = "if (typeof window !== 'undefined') window.RiScript = RiScript.default;"
   + "if (typeof module !== 'undefined') module.exports = RiScript.default;";
 
-const opts: Options = {
+const baseConfig: Options = {
   name: "riscript",
   entry: { riscript: 'src/index.js' },
   outDir: 'dist',
@@ -25,13 +25,13 @@ const opts: Options = {
 }
 
 const esm: Options = {
+  ...baseConfig,
   format: ['esm'],
-  ...opts,
 }
 
 const cjs: Options = {
+  ...baseConfig,
   format: ['cjs'],
-  ...opts,
   noExternal: ['chevrotain'],
   platform: "node",
   cjsInterop: true,
@@ -40,8 +40,8 @@ const cjs: Options = {
 }
 
 const iife: Options = {
+  ...baseConfig,
   format: ['iife'],
-  ...opts,
   minify: false, // tmp
   platform: "browser",
   globalName: "RiScript",
