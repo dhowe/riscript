@@ -12,9 +12,8 @@
     console.log(RiScript.VERSION);
     let html = '<h3>RiScript v' + RiScript.VERSION + '</h3>';
     Object.getOwnPropertyNames(RiScript)
-      .filter(p => !p.startsWith('_')
-        && typeof RiScript[p] === "function")
-      .forEach(p => html += `RiScript.${p}()<br/>`);
+      .filter(p => !p.startsWith('_') && typeof RiScript[p] === "function")
+      .forEach(p => html += `RiScript.${p}` + (/^class/.test(RiScript[p] + "") ? '' : '()')+'<br>');
     document.getElementById("content").innerHTML = html; 
   </script>
 

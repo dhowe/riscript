@@ -1,5 +1,4 @@
 let RiScript = require('../../dist/riscript.cjs');
-console.log(Object.getOwnPropertyNames(RiScript));
 let str = '\nRiScript v' + RiScript.VERSION + '\n\n';
 Object.getOwnPropertyNames(RiScript)
   .filter(p => !p.startsWith('_') && typeof RiScript[p] === "function" )
