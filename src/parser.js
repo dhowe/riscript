@@ -6,12 +6,13 @@ class RiScriptParser extends CstParser {
   constructor(allTokens) {
     super(allTokens, { nodeLocationTracking: "full" });
     this.atomTypes = ['silent', 'assign', 'symbol', 'choice', 'pgate', 'text', 'entity'];
+    this.rawTypes = ['Raw', 'STAT'];
     this.buildRules();
   }
 
   parse(opts) {
     this.input = opts.tokens; // superclass member (do not change)
-    
+
     let cst = this.script();
     if (this.errors.length > 0) throw Error
       ("[PARSING]\n" + this.errors[0].message);
@@ -113,7 +114,13 @@ class RiScriptParser extends CstParser {
     });
 
     $.RULE("text", () => {
-      $.CONSUME(Tokens.Raw);
+      // this.rawTypes.map(t => console.log(t, Tokens[t]));
+      $.OR(this.rawTypes.map(t => ({ ALT: () => $.CONSUME(Tokens[t]) })));
+
+      // $.OR([
+      //   { ALT: () => $.CONSUME(Tokens.STAT) },
+      //   { ALT: () => $.CONSUME(Tokens.Raw) },
+      // ])
     });
 
     this.performSelfAnalysis(); // keep

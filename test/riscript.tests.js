@@ -35,6 +35,33 @@ describe('RiScript.v3', function () {
   LTR && describe('OneOff', function () {
     it('Should be a single problematic test', function () { });
   });
+  describe('Markdown', function () {
+    it('Should handle markdown headers ', function () {
+      const res = riscript.evaluate('### Header');
+      expect(res).eq('### Header');
+    });
+    
+    it('Should handle markdown @italics', function () {
+      // TODO: if @ is not followed by {, escaped it automatically?
+      const res = riscript.evaluate(`Some [RiScript](/\\@dhowe/riscript) *code*`);
+      expect(res).eq('Some RiScript(/@dhowe/riscript) *code*');
+    });
+
+    it('Should handle markdown lines', function () {
+      let input = `### A Title 
+      Some [RiScript](/\\@dhowe/riscript) code
+        that we can [format|format|format]
+           with *[inline | inline]* Markdown
+             and rerun [once per | once per] second
+               [using|using|using] the **[pulse].qq** function below`;
+      let expected = '### A Title \n      Some RiScript(/@dhowe/riscript) code\n        that we can format\n           with *inline* Markdown\n             and rerun once per second\n               using the **“pulse”** function below';
+      // TODO: if @ is not followed by {, escaped it automatically?
+      const res = riscript.evaluate(input);
+      //console.log(res);
+      expect(res).eq(expected);
+    });
+  });
+
 
   describe('Sequences', function () {
     it('Should support norepeat choice transforms', function () {

@@ -244,9 +244,10 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   text(ctx) {
-    if (ctx.Raw.length !== 1) throw Error('[1] invalid text');
+    // if (ctx.Raw.length !== 1 && ctx.STAT.length !== 1 ) throw Error('[1] invalid text');
     if (Object.keys(ctx).length !== 1) throw Error('[2] invalid text');
-    const image = ctx.Raw[0].image;
+    const tok = ctx?.Raw || ctx?.STAT;
+    const image = tok[0].image;
     this.print('text', this.RiScript._escapeText("'" + image + "'"));
     return image;
   }
@@ -272,7 +273,7 @@ class RiScriptVisitor extends BaseVisitor {
     // lookup: result is either a value, a function, or undef
     let { result, isStatic, isUser, resolved } = this.checkContext(ident);
 
-    if (!isStatic && symbol.startsWith(this.symbols.STATIC)) {
+    if (!isStatic && this.scripting.StaticSymbol.test(symbol)) {
       if (!this.scripting.EntityRE.test(symbol)) {
         throw Error(`Attempt to refer to dynamic symbol '${ident}' as` +
           ` ${this.symbols.STATIC}${ident}, did you mean $${ident}?`);

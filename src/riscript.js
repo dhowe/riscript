@@ -76,22 +76,27 @@ class RiScript {
     this.visitor = 0; // created in evaluate() or passed in here
     this.v2Compatible = opts.compatibility === 2;
     const { Constants, tokens } = getTokens(this.v2Compatible);
-    this.Escaped = Constants.Escaped;
-    this.Symbols = Constants.Symbols;
+    const { Escaped, Symbols } = Constants;
 
-    const anysym = Constants.Escaped.STATIC + Constants.Escaped.DYNAMIC;
-    const open = Constants.Escaped.OPEN_CHOICE;
-    const close = Constants.Escaped.CLOSE_CHOICE;
+    this.Escaped = Escaped;
+    this.Symbols = Symbols;
+
+    const open = Escaped.OPEN_CHOICE;
+    const close = Escaped.CLOSE_CHOICE;
+    const anysym = Escaped.STATIC + Escaped.DYNAMIC;
 
     this.JSOLIdentRE = new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g');
     this.RawAssignRE = new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`);
     this.ChoiceWrapRE = new RegExp('^' + open + '[^' + open + close + ']*' + close + '$');
 
     this.EntityRE = tokens.modes.normal.filter(t => t.name === 'Entity')[0].PATTERN;
-    this.SpecialRE = new RegExp(`[${this.Escaped.SPECIAL.replace('&', '')}]`);
-    this.ContinueRE = new RegExp(this.Escaped.CONTINUATION + '\\r?\\n', 'g');
+    this.SpecialRE = new RegExp(`[${Escaped.SPECIAL.replace('&', '')}]`);
+    this.ContinueRE = new RegExp(Escaped.CONTINUATION + '\\r?\\n', 'g');
     this.WhitespaceRE = /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g;
+    this.StaticSymbol = new RegExp(Escaped.STATIC + '[A-Za-z_0-9][A-Za-z_0-9]*');
+    this.ValidSymbolRE = new RegExp('(' + Escaped.DYNAMIC + '|' + Escaped.STATIC + '[A-Za-z_0-9])[A-Za-z_0-9]*');
     this.AnySymbolRE = new RegExp(`[${anysym}]`); // added
+
 
     this.silent = false;
     this.lexer = new Lexer(tokens);
@@ -175,7 +180,7 @@ class RiScript {
 
     // check for unresolved symbols ([$#]) after removing HTML entities
     if (!this.silent && !this.RiTa.SILENT) {
-      if (this.AnySymbolRE.test(expr.replace(HtmlEntities, ''))) {
+      if (this.ValidSymbolRE.test(expr.replace(HtmlEntities, ''))) {
         console.warn('[WARN] Unresolved symbol(s) in "' + expr.replace(/\n/g, '\\n') + '" ');
       }
     }

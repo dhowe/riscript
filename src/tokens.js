@@ -39,7 +39,7 @@ function getTokens(v2Compatible) {
   const ENTITY_PATTERN = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/i;
   const PENDING_GATE_PATTERN = new RegExp(`${Escaped.PENDING_GATE}([0-9]{9,11})`)
 
-  Escaped.SPECIAL = Object.values(Escaped).join('').replace(/[<>]/g, ''); // allow <>& for html 
+  Escaped.SPECIAL = Object.values(Escaped).join('').replace(/[<>]/g, ''); // allow <> for html 
   Symbols.PENDING_GATE_RE = new RegExp(PENDING_GATE_PATTERN.source, 'g'); // for unresolved gates
 
   const ExitGate = createToken({
@@ -64,7 +64,8 @@ function getTokens(v2Compatible) {
     push_mode: "gate_mode"
   });
 
-  
+  const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
+  const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
   const OC = createToken({ name: "OC", pattern: new RegExp(Escaped.OPEN_CHOICE + '\\s*') });
   const CC = createToken({ name: "CC", pattern: new RegExp(`\\s*${Escaped.CLOSE_CHOICE}`) });
   const OR = createToken({ name: "OR", pattern: /\s*\|\s*/ });
@@ -73,13 +74,13 @@ function getTokens(v2Compatible) {
   const TF = createToken({ name: "TF", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
   const OS = createToken({ name: "OS", pattern: new RegExp(`${Escaped.OPEN_SILENT}\\s*`) });
   const CS = createToken({ name: "CS", pattern: new RegExp(`\\s*${Escaped.CLOSE_SILENT}`) });
-  const SYM = createToken({ name: "SYM", pattern: new RegExp(`[${Escaped.DYNAMIC}${Escaped.STATIC}][A-Za-z_0-9]*`) });
+  const SYM = createToken({ name: "SYM", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*`) });
 
   const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
 
-  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, TF, OS, CS, PendingGate, Raw, EnterGate];
+  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, DYN, STAT, TF, OS, CS, PendingGate, Raw, EnterGate];
   const gateMode = [Gate, ExitGate];
 
   const multiMode = {
