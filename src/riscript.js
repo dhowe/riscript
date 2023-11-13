@@ -87,6 +87,7 @@ class RiScript {
     this.RawAssignRE = new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`);
     this.ChoiceWrapRE = new RegExp('^' + open + '[^' + open + close + ']*' + close + '$');
 
+    this.EntityRE = tokens.modes.normal.filter(t => t.name === 'Entity')[0].PATTERN;
     this.SpecialRE = new RegExp(`[${this.Escaped.SPECIAL.replace('&', '')}]`);
     this.ContinueRE = new RegExp(this.Escaped.CONTINUATION + '\\r?\\n', 'g');
     this.WhitespaceRE = /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g;
