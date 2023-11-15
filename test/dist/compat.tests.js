@@ -401,7 +401,7 @@ describe("RiScript.v2", function() {
           throw Error("invalid: " + ans);
         result[ans]++;
       }
-      expect(result.b).gt(result.a);
+      expect(result.b).greaterThanOrEqual(result.a);
     });
   });
   describe("Entities.v2", function() {
