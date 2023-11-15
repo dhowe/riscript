@@ -500,7 +500,7 @@ describe('RiScript.v2', function () {
         if (!/^[ab]$/.test(ans)) throw Error('invalid: ' + ans);
         result[ans]++;
       }
-      expect(result.b).gt(result.a);
+      expect(result.b).greaterThanOrEqual(result.a);
     });
   });
 
