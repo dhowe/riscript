@@ -10,8 +10,8 @@
     "test": "NODE_ENV=dev mocha",
     "test:dist": "NODE_ENV=dev mocha test/dist",
     "build": "rm -rf ./dist/ && npx tsup",
-    "pub": "np patch",
-    "prepub": "npm run build",
+    "pub": "./npnb/source/cli.js --no-release-draft patch",
+    "prepub": "npm version patch && npm run build",
     "types": "npx tsc"
   },
   "main": "./dist/riscript.js",
