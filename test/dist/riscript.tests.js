@@ -23,22 +23,35 @@ describe("RiScript.v3", function() {
     });
   });
   describe("Markdown", function() {
-    it("Should handle markdown headers ", function() {
+    it("Should handle basic markdown", function() {
+      let test = "Some *italic* and **bold** and _other_ markdown";
+      expect(riscript.evaluate(test)).eq(test);
+      let test2 = "1. list 1\n2. list 2\n3. list 3";
+      expect(riscript.evaluate(test2)).eq(test2);
+    });
+    it("Should handle markdown headers", function() {
       const res = riscript.evaluate("### Header");
       expect(res).eq("### Header");
     });
-    it("Should handle markdown @italics", function() {
-      const res = riscript.evaluate(`Some [RiScript](/\\@dhowe/riscript) *code*`);
-      expect(res).eq("Some RiScript(/@dhowe/riscript) *code*");
+    it("Should handle markdown links", function() {
+      let res;
+      res = riscript.evaluate("Some [RiTa](https://rednoise.org/rita) code");
+      expect(res).eq("Some [RiTa](https://rednoise.org/rita) code");
+      res = riscript.evaluate("Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code");
+      expect(res).eq("Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code");
+      res = riscript.evaluate("Some [RiScript](/@dhowe/riscript) code");
+      expect(res).eq("Some [RiScript](/@dhowe/riscript) code");
+      res = riscript.evaluate("Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code with [RiScript](/@dhowe/riscript) links");
+      expect(res).eq("Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code with [RiScript](/@dhowe/riscript) links");
     });
-    it("Should handle markdown lines", function() {
+    it("Should handle formatted markdown", function() {
       let input = `### A Title 
-      Some [RiScript](/\\@dhowe/riscript) code
+      Some RiScript code
         that we can [format|format|format]
            with *[inline | inline]* Markdown
              and rerun [once per | once per] second
                [using|using|using] the **[pulse].qq** function below`;
-      let expected = "### A Title \n      Some RiScript(/@dhowe/riscript) code\n        that we can format\n           with *inline* Markdown\n             and rerun once per second\n               using the **\u201Cpulse\u201D** function below";
+      let expected = "### A Title \n      Some RiScript code\n        that we can format\n           with *inline* Markdown\n             and rerun once per second\n               using the **\u201Cpulse\u201D** function below";
       const res = riscript.evaluate(input);
       expect(res).eq(expected);
     });
@@ -98,8 +111,8 @@ describe("RiScript.v3", function() {
     });
   });
   describe("Gates", function() {
-    it("simple gate", function() {
-      expect(riscript.evaluate("$[ @{ a: { $exists: true }}@ hello]")).eq("");
+    it("Should handle simplest gate", function() {
+      expect(riscript.evaluate("[ @{ a: { $exists: true }}@ hello]")).eq("");
     });
     it("Should throw on bad gates", function() {
       expect(
@@ -195,6 +208,8 @@ describe("RiScript.v3", function() {
       res = riscript.evaluate("[@{x:4}@a||b]", { x: 3 });
       expect(res).eq("b");
       res = riscript.evaluate("[@{x:4}@ a | a || b ]", { x: 3 });
+      expect(res).eq("b");
+      res = riscript.evaluate("[@{x:4}@ a | a || [b | b(5)] ]", { x: 3 });
       expect(res).eq("b");
       res = riscript.evaluate("[@{}@a||b]", 0);
       expect(res).eq("a");
@@ -2189,9 +2204,16 @@ index#${i}=[${syls[i]}]
       expect(riscript.evaluate("The reference\\(1\\) has parens")).eq(
         "The reference(1) has parens"
       );
+      expect(riscript.evaluate("The reference&lpar;1&rpar; has parens")).eq(
+        "The reference(1) has parens"
+      );
       expect(riscript.evaluate("The \\[word\\] has brackets", 0)).eq(
         "The [word] has brackets"
       );
+      expect(riscript.evaluate("The &lsqb;word&rsqb; has brackets", 0)).eq(
+        "The [word] has brackets"
+      );
+      expect(riscript.evaluate("The & is an ampersand")).eq("The & is an ampersand");
     });
     it("Should decode escaped characters in choices", function() {
       expect(riscript.evaluate("The [\\(word\\) | \\(word\\)] has parens")).eq(
@@ -2252,11 +2274,9 @@ index#${i}=[${syls[i]}]
       );
       expect(res = riscript.evaluate("This is &#36;", {})).eq("This is $");
     });
-    it("Should allow HTML entities in context?", function() {
+    it("Should allow HTML entities in context", function() {
       let res;
-      expect(
-        res = riscript.evaluate("This is $dollar.", { dollar: "&#36;" })
-      ).eq("This is $.");
+      expect(res = riscript.evaluate("This is $dollar.", { dollar: "&#36;" })).eq("This is $.");
     });
     it("Should recognize continuations", function() {
       expect(riscript.evaluate("~\n", {})).eq("");
@@ -2322,7 +2342,7 @@ index#${i}=[${syls[i]}]
     it("#stringHash", function() {
       expect(RiScript._stringHash("revenue")).eq("1099842588");
     });
-    it("#preparseLines", function() {
+    it("#preParseLines", function() {
       expect(riscript.preParse("a (1) ")).eq("a ^1^ ");
       expect(riscript.preParse("a (foo) ")).eq("a (foo) ");
       expect(riscript.preParse("foo=a")).eq("foo=a");
@@ -2342,6 +2362,12 @@ index#${i}=[${syls[i]}]
       expect(riscript.preParse("[ @{a: {}}@ hello]\n$a=2")).eq(
         "[ @{a: {}}@ hello]\n{$a=2}"
       );
+      expect(riscript.preParse("[ @{a: {}}@ hello]\n$a=2")).eq(
+        "[ @{a: {}}@ hello]\n{$a=2}"
+      );
+      let res = riscript.preParse("Some [RiTa](https://rednoise.org/rita?a=b&c=k) code");
+      let expected = "Some &lsqb;RiTa&rsqb;&lpar;https:&sol;&sol;rednoise.org&sol;rita?a=b&c=k&rpar; code";
+      expect(res).eq(expected);
     });
     it("#parseJSOLregex", function() {
       let res = riscript.parseJSOL("{a: /^p/}");
