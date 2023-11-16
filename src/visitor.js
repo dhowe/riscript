@@ -175,7 +175,7 @@ class RiScriptVisitor extends BaseVisitor {
     const sym = ctx.SYM[0].image;
     let value;
     let info;
-    const ident = sym.replace(this.scripting.AnySymbolRE, '');
+    const ident = sym.replace(this.scripting.regex.AnySymbol, '');
     const isStatic = sym.startsWith(this.symbols.STATIC);
 
     if (isStatic) {
@@ -260,7 +260,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     const original = this.nodeText;
     const symbol = ctx.SYM[0].image;
-    const ident = symbol.replace(this.scripting.AnySymbolRE, '');
+    const ident = symbol.replace(this.scripting.regex.AnySymbol, '');
 
     this.isNoRepeat = this.hasNoRepeat(ctx.TF);
 
@@ -272,8 +272,8 @@ class RiScriptVisitor extends BaseVisitor {
     // lookup: result is either a value, a function, or undef
     let { result, isStatic, isUser, resolved } = this.checkContext(ident);
 
-    if (!isStatic && this.scripting.StaticSymbol.test(symbol)) {
-      if (!this.scripting.EntityRE.test(symbol)) {
+    if (!isStatic && this.scripting.regex.StaticSymbol.test(symbol)) {
+      if (!this.scripting.regex.Entity.test(symbol)) {
         throw Error(`Attempt to refer to dynamic symbol '${ident}' as` +
           ` ${this.symbols.STATIC}${ident}, did you mean $${ident}?`);
       }
@@ -454,7 +454,7 @@ class RiScriptVisitor extends BaseVisitor {
   // Helpers ================================================
 
   hasNoRepeat(tfs) {
-    const transforms = this.RiScript._transformNames(tfs);
+    const transforms = transformNames(tfs);
     if (transforms.length) {
       return transforms.includes('nr') || transforms.includes('norepeat');
     }
@@ -713,6 +713,12 @@ class RiScriptVisitor extends BaseVisitor {
   tindent() {
     return ' '.repeat((this.order + '').length + 1);
   }
+}
+
+function transformNames(txs) {
+  return txs && txs.length
+    ? txs.map((tx) => tx.image.replace(/(^\.|\(\)$)/g, ''), [])
+    : [];
 }
 
 export { RiScriptVisitor };

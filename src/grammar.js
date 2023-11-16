@@ -113,7 +113,7 @@ class RiGrammar {
         name = Symbols.DYNAMIC + name;
       }
       // console.log(i,name);
-      if (!this.scripting.ChoiceWrapRE.test(rule)) {
+      if (!this.scripting.regex.ChoiceWrap.test(rule)) {
         // let orig = rule;
         rule = Symbols.OPEN_CHOICE + rule + Symbols.CLOSE_CHOICE;
         // console.log('WRAPPING: ' + orig + '->' + rule);

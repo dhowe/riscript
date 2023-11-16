@@ -50,16 +50,20 @@ describe('RiScript.v3', function () {
 
     it('Should handle markdown links', function () {
       let res;
-      
-      /*res = riscript.evaluate('Some [RiTa](https://rednoise.org/rita) code');
+
+      res = riscript.evaluate('Some [RiTa](https://rednoise.org/rita) code');
       expect(res).eq('Some [RiTa](https://rednoise.org/rita) code');
-      
+
       res = riscript.evaluate('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');
-      expect(res).eq('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');*/
+      expect(res).eq('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');
 
       res = riscript.evaluate('Some [RiScript](/@dhowe/riscript) code');
-            // console.log('GOT', res);
       expect(res).eq('Some [RiScript](/@dhowe/riscript) code');
+
+      res = riscript.evaluate('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code' +
+        ' with [RiScript](/@dhowe/riscript) links');
+      expect(res).eq('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code' +
+        ' with [RiScript](/@dhowe/riscript) links');
     });
 
     it('Should handle formatted markdown', function () {
@@ -70,9 +74,7 @@ describe('RiScript.v3', function () {
              and rerun [once per | once per] second
                [using|using|using] the **[pulse].qq** function below`;
       let expected = '### A Title \n      Some RiScript code\n        that we can format\n           with *inline* Markdown\n             and rerun once per second\n               using the **“pulse”** function below';
-      // TODO: if @ is not followed by {, escaped it automatically?
       const res = riscript.evaluate(input);
-      //console.log(res);
       expect(res).eq(expected);
     });
   });
@@ -269,7 +271,6 @@ describe('RiScript.v3', function () {
       res = riscript.evaluate('[@{x:4}@ a | a || b | b ]', { x: 3 });
       expect(res).eq('b');
 
-      // WORKING HERE: pending gates that dont resolve
       res = riscript.evaluate('[@{a:2}@a||b]', 0);
       expect(res).eq('b');
     });
@@ -2666,11 +2667,9 @@ describe('RiScript.v3', function () {
       expect((res = riscript.evaluate('This is &#36;', {}))).eq('This is $');
     });
 
-    it('Should allow HTML entities in context?', function () {
+    it('Should allow HTML entities in context', function () { // not sure about this
       let res;
-      expect(
-        (res = riscript.evaluate('This is $dollar.', { dollar: '&#36;' }))
-      ).eq('This is $.');
+      expect((res = riscript.evaluate('This is $dollar.', { dollar: '&#36;' }))).eq('This is $.');
       // console.log(res);
     });
 
@@ -2775,7 +2774,6 @@ bb',
       );
 
       let res = riscript.preParse('Some [RiTa](https://rednoise.org/rita?a=b&c=k) code');
-
       let expected = 'Some &lsqb;RiTa&rsqb;&lpar;https:&sol;&sol;rednoise.org&sol;rita?a=b&c=k&rpar; code';
       expect(res).eq(expected);
     });

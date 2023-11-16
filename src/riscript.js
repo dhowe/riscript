@@ -22,7 +22,7 @@ import { getTokens, TextTypes } from './tokens.js';
 */
 
 const { decode } = he;
-const VowelRE = /[aeiou]/;
+const Vowels = /[aeiou]/;
 const RegexEscape = '_RE_';
 const HtmlEntities = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/gi;
 
@@ -86,18 +86,25 @@ class RiScript {
     const close = Escaped.CLOSE_CHOICE;
     const anysym = Escaped.STATIC + Escaped.DYNAMIC;
 
-    this.JSOLIdentRE = new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g');
-    this.RawAssignRE = new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`);
-    this.ChoiceWrapRE = new RegExp('^' + open + '[^' + open + close + ']*' + close + '$');
-
-    this.EntityRE = tokens.modes.normal.filter(t => t.name === 'Entity')[0].PATTERN;
-    this.SpecialRE = new RegExp(`[${Escaped.SPECIAL.replace('&', '')}]`);
-    this.ContinueRE = new RegExp(Escaped.CONTINUATION + '\\r?\\n', 'g');
-    this.WhitespaceRE = /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g;
-    this.StaticSymbol = new RegExp(Escaped.STATIC + '[A-Za-z_0-9][A-Za-z_0-9]*');
-    this.ValidSymbolRE = new RegExp('(' + Escaped.DYNAMIC + '|' + Escaped.STATIC + '[A-Za-z_0-9])[A-Za-z_0-9]*');
-    this.AnySymbolRE = new RegExp(`[${anysym}]`); // added
-
+    this.regex = {
+      LineBreaks: /\r?\n/,
+      EndingBreak: /\r?\n$/,
+      NonGateAtSigns: /([^}])@(?!{)/,
+      AnySymbol: new RegExp(`[${anysym}]`),
+      ParenthesizedWeights: /\((\s*\d+\s*)\)/g,
+      MultiLineComments: /\/\*[^]*?(\r?\n)?\//g,
+      SingleLineComments: /\/\/[^\n]+(\r?\n|$)/g,
+      MarkdownLinks: /\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g,
+      RawAssign: new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`),
+      JSOLIdent: new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g'),
+      ChoiceWrap: new RegExp('^' + open + '[^' + open + close + ']*' + close + '$'),
+      ValidSymbol: new RegExp('(' + Escaped.DYNAMIC + '|' + Escaped.STATIC + '[A-Za-z_0-9])[A-Za-z_0-9]*'),
+      Entity: tokens.modes.normal.filter(t => t.name === 'Entity')[0].PATTERN,
+      StaticSymbol: new RegExp(Escaped.STATIC + '[A-Za-z_0-9][A-Za-z_0-9]*'),
+      Special: new RegExp(`[${Escaped.SPECIAL.replace('&', '')}]`),
+      Continue: new RegExp(Escaped.CONTINUATION + '\\r?\\n', 'g'),
+      Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
+    }
 
     this.silent = false;
     this.textTypes = TextTypes
@@ -149,7 +156,7 @@ class RiScript {
 
     // opts.onepass = true; // TMP
 
-    let last, endingBreak = /\r?\n$/.test(input); // keep
+    let last, endingBreak = this.regex.EndingBreak.test(input); // keep
 
     let expr = this.preParse(input, opts);
     if (!expr) return '';
@@ -183,7 +190,7 @@ class RiScript {
 
     // check for unresolved symbols ([$#]) after removing HTML entities
     if (!this.silent && !this.RiTa.SILENT) {
-      if (this.ValidSymbolRE.test(expr.replace(HtmlEntities, ''))) {
+      if (this.regex.ValidSymbol.test(expr.replace(HtmlEntities, ''))) {
         console.warn('[WARN] Unresolved symbol(s) in "'
           + expr.replace(/\n/g, '\\n') + '" ');
       }
@@ -210,6 +217,57 @@ class RiScript {
       this.visitor.lookupsToString());
   }
 
+  preParse(script, opts) {
+    if (typeof script !== 'string') return '';
+
+    const $ = this.Symbols;
+
+    let input = script;
+    if (!this.v2Compatible) { // handle parenthesized weights
+      input = input.replace(this.regex.ParenthesizedWeights, '^$1^');
+    }
+
+    let replaced = input.replace(this.regex.NonGateAtSigns, '$1&#64;'); // non-gate @-signs
+    if (replaced !== input) {
+      // console.log('Removed non-gate @-sign: ','\n', input,'\n', replaced);
+      input = replaced;
+    }
+
+    let matches = input.match(this.regex.MarkdownLinks, ''); // md-links
+    matches && matches.forEach(m => input = input.replace(m, escapeMarkdownLink(m)));
+    input = input.replace(this.regex.MultiLineComments, ''); // multi-line comments
+    input = input.replace(this.regex.SingleLineComments, ''); // single-line comments
+    input = input.replace(this.regex.Continue, ''); // line continuations
+    input = slashEscapesToEntities(input); // double-backslashed escapes
+
+    let result = '';
+    let lines = input.split(this.regex.LineBreaks);
+    for (let i = 0; i < lines.length; i++) {
+      // special-case: handle assignments alone on a line
+      if (this.regex.RawAssign.test(lines[i])) {
+        // a very convoluted way of preserving line-breaks inside groups
+        let eqIdx = lines[i].indexOf('=');
+        if (eqIdx < 0) throw Error('invalid state: no assigment: ' + lines[i]);
+        let lhs = lines[i].substring(0, eqIdx),
+          rhs = lines[i].substring(eqIdx + 1);
+        let opens = charCount(rhs, $.OPEN_CHOICE);
+        let closes = charCount(rhs, $.CLOSE_CHOICE);
+        while (opens > closes) {
+          let line = lines[++i];
+          rhs += '\n' + line;
+          opens += charCount(line, $.OPEN_CHOICE);
+          closes += charCount(line, $.CLOSE_CHOICE);
+        }
+        result += $.OPEN_SILENT + (lhs + '=' + rhs) + $.CLOSE_SILENT;
+      } else {
+        result += lines[i];
+        if (i < lines.length - 1) result += '\n';
+      }
+    }
+
+    return result;
+  }
+
   postParse(input, opts) {
     if (typeof input !== 'string') return '';
 
@@ -217,7 +275,7 @@ class RiScript {
     let decoded = decode(input);
 
     // clean up whitespace, linebreaks
-    let result = decoded.replace(this.WhitespaceRE, ' ').replace(/\r?\n$/, '');
+    let result = decoded.replace(this.regex.Whitespace, ' ').replace(this.regex.EndingBreak, '');
 
     // handle unresolved gates
     let gates = [...result.matchAll(this.Symbols.PENDING_GATE_RE)];
@@ -243,70 +301,6 @@ class RiScript {
     return result;
   }
 
-  static escapeMarkdownLink(script) {
-    script = script.replace(/\[/g, '&lsqb;');
-    script = script.replace(/\]/g, '&rsqb;');
-    script = script.replace(/\(/g, '&lpar;');
-    script = script.replace(/\)/g, '&rpar;');
-    script = script.replace(/\//g, '&sol;');
-    return script;
-  }
-
-
-  preParse(script, opts) {
-    if (typeof script !== 'string') return '';
-
-    const $ = this.Symbols;
-
-    let input = script;
-    if (!this.v2Compatible) { // handle parenthesized weights
-      input = input.replace(/\((\s*\d+\s*)\)/g, '^$1^');
-    }
-
-    let replaced = input.replace(/([^}])@(?!{)/, '$1&#64;'); // non-gate @-signs
-    if (replaced!==input) {
-      // console.log('Removed non-gate @-sign: ','\n', input,'\n', replaced);
-      input = replaced;
-    }
-    
-    let matches = input.match(/\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g, ''); // md-links
-    if (matches && matches.length) {
-      input = input.replace(matches[0], RiScript.escapeMarkdownLink(matches[0]));
-    }
-
-    input = input.replace(/\/\*[^]*?(\r?\n)?\//g, ''); // multi-line comments
-    input = input.replace(/\/\/[^\n]+(\r?\n|$)/g, ''); // single-line comments
-    input = input.replace(this.ContinueRE, ''); // line continuations
-    input = slashEscapesToEntities(input); // double-backslashed escapes
-
-    let result = '';
-    let lines = input.split(/\r?\n/);
-    for (let i = 0; i < lines.length; i++) {
-      // special-case: handle assignments alone on a line
-      if (this.RawAssignRE.test(lines[i])) {
-        // a very convoluted way of preserving line-breaks inside groups
-        let eqIdx = lines[i].indexOf('=');
-        if (eqIdx < 0) throw Error('invalid state: no assigment: ' + lines[i]);
-        let lhs = lines[i].substring(0, eqIdx),
-          rhs = lines[i].substring(eqIdx + 1);
-        let opens = charCount(rhs, $.OPEN_CHOICE);
-        let closes = charCount(rhs, $.CLOSE_CHOICE);
-        while (opens > closes) {
-          let line = lines[++i];
-          rhs += '\n' + line;
-          opens += charCount(line, $.OPEN_CHOICE);
-          closes += charCount(line, $.CLOSE_CHOICE);
-        }
-        result += $.OPEN_SILENT + (lhs + '=' + rhs) + $.CLOSE_SILENT;
-      } else {
-        result += lines[i];
-        if (i < lines.length - 1) result += '\n';
-      }
-    }
-
-    return result;
-  }
-
   /*
    * Parses a mingo query into JSON format
    */
@@ -325,8 +319,8 @@ class RiScript {
       }
       return res;
     };
-    let escaped = RiScript._escapeJSONRegex(text)
-      .replace(this.JSOLIdentRE, '"$1":')
+    let escaped = escapeJSONRegex(text)
+      .replace(this.regex.JSOLIdent, '"$1":')
       .replace(/'/g, '"');
 
     // console.log("escaped: '"+escaped+"'");
@@ -342,7 +336,7 @@ class RiScript {
     let result = true;
     let isStrOrNum = /(string|number)/.test(typeof s);
     // if a string or num, test for special chars
-    if (isStrOrNum) result = this.SpecialRE.test(s.toString());
+    if (isStrOrNum) result = this.regex.Special.test(s.toString());
     return result;
   }
 
@@ -368,7 +362,7 @@ class RiScript {
 
     // could still be original word if no phones found
     return (
-      (phones && phones.length && VowelRE.test(phones[0]) ? 'an ' : 'a ') + s
+      (phones && phones.length && Vowels.test(phones[0]) ? 'an ' : 'a ') + s
     );
   }
 
@@ -406,26 +400,13 @@ class RiScript {
 
   // static helpers
 
-  static _transformNames(txs) {
-    return txs && txs.length
-      ? txs.map((tx) => tx.image.replace(/(^\.|\(\)$)/g, ''), [])
-      : [];
-  }
-
   static _escapeText(s, quotify) {
     if (typeof s !== 'string') return s;
     let t = s.replace(/\r?\n/g, '\\n');
     return quotify || !t.length ? "'" + t + "'" : t;
   }
-
-  static _escapeJSONRegex(text) {
-    return text.replace(
-      /\/([^/]+?)\/([igmsuy]*)/g,
-      `"${RegexEscape}$1${RegexEscape}$2${RegexEscape}"`
-    );
-  }
-
-  static _stringHash(s) {
+  
+  static _stringHash(s) { // for testing
     let chr,
       hash = 0;
     for (let i = 0; i < s.length; i++) {
@@ -462,6 +443,13 @@ RiScript.transforms = {
 
 ///////////////////////// FUNCTIONS /////////////////////////
 
+function escapeMarkdownLink(txt) {
+  let result = txt;
+  let lookups = { '[': '&lsqb;', ']': '&rsqb;', '(': '&lpar;', ')': '&rpar;', '/': '&sol;' };
+  Object.entries(lookups).forEach(([k, v]) => result = result.replace(new RegExp(`\\${k}`, 'g'), v));
+  return result;
+}
+
 function slashEscapesToEntities(s) {
   s = replaceAll(s, '\\(', '&lpar;');
   s = replaceAll(s, '\\)', '&rpar;');
@@ -475,12 +463,22 @@ function slashEscapesToEntities(s) {
   s = replaceAll(s, '\\=', ' &equals');
   return s;
 }
+
+function escapeJSONRegex(text) {
+  return text.replace(
+    /\/([^/]+?)\/([igmsuy]*)/g,
+    `"${RegexEscape}$1${RegexEscape}$2${RegexEscape}"`
+  );
+}
+
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
 function replaceAll(str, match, replacement) {
   return str.replace(new RegExp(escapeRegExp(match), 'g'), () => replacement);
 }
+
 function charCount(str, c) {
   let count = 0;
   for (let i = 0; i < str.length; i++) {
