@@ -1,5 +1,7 @@
 import { createToken } from "chevrotain"
 
+const TextTypes = ['Raw', 'STAT', 'AMP'];
+
 function getTokens(v2Compatible) {
 
   let Symbols = {
@@ -67,6 +69,8 @@ function getTokens(v2Compatible) {
   const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
   const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
   const AMP = createToken({ name: "AMP", pattern: /&/ });
+  //const AT = createToken({ name: "AT", pattern: /@/ });
+
   const OC = createToken({ name: "OC", pattern: new RegExp(Escaped.OPEN_CHOICE + '\\s*') });
   const CC = createToken({ name: "CC", pattern: new RegExp(`\\s*${Escaped.CLOSE_CHOICE}`) });
   const OR = createToken({ name: "OR", pattern: /\s*\|\s*/ });
@@ -94,8 +98,6 @@ function getTokens(v2Compatible) {
 
   return { tokens: multiMode, Constants: { Symbols, Escaped } };
 }
-
-const TextTypes = ['Raw', 'STAT', 'AMP'];
 
 function escapeRegex(s) {
   return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');

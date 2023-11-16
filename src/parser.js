@@ -84,10 +84,6 @@ class RiScriptParser extends CstParser {
       $.CONSUME(Tokens.OC)
       $.OPTION1(() => $.SUBRULE($.gate));
       $.SUBRULE($.accept)
-      // $.MANY_SEP({
-      //   SEP: Tokens.OR,
-      //   DEF: () => $.SUBRULE($.wexpr)
-      // });
       $.OPTION2(() => {
         $.CONSUME(Tokens.ELSE);
         $.SUBRULE($.reject)

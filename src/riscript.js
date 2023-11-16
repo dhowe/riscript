@@ -244,15 +244,11 @@ class RiScript {
   }
 
   static escapeMarkdownLink(script) {
-    // [ '[', ']', '(', ')', '{', '}', '@', '#', '|', '=', '&'].forEach
-    //   (c => c.replace(new RegExp(c, 'g'), '\\' + c));
-    // script = script.replace(/&/g, '&amp;');
     script = script.replace(/\[/g, '&lsqb;');
     script = script.replace(/\]/g, '&rsqb;');
     script = script.replace(/\(/g, '&lpar;');
     script = script.replace(/\)/g, '&rpar;');
     script = script.replace(/\//g, '&sol;');
-    // script = script.replace(/\]/g, '\\]');
     return script;
   }
 
@@ -267,12 +263,15 @@ class RiScript {
       input = input.replace(/\((\s*\d+\s*)\)/g, '^$1^');
     }
 
+    let replaced = input.replace(/([^}])@(?!{)/, '$1&#64;'); // non-gate @-signs
+    if (replaced!==input) {
+      // console.log('Removed non-gate @-sign: ','\n', input,'\n', replaced);
+      input = replaced;
+    }
+    
     let matches = input.match(/\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g, ''); // md-links
-
     if (matches && matches.length) {
-      // console.log('MD-LINKS: ', matches);
       input = input.replace(matches[0], RiScript.escapeMarkdownLink(matches[0]));
-      // console.log('MD-LINKS-REP: ', input);
     }
 
     input = input.replace(/\/\*[^]*?(\r?\n)?\//g, ''); // multi-line comments

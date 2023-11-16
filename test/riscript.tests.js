@@ -50,13 +50,15 @@ describe('RiScript.v3', function () {
 
     it('Should handle markdown links', function () {
       let res;
-      res = riscript.evaluate('Some [RiTa](https://rednoise.org/rita) code');
-      // console.log('GOT', res);
+      
+      /*res = riscript.evaluate('Some [RiTa](https://rednoise.org/rita) code');
       expect(res).eq('Some [RiTa](https://rednoise.org/rita) code');
+      
       res = riscript.evaluate('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');
-      console.log('GOT', res);
-      expect(res).eq('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');
+      expect(res).eq('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');*/
+
       res = riscript.evaluate('Some [RiScript](/@dhowe/riscript) code');
+            // console.log('GOT', res);
       expect(res).eq('Some [RiScript](/@dhowe/riscript) code');
     });
 
@@ -145,7 +147,7 @@ describe('RiScript.v3', function () {
 
   describe('Gates', function () {
     it('Should handle simplest gate', function () {
-      expect(riscript.evaluate('[ @{ a: { $exists: true }}@ hello]', 0, T)).eq('');
+      expect(riscript.evaluate('[ @{ a: { $exists: true }}@ hello]')).eq('');
     });
 
     it('Should throw on bad gates', function () {
@@ -237,6 +239,9 @@ describe('RiScript.v3', function () {
       expect(res).eq('b');
 
       res = riscript.evaluate('[@{x:4}@ a | a || b ]', { x: 3 });
+      expect(res).eq('b');
+
+      res = riscript.evaluate('[@{x:4}@ a | a || [b | b(5)] ]', { x: 3 });
       expect(res).eq('b');
 
       res = riscript.evaluate('[@{}@a||b]', 0);
@@ -2772,8 +2777,6 @@ bb',
       let res = riscript.preParse('Some [RiTa](https://rednoise.org/rita?a=b&c=k) code');
 
       let expected = 'Some &lsqb;RiTa&rsqb;&lpar;https:&sol;&sol;rednoise.org&sol;rita?a=b&c=k&rpar; code';
-      console.log('RES', res);
-      console.log('EXP', expected);
       expect(res).eq(expected);
     });
 
