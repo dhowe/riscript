@@ -3,10 +3,10 @@ import { CstParser } from "chevrotain"
 
 class RiScriptParser extends CstParser {
 
-  constructor(allTokens) {
+  constructor(allTokens, textTypes) {
     super(allTokens, { nodeLocationTracking: "full" });
     this.atomTypes = ['silent', 'assign', 'symbol', 'choice', 'pgate', 'text', 'entity'];
-    this.rawTypes = ['Raw', 'STAT'];
+    this.textTypes = textTypes; // defined in tokens.js
     this.buildRules();
   }
 
@@ -114,13 +114,7 @@ class RiScriptParser extends CstParser {
     });
 
     $.RULE("text", () => {
-      // this.rawTypes.map(t => console.log(t, Tokens[t]));
-      $.OR(this.rawTypes.map(t => ({ ALT: () => $.CONSUME(Tokens[t]) })));
-
-      // $.OR([
-      //   { ALT: () => $.CONSUME(Tokens.STAT) },
-      //   { ALT: () => $.CONSUME(Tokens.Raw) },
-      // ])
+      $.OR(this.textTypes.map(t => ({ ALT: () => $.CONSUME(Tokens[t]) })));
     });
 
     this.performSelfAnalysis(); // keep

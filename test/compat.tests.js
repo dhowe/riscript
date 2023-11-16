@@ -512,6 +512,10 @@ describe('RiScript.v2', function () {
         'The word has parens'
       );
 
+      expect(riscript.evaluate('The & is an ampersand')).eq(
+        'The & is an ampersand'
+      );
+
       expect(riscript.evaluate('The reference\\[1\\] has parens')).eq(
         'The reference[1] has parens'
       );

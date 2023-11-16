@@ -2,9 +2,9 @@ import he from 'he';
 import { Query } from 'mingo';
 import { Lexer } from 'chevrotain';
 
-import { getTokens } from './tokens.js';
 import { RiScriptParser } from './parser.js';
 import { RiScriptVisitor } from './visitor.js';
+import { getTokens, TextTypes } from './tokens.js';
 
 /*
   Specification:
@@ -63,9 +63,10 @@ class RiQuery extends Query {
 }
 
 class RiScript {
-  static Query = RiQuery;
 
   static VERSION = '[VI]{{inject}}[/VI]';
+
+  static Query = RiQuery;
   static RiTaWarnings = { plurals: false, phones: false };
 
   static evaluate(script, context, opts = {}) {
@@ -99,8 +100,9 @@ class RiScript {
 
 
     this.silent = false;
+    this.textTypes = TextTypes
     this.lexer = new Lexer(tokens);
-    this.parser = new RiScriptParser(tokens);
+    this.parser = new RiScriptParser(tokens, this.textTypes);
     this.RiTa = opts.RiTa || {
       VERSION: 0,
       randi: (k) => Math.floor(Math.random() * k),
@@ -241,15 +243,36 @@ class RiScript {
     return result;
   }
 
+  static escapeMarkdownLink(script) {
+    // [ '[', ']', '(', ')', '{', '}', '@', '#', '|', '=', '&'].forEach
+    //   (c => c.replace(new RegExp(c, 'g'), '\\' + c));
+    // script = script.replace(/&/g, '&amp;');
+    script = script.replace(/\[/g, '&lsqb;');
+    script = script.replace(/\]/g, '&rsqb;');
+    script = script.replace(/\(/g, '&lpar;');
+    script = script.replace(/\)/g, '&rpar;');
+    script = script.replace(/\//g, '&sol;');
+    // script = script.replace(/\]/g, '\\]');
+    return script;
+  }
+
+
   preParse(script, opts) {
     if (typeof script !== 'string') return '';
 
     const $ = this.Symbols;
 
     let input = script;
-    if (!this.v2Compatible) {
-      // handle parenthesized weights ??
+    if (!this.v2Compatible) { // handle parenthesized weights
       input = input.replace(/\((\s*\d+\s*)\)/g, '^$1^');
+    }
+
+    let matches = input.match(/\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g, ''); // md-links
+
+    if (matches && matches.length) {
+      // console.log('MD-LINKS: ', matches);
+      input = input.replace(matches[0], RiScript.escapeMarkdownLink(matches[0]));
+      // console.log('MD-LINKS-REP: ', input);
     }
 
     input = input.replace(/\/\*[^]*?(\r?\n)?\//g, ''); // multi-line comments
@@ -261,7 +284,7 @@ class RiScript {
     let lines = input.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
       // special-case: handle assignments alone on a line
-      if (/*!opts.noAddedSilence && */ this.RawAssignRE.test(lines[i])) {
+      if (this.RawAssignRE.test(lines[i])) {
         // a very convoluted way of preserving line-breaks inside groups
         let eqIdx = lines[i].indexOf('=');
         if (eqIdx < 0) throw Error('invalid state: no assigment: ' + lines[i]);

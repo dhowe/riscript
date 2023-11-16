@@ -36,11 +36,24 @@ describe('RiScript.v3', function () {
     it('Should be a single problematic test', function () { });
   });
   describe('Markdown', function () {
-    it('Should handle markdown headers ', function () {
+    it('Should handle markdown headers', function () {
       const res = riscript.evaluate('### Header');
       expect(res).eq('### Header');
     });
-    
+
+    it('Should handle markdown links', function () {
+      let res;
+      res = riscript.evaluate('Some [RiTa](https://rednoise.org/rita) code');
+      // console.log('GOT', res);
+      expect(res).eq('Some [RiTa](https://rednoise.org/rita) code');
+      res = riscript.evaluate('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');
+      console.log('GOT', res);
+      expect(res).eq('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');
+      return;
+      res = riscript.evaluate('Some [RiScript](/@dhowe/riscript) code');
+      expect(res).eq('Some [RiScript](/@dhowe/riscript) code');
+    });
+
     it('Should handle markdown @italics', function () {
       // TODO: if @ is not followed by {, escaped it automatically?
       const res = riscript.evaluate(`Some [RiScript](/\\@dhowe/riscript) *code*`);
@@ -131,8 +144,8 @@ describe('RiScript.v3', function () {
   });
 
   describe('Gates', function () {
-    it('simple gate', function () {
-      expect(riscript.evaluate('$[ @{ a: { $exists: true }}@ hello]')).eq('');
+    it('Should handle simplest gate', function () {
+      expect(riscript.evaluate('[ @{ a: { $exists: true }}@ hello]', 0, T)).eq('');
     });
 
     it('Should throw on bad gates', function () {
@@ -1614,7 +1627,7 @@ describe('RiScript.v3', function () {
         const res = RiGrammar.expand(script);
         // console.log(i, 'res=' + res);
         const parts = res.split(':');
-        expect(parts.length, 'FAIL: parts='+parts).eq(2);
+        expect(parts.length, 'FAIL: parts=' + parts).eq(2);
         if (parts[0] !== parts[1]) {
           ok = true;
           break;
@@ -2550,7 +2563,6 @@ describe('RiScript.v3', function () {
 
   describe('Entities', function () {
     it('Should decode escaped characters', function () {
-      // TODO: intermittent errors ???
 
       expect(riscript.evaluate('The (word) has parens')).eq(
         'The (word) has parens'
@@ -2564,9 +2576,19 @@ describe('RiScript.v3', function () {
         'The reference(1) has parens'
       );
 
+      expect(riscript.evaluate('The reference&lpar;1&rpar; has parens')).eq(
+        'The reference(1) has parens'
+      );
+
       expect(riscript.evaluate('The \\[word\\] has brackets', 0)).eq(
         'The [word] has brackets'
       );
+
+      expect(riscript.evaluate('The &lsqb;word&rsqb; has brackets', 0)).eq(
+        'The [word] has brackets'
+      );
+
+      expect(riscript.evaluate('The & is an ampersand')).eq('The & is an ampersand');
     });
 
     it('Should decode escaped characters in choices', function () {
@@ -2716,7 +2738,7 @@ bb',
       expect(RiScript._stringHash('revenue')).eq('1099842588');
     });
 
-    it('#preparseLines', function () {
+    it('#preParseLines', function () {
       // handle new weights
       expect(riscript.preParse('a (1) ')).eq('a ^1^ ');
       expect(riscript.preParse('a (foo) ')).eq('a (foo) ');
@@ -2742,6 +2764,17 @@ bb',
       expect(riscript.preParse('[ @{a: {}}@ hello]\n$a=2')).eq(
         '[ @{a: {}}@ hello]\n{$a=2}'
       );
+
+      expect(riscript.preParse('[ @{a: {}}@ hello]\n$a=2')).eq(
+        '[ @{a: {}}@ hello]\n{$a=2}'
+      );
+
+      let res = riscript.preParse('Some [RiTa](https://rednoise.org/rita?a=b&c=k) code');
+
+      let expected = 'Some &lsqb;RiTa&rsqb;&lpar;https:&sol;&sol;rednoise.org&sol;rita?a=b&c=k&rpar; code';
+      console.log('RES', res);
+      console.log('EXP', expected);
+      expect(res).eq(expected);
     });
 
 

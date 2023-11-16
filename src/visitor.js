@@ -244,10 +244,9 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   text(ctx) {
-    // if (ctx.Raw.length !== 1 && ctx.STAT.length !== 1 ) throw Error('[1] invalid text');
     if (Object.keys(ctx).length !== 1) throw Error('[2] invalid text');
-    const tok = ctx?.Raw || ctx?.STAT;
-    const image = tok[0].image;
+    const type = this.scripting.textTypes.filter(t => ctx[t]);
+    const image = ctx[type][0].image; // any of riscript.textTypes
     this.print('text', this.RiScript._escapeText("'" + image + "'"));
     return image;
   }

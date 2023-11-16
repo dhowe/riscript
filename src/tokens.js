@@ -66,6 +66,7 @@ function getTokens(v2Compatible) {
 
   const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
   const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
+  const AMP = createToken({ name: "AMP", pattern: /&/ });
   const OC = createToken({ name: "OC", pattern: new RegExp(Escaped.OPEN_CHOICE + '\\s*') });
   const CC = createToken({ name: "CC", pattern: new RegExp(`\\s*${Escaped.CLOSE_CHOICE}`) });
   const OR = createToken({ name: "OR", pattern: /\s*\|\s*/ });
@@ -80,7 +81,7 @@ function getTokens(v2Compatible) {
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
 
-  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, DYN, STAT, TF, OS, CS, PendingGate, Raw, EnterGate];
+  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, DYN, STAT, AMP, TF, OS, CS, PendingGate, Raw, EnterGate];
   const gateMode = [Gate, ExitGate];
 
   const multiMode = {
@@ -94,10 +95,12 @@ function getTokens(v2Compatible) {
   return { tokens: multiMode, Constants: { Symbols, Escaped } };
 }
 
+const TextTypes = ['Raw', 'STAT', 'AMP'];
+
 function escapeRegex(s) {
   return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
 // console.log(getTokens().tokens.modes.normal.map(t => t.name));
 
-export { getTokens };
+export { getTokens, TextTypes };
