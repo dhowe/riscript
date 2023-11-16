@@ -341,7 +341,17 @@ class RiScript {
   }
 
   // ========================= statics ===============================
+  static addTransform(name, def) {
+    return RiScript.transforms[name] = def;
+  }
 
+  static getTransforms() {
+    return Object.keys(RiScript.transforms);
+  }
+
+  static removeTransform(name) {
+    delete RiScript.transforms[name];
+  }
 
   // Default transform that adds an article
   static articlize(s) {
@@ -405,7 +415,7 @@ class RiScript {
     let t = s.replace(/\r?\n/g, '\\n');
     return quotify || !t.length ? "'" + t + "'" : t;
   }
-  
+
   static _stringHash(s) { // for testing
     let chr,
       hash = 0;

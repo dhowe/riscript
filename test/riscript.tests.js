@@ -861,8 +861,9 @@ describe('RiScript.v3', function () {
     it('Should resolve transformed choices', function () {
       expect(riscript.evaluate('[A B].toLowerCase()')).eq('a b');
       expect(riscript.evaluate('[A B | A B].toLowerCase()')).eq('a b');
-      // IF_RITA &&
       expect(riscript.evaluate('[A B | A B].articlize()')).eq('an A B');
+      expect(riscript.evaluate('$mammal=[dog | dog]\n$mammal.pluralize.ucf are unruly, but my $mammal is the best.'))
+        .eq('Dogs are unruly, but my dog is the best.');
     });
 
     it('Should resolve simple statics', function () {
@@ -1090,6 +1091,20 @@ describe('RiScript.v3', function () {
   });
 
   describe('Transforms', function () {
+
+    it('Should add/remove custom transforms', function () {
+      let addRhyme = function(word) { 
+        return word + ' rhymes with bog';
+      }
+      expect(RiScript.transforms.rhymes).is.undefined;
+      RiScript.addTransform('rhymes', addRhyme);
+      expect(RiScript.transforms.rhymes).is.not.undefined;
+      let res = RiScript.evaluate('The [dog | dog | dog].rhymes');
+      expect(res).eq('The dog rhymes with bog');
+      RiScript.removeTransform('rhymes');
+      expect(RiScript.transforms.rhymes).is.undefined;
+    });
+
     it('Should handle anonymous transforms', function () {
       // ensure $.tf() === ''.tf() === [].tf()
       const ctx = { capB: (s) => 'B' };
