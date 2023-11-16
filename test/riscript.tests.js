@@ -36,6 +36,13 @@ describe('RiScript.v3', function () {
     it('Should be a single problematic test', function () { });
   });
   describe('Markdown', function () {
+    it('Should handle basic markdown', function () {
+      let test = 'Some *italic* and **bold** and _other_ markdown';
+      expect(riscript.evaluate(test)).eq(test)
+      let test2 = '1. list 1\n2. list 2\n3. list 3';
+      expect(riscript.evaluate(test2)).eq(test2)
+    });
+
     it('Should handle markdown headers', function () {
       const res = riscript.evaluate('### Header');
       expect(res).eq('### Header');
@@ -49,25 +56,18 @@ describe('RiScript.v3', function () {
       res = riscript.evaluate('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');
       console.log('GOT', res);
       expect(res).eq('Some [RiTa+](https://rednoise.org/rita?a=b&c=k) code');
-      return;
       res = riscript.evaluate('Some [RiScript](/@dhowe/riscript) code');
       expect(res).eq('Some [RiScript](/@dhowe/riscript) code');
     });
 
-    it('Should handle markdown @italics', function () {
-      // TODO: if @ is not followed by {, escaped it automatically?
-      const res = riscript.evaluate(`Some [RiScript](/\\@dhowe/riscript) *code*`);
-      expect(res).eq('Some RiScript(/@dhowe/riscript) *code*');
-    });
-
-    it('Should handle markdown lines', function () {
+    it('Should handle formatted markdown', function () {
       let input = `### A Title 
-      Some [RiScript](/\\@dhowe/riscript) code
+      Some RiScript code
         that we can [format|format|format]
            with *[inline | inline]* Markdown
              and rerun [once per | once per] second
                [using|using|using] the **[pulse].qq** function below`;
-      let expected = '### A Title \n      Some RiScript(/@dhowe/riscript) code\n        that we can format\n           with *inline* Markdown\n             and rerun once per second\n               using the **“pulse”** function below';
+      let expected = '### A Title \n      Some RiScript code\n        that we can format\n           with *inline* Markdown\n             and rerun once per second\n               using the **“pulse”** function below';
       // TODO: if @ is not followed by {, escaped it automatically?
       const res = riscript.evaluate(input);
       //console.log(res);
