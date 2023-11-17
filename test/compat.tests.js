@@ -2,7 +2,10 @@ import { expect } from 'chai';
 
 import RiScript from './index.js';
 
-describe('RiScript.v2', function () {
+const version = RiScript.VERSION;
+const title = `RiScript.compat ${isNum(version) ? `v${version}` : '[DEV]'}`;
+
+describe(title, function () {
   /* eslint-disable no-unused-vars */
   const TRACE = { trace: 1 };
   const LTR = 0;
@@ -18,6 +21,7 @@ describe('RiScript.v2', function () {
     riscript = new RiScript({ compatibility: 2 });
     RiScriptVisitor = RiScript.Visitor;
     IfRiTa = typeof riscript.RiTa.VERSION === 'string';
+    RiScript.RiTaWarnings.silent = !IfRiTa;
   });
 
   describe('Assignment.v2', function () {
@@ -125,7 +129,7 @@ describe('RiScript.v2', function () {
   });
 
   describe('Evaluation.v2', function () {
-    it('Should handle abbreviations.v2', function () {
+    it('Should handle abbreviations', function () {
       expect(riscript.evaluate('The C.D failed', {})).eq('The C.D failed');
       expect(
         riscript.evaluate('The $C.D failed', {
@@ -135,7 +139,7 @@ describe('RiScript.v2', function () {
       ).eq('The c failed');
     });
 
-    it('Should resolve expressions.v2', function () {
+    it('Should resolve expressions', function () {
       expect(riscript.evaluate('foo')).eq('foo');
       expect(riscript.evaluate('(foo)', {})).eq('foo');
       expect(riscript.evaluate('foo!', {})).eq('foo!');
@@ -172,8 +176,7 @@ describe('RiScript.v2', function () {
     it('Should resolve transformed choices', function () {
       expect(riscript.evaluate('(A B).toLowerCase()')).eq('a b');
       expect(riscript.evaluate('(A B | A B).toLowerCase()')).eq('a b');
-      IfRiTa &&
-        expect(riscript.evaluate('(A B | A B).articlize()')).eq('an A B');
+      expect(riscript.evaluate('(A B | A B).articlize()')).eq('an A B');
     });
 
     it('Should resolve simple statics', function () {
@@ -383,7 +386,8 @@ describe('RiScript.v2', function () {
       expect(/(man|boy):(man|boy)/.test(res)).true;
     });
 
-    IfRiTa && it('Should repeat choices with randomSeed', function () {
+    it('Should repeat choices with randomSeed', function () {
+      if (!('randomSeed' in riscript.RiTa)) return;
       const seed = Math.random() * Number.MAX_SAFE_INTEGER;
       const script = '$a=(1|2|3|4|5|6)\n$a';
       RiScript.RiTa.randomSeed(seed);
@@ -441,7 +445,7 @@ describe('RiScript.v2', function () {
       expect(riscript.evaluate('(A B | A B)')).eq('A B');
       expect(riscript.evaluate('(A B).toLowerCase()')).eq('a b');
       expect(riscript.evaluate('(A B | A B).toLowerCase()', 0)).eq('a b');
-      IfRiTa && expect(riscript.evaluate('(A B | A B).articlize()', 0)).eq('an A B');
+      expect(riscript.evaluate('(A B | A B).articlize()', 0)).eq('an A B');
       riscript.RiTa.SILENCE_LTS = silent;
     });
 
@@ -505,7 +509,7 @@ describe('RiScript.v2', function () {
   });
 
   describe('Entities.v2', function () {
-    it('Should decode escaped characters.v2', function () {
+    it('Should decode escaped characters', function () {
       // TODO: intermittent errors ???
 
       expect(riscript.evaluate('The (word) has parens')).eq(
@@ -529,7 +533,7 @@ describe('RiScript.v2', function () {
       );
     });
 
-    it('Should decode escaped characters in choices.v2', function () {
+    it('Should decode escaped characters in choices', function () {
       expect(riscript.evaluate('The (\\(word\\) | \\(word\\)) has parens')).eq(
         'The (word) has parens'
       );
@@ -540,3 +544,7 @@ describe('RiScript.v2', function () {
     });
   });
 });
+
+function isNum(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}

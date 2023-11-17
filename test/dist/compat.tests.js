@@ -1,17 +1,17 @@
 import { expect } from "chai";
 import RiScript from "./index.js";
-describe("RiScript.v2", function() {
+const title = `RiScript.compat ${isNum(RiScript.VERSION) ? "v" + RiScript.VERSION : "[DEV]"}`;
+describe(title, function() {
   const TRACE = { trace: 1 };
   const LTR = 0;
   const T = TRACE;
   const PL = { preserveLookups: 1 };
   const TRX = { trace: 1, traceTx: 1 };
   const TPL = { preserveLookups: 1, trace: 1 };
-  let riscript, RiScriptVisitor, IfRiTa;
+  let riscript, RiScriptVisitor;
   before(function() {
     riscript = new RiScript({ compatibility: 2 });
     RiScriptVisitor = RiScript.Visitor;
-    IfRiTa = typeof riscript.RiTa.VERSION === "string";
   });
   describe("Assignment.v2", function() {
     it("Should end single assignments on line break", function() {
@@ -132,7 +132,7 @@ describe("RiScript.v2", function() {
     it("Should resolve transformed choices", function() {
       expect(riscript.evaluate("(A B).toLowerCase()")).eq("a b");
       expect(riscript.evaluate("(A B | A B).toLowerCase()")).eq("a b");
-      IfRiTa && expect(riscript.evaluate("(A B | A B).articlize()")).eq("an A B");
+      expect(riscript.evaluate("(A B | A B).articlize()")).eq("an A B");
     });
     it("Should resolve simple statics", function() {
       expect(riscript.evaluate("{#foo=bar}baz", {})).eq("baz");
@@ -296,7 +296,9 @@ describe("RiScript.v2", function() {
       const res = riscript.evaluate("$bar:$bar", { bar: "(man | boy)" });
       expect(/(man|boy):(man|boy)/.test(res)).true;
     });
-    IfRiTa && it("Should repeat choices with randomSeed", function() {
+    it("Should repeat choices with randomSeed", function() {
+      if (!("randomSeed" in riscript.RiTa))
+        return;
       const seed = Math.random() * Number.MAX_SAFE_INTEGER;
       const script = "$a=(1|2|3|4|5|6)\n$a";
       RiScript.RiTa.randomSeed(seed);
@@ -346,7 +348,7 @@ describe("RiScript.v2", function() {
       expect(riscript.evaluate("(A B | A B)")).eq("A B");
       expect(riscript.evaluate("(A B).toLowerCase()")).eq("a b");
       expect(riscript.evaluate("(A B | A B).toLowerCase()", 0)).eq("a b");
-      IfRiTa && expect(riscript.evaluate("(A B | A B).articlize()", 0)).eq("an A B");
+      expect(riscript.evaluate("(A B | A B).articlize()", 0)).eq("an A B");
       riscript.RiTa.SILENCE_LTS = silent;
     });
     it("Should resolve choices in expressions", function() {
@@ -432,3 +434,6 @@ describe("RiScript.v2", function() {
     });
   });
 });
+function isNum(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}

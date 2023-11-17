@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import RiScript from "./index.js";
-describe("RiScript.v3", function() {
+const title = `RiScript.v3 ${isNum(RiScript.VERSION) ? "v" + RiScript.VERSION : "[DEV]"}`;
+describe(title, function() {
   const TRACE = { trace: 1 };
   const LTR = 0;
   const T = TRACE;
@@ -13,10 +14,7 @@ describe("RiScript.v3", function() {
     RiGrammar = RiScript.Grammar;
     RiScriptVisitor = RiScript.Visitor;
     IfRiTa = typeof riscript.RiTa.VERSION === "string";
-    console.log(
-      "RiScript v" + RiScript.VERSION,
-      IfRiTa ? "RiTa v" + riscript.RiTa.VERSION : "No RiTa"
-    );
+    RiScript.RiTaWarnings.silent = !IfRiTa;
   });
   LTR && describe("OneOff", function() {
     it("Should be a single problematic test", function() {
@@ -942,10 +940,14 @@ describe("RiScript.v3", function() {
       expect(RiScript.transforms.rhymes).is.undefined;
       RiScript.addTransform("rhymes", addRhyme);
       expect(RiScript.transforms.rhymes).is.not.undefined;
-      let res = RiScript.evaluate("The [dog | dog | dog].rhymes");
+      let res = riscript.evaluate("The [dog | dog | dog].rhymes");
       expect(res).eq("The dog rhymes with bog");
       RiScript.removeTransform("rhymes");
       expect(RiScript.transforms.rhymes).is.undefined;
+      riscript.RiTa.SILENT = true;
+      res = riscript.evaluate("The [dog | dog | dog].rhymes");
+      expect(res).eq("The dog.rhymes");
+      riscript.RiTa.SILENT = false;
     });
     it("Should handle anonymous transforms", function() {
       const ctx = { capB: (s) => "B" };
@@ -1012,7 +1014,11 @@ describe("RiScript.v3", function() {
       expect(riscript.evaluate("How many [].quotify() do you have?")).eq(
         "How many \u201C\u201D do you have?"
       );
+      expect(
+        riscript.evaluate("How many [teeth].toUpperCase() do you have?", 0)
+      ).eq("How many TEETH do you have?");
       expect(riscript.evaluate("That is [].articlize().", 0)).eq("That is .");
+      expect(riscript.evaluate("That is $.articlize().", 0)).eq("That is .");
       expect(riscript.evaluate("That is an [ant].capitalize().")).eq(
         "That is an Ant."
       );
@@ -1028,9 +1034,6 @@ describe("RiScript.v3", function() {
       expect(
         riscript.evaluate("[deeply-nested $art].art()", { art: "emotion" })
       ).eq("a deeply-nested emotion");
-      expect(
-        riscript.evaluate("How many [teeth].toUpperCase() do you have?", 0)
-      ).eq("How many TEETH do you have?");
       expect(riscript.evaluate("That is [ant].articlize().")).eq(
         "That is an ant."
       );
@@ -1145,19 +1148,12 @@ describe("RiScript.v3", function() {
       expect(riscript.evaluate("The [boy | boy].toUpperCase() ate.")).eq(
         "The BOY ate."
       );
-      IfRiTa && expect(
-        riscript.evaluate("How many [tooth | tooth].pluralize() do you have?")
-      ).eq("How many teeth do you have?");
+      IfRiTa && expect(riscript.evaluate("How many [tooth | tooth].pluralize() do you have?")).eq("How many teeth do you have?");
     });
     it("Should preserve non-existent transforms", function() {
-      const silent = riscript.RiTa.SILENT;
-      riscript.RiTa.SILENT = true;
       expect(riscript.evaluate("[a | a].up()", {})).eq("a.up()");
-      expect(riscript.evaluate("$dog.toUpperCase()", {})).eq(
-        "$dog.toUpperCase()"
-      );
+      expect(riscript.evaluate("$dog.toUpperCase()", {})).eq("$dog.toUpperCase()");
       expect(riscript.evaluate("The $C.D failed", {})).eq("The $C.D failed");
-      riscript.RiTa.SILENT = silent;
     });
     it("Should resolve symbol transforms", function() {
       expect(riscript.evaluate("$dog.toUpperCase()", { dog: "spot" })).eq(
@@ -1495,7 +1491,7 @@ index#${i}=[${syls[i]}]
       verb: "shoots"
     };
     const grammars = [sentences1, sentences2, sentences3];
-    it("should call constructor", function() {
+    it("Should call constructor", function() {
       expect(typeof new RiGrammar() !== "undefined");
     });
     it("Should support norepeat rules", function() {
@@ -1547,7 +1543,7 @@ index#${i}=[${syls[i]}]
       }
       expect(fail).false;
     });
-    it("should call constructorJSON", function() {
+    it("Should call constructorJSON", function() {
       const json = JSON.stringify(sentences1);
       const gr1 = new RiGrammar(JSON.parse(json));
       expect(gr1 instanceof RiGrammar).true;
@@ -1559,7 +1555,7 @@ index#${i}=[${syls[i]}]
       );
       expect(() => new RiGrammar("notjson")).to.throw();
     });
-    it("should call static expandFrom", function() {
+    it("Should call static expandFrom", function() {
       const rg = new RiGrammar();
       rg.addRule("start", "$pet");
       rg.addRule("pet", "[$bird | $mammal]");
@@ -1632,7 +1628,7 @@ index#${i}=[${syls[i]}]
       rs = rg.expand({ start: "1line" }, { trace: 0 });
       expect(rs).to.be.oneOf(["Dave", "Jill", "Pete"]);
     });
-    it("should call setRules", function() {
+    it("Should call setRules", function() {
       let rg = new RiGrammar();
       expect(typeof rg.rules !== "undefined");
       expect(typeof rg.rules.start === "undefined");
@@ -1648,7 +1644,7 @@ index#${i}=[${syls[i]}]
       rg.setRules('{"start":"a"}');
       expect(rg.expand().length > 0);
     });
-    it("should call fromJSON with string", function() {
+    it("Should call fromJSON with string", function() {
       grammars.forEach((g) => {
         const rg = RiGrammar.fromJSON(JSON.stringify(g));
         expect(typeof rg.rules !== "undefined");
@@ -1657,7 +1653,7 @@ index#${i}=[${syls[i]}]
         expect(rg.expand().length > 0);
       });
     });
-    it("should call removeRule", function() {
+    it("Should call removeRule", function() {
       grammars.forEach((g) => {
         const rg1 = new RiGrammar(g);
         expect(rg1.rules.start).not.undefined;
@@ -1673,7 +1669,7 @@ index#${i}=[${syls[i]}]
         rg1.removeRule(void 0);
       });
     });
-    it("should call static removeRule", function() {
+    it("Should call static removeRule", function() {
       const rg = new RiGrammar();
       rg.addRule("start", "$pet");
       rg.addRule("pet", "[$bird | $mammal]");
@@ -1692,13 +1688,13 @@ index#${i}=[${syls[i]}]
       expect(!rg.rules.start).not.undefined;
       expect(rg.rules.mammal).not.undefined;
     });
-    it("should throw on missing rules", function() {
+    it("Should throw on missing rules", function() {
       let rg = new RiGrammar();
       expect(() => rg.expand()).to.throw();
       rg = new RiGrammar({ start: "My rule" });
       expect(() => rg.expand("bad")).to.throw();
     });
-    it("should call expandFrom", function() {
+    it("Should call expandFrom", function() {
       const rg = new RiGrammar();
       rg.addRule("start", "$pet");
       rg.addRule("pet", "[$bird | $mammal]");
@@ -1723,7 +1719,7 @@ index#${i}=[${syls[i]}]
       expect(() => new RiGrammar().removeRule("rule")).not.to.throw();
       expect(() => new RiGrammar().removeRule("nonexistent")).not.to.throw();
     });
-    it("should call toString", function() {
+    it("Should call toString", function() {
       let rg = new RiGrammar({ start: "pet" });
       expect(rg.toString()).eq('{\n  "start": "pet"\n}');
       rg = new RiGrammar({ start: "$pet", pet: "dog" });
@@ -1757,7 +1753,7 @@ index#${i}=[${syls[i]}]
         '{\n  "start": "$pet.articlize()",\n  "#pet": "[dog | cat]"\n}'
       );
     });
-    it("should call toString with arg", function() {
+    it("Should call toString with arg", function() {
       const lb = { linebreak: "<br/>" };
       let rg = new RiGrammar({ start: "pet" });
       expect(rg.toString(lb), '{<br/>  "start": "pet"<br/>}');
@@ -1786,7 +1782,7 @@ index#${i}=[${syls[i]}]
         '{<br/>  "start": "$pet.articlize()",<br/>  "#pet": "dog | cat"<br/>}'
       );
     });
-    it("should call expand", function() {
+    it("Should call expand", function() {
       let rg = new RiGrammar();
       rg.addRule("start", "pet");
       expect(rg.expand(), "pet");
@@ -1807,7 +1803,7 @@ index#${i}=[${syls[i]}]
       expect(() => rg.expand({ start: "a$pet" })).to.throw();
       expect(() => new RiGrammar().addRule("pet", "dog").expand()).to.throw();
     });
-    it("should override dynamic default", function() {
+    it("Should override dynamic default", function() {
       let rg = new RiGrammar();
       rg.addRule("start", "$rule $rule");
       rg.addRule("rule", "[a|b|c|d|e]");
@@ -1831,7 +1827,7 @@ index#${i}=[${syls[i]}]
         expect(parts[0]).eq(parts[1]);
       }
     });
-    it("should call expand.weights", function() {
+    it("Should call expand.weights", function() {
       const rg = new RiGrammar();
       rg.addRule("start", "$rule1");
       rg.addRule("rule1", "cat | dog | boy");
@@ -1850,7 +1846,7 @@ index#${i}=[${syls[i]}]
       }
       expect(found1 && found2 && found3);
     });
-    it("should call expandFrom.weights", function() {
+    it("Should call expandFrom.weights", function() {
       const rg = new RiGrammar();
       rg.addRule("start", "$pet");
       rg.addRule("pet", "$bird (9) | $mammal");
@@ -1869,7 +1865,7 @@ index#${i}=[${syls[i]}]
       }
       expect(hawks > dogs * 2, "got h=" + hawks + ", " + dogs);
     });
-    it("should call addRule", function() {
+    it("Should call addRule", function() {
       const rg = new RiGrammar();
       rg.addRule("start", "$pet");
       expect(typeof rg.rules.start).not.undefined;
@@ -1881,7 +1877,7 @@ index#${i}=[${syls[i]}]
       expect(typeof rg.rules.start).not.undefined;
       expect(() => rg.addRule("start")).to.throw();
     });
-    it("should call expandFrom.weights.static", function() {
+    it("Should call expandFrom.weights.static", function() {
       const rg = new RiGrammar();
       rg.addRule("start", "$pet $pet");
       rg.addRule("#pet", "$bird (9) | $mammal");
@@ -1901,7 +1897,7 @@ index#${i}=[${syls[i]}]
       }
       expect(hawks > dogs), "got h=" + hawks + ", d=" + dogs;
     });
-    it("should handle transforms", function() {
+    it("Should handle transforms", function() {
       let rg = new RiGrammar();
       rg.addRule("start", "$pet.toUpperCase()");
       rg.addRule("pet", "dog");
@@ -1930,7 +1926,7 @@ index#${i}=[${syls[i]}]
       rg.addRule("pet", "ant");
       expect(rg.expand(), "An ant");
     });
-    it("should handle transforms on statics", function() {
+    it("Should handle transforms on statics", function() {
       let rg = new RiGrammar();
       rg.addRule("start", "$pet.toUpperCase()");
       rg.addRule("#pet", "dog");
@@ -1966,7 +1962,7 @@ index#${i}=[${syls[i]}]
         expect(rg.expand()).to.be.oneOf(["Ant ant", "Eater eater"]);
       }
     });
-    it("should allow context in expand", function() {
+    it("Should allow context in expand", function() {
       let ctx, rg;
       ctx = { randomPosition: () => "job type" };
       rg = new RiGrammar({ start: "My $.randomPosition()." }, ctx);
@@ -1988,7 +1984,7 @@ index#${i}=[${syls[i]}]
       expect(rg.expand({ start: "#rule" })).eq("My job type.");
       expect(rg.expand({ start: "$rule" })).eq("My job type.");
     });
-    it("should resolve rules in context", function() {
+    it("Should resolve rules in context", function() {
       let ctx, rg;
       ctx = { rule: "[job | mob]" };
       rg = new RiGrammar({ start: "$rule $rule" }, ctx);
@@ -1999,22 +1995,22 @@ index#${i}=[${syls[i]}]
         expect(rg.expand(T)).to.be.oneOf(["job job", "mob mob"]);
       }
     });
-    LTR && it("should handle custom transforms on statics", function() {
+    LTR && it("Should handle custom transforms on statics", function() {
       const context2 = { "#randomPosition": () => "job type" };
       const rg = new RiGrammar({ start: "My $.randomPosition()." });
       expect(rg.expand(context2)).eq("My job type.");
     });
-    it("should handle custom transforms", function() {
+    it("Should handle custom transforms", function() {
       const context2 = { randomPosition: () => "job type" };
       const rg = new RiGrammar({ start: "My $.randomPosition()." }, context2);
       expect(rg.expand()).eq("My job type.");
     });
-    it("should handle phrases starting with custom transforms", function() {
+    it("Should handle phrases starting with custom transforms", function() {
       const context2 = { randomPosition: () => "job type" };
       const rg = new RiGrammar({ start: "$.randomPosition()." }, context2);
       expect(rg.expand()).eq("job type.");
     });
-    it("should handle custom transforms with target", function() {
+    it("Should handle custom transforms with target", function() {
       const context2 = { randomPosition: (z) => z + " job type" };
       let rg = new RiGrammar({ start: "My [new].randomPosition()." }, context2);
       expect(rg.expand()).eq("My new job type.");
@@ -2022,7 +2018,7 @@ index#${i}=[${syls[i]}]
       rg = new RiGrammar({ start: "My $new.randomPosition." }, context2);
       expect(rg.expand()).eq("My new job type.");
     });
-    it("should handle paired assignments via transforms", function() {
+    it("Should handle paired assignments via transforms", function() {
       let rules2 = {
         start: "$name was our hero and $pronoun was fantastic.",
         name: "$boys {$pronoun=he} | $girls {$pronoun=she}",
@@ -2059,7 +2055,7 @@ index#${i}=[${syls[i]}]
         "Jake was our hero and Jake was fantastic."
       ]);
     });
-    it("should handle symbol transforms", function() {
+    it("Should handle symbol transforms", function() {
       let rg;
       rg = new RiGrammar({
         start: "$tmpl",
@@ -2078,7 +2074,7 @@ index#${i}=[${syls[i]}]
       });
       expect(rg.expand({ trace: 0 }), "mice");
     });
-    it("should handle symbol transforms on statics", function() {
+    it("Should handle symbol transforms on statics", function() {
       let rg;
       rg = new RiGrammar({
         start: "$tmpl",
@@ -2101,7 +2097,7 @@ index#${i}=[${syls[i]}]
         expect(rg.expand()).to.be.oneOf(["mouses mouse", "ants ant"]);
       }
     });
-    it("should handle special characters", function() {
+    it("Should handle special characters", function() {
       let rg, res, s;
       s = '{ "start": "hello &#124; name" }';
       rg = RiGrammar.fromJSON(s);
@@ -2132,7 +2128,7 @@ index#${i}=[${syls[i]}]
         expect(res === "hello" || res === "name");
       }
     });
-    it("should handle special characters with statics", function() {
+    it("Should handle special characters with statics", function() {
       let rg, res, s;
       s = '{ "start": "hello &#124; name" }';
       rg = RiGrammar.fromJSON(s);
@@ -2163,7 +2159,7 @@ index#${i}=[${syls[i]}]
         expect(res === "hello" || res === "name");
       }
     });
-    it("should call to/from JSON", function() {
+    it("Should call to/from JSON", function() {
       let json, rg, rg2, generatedJSON;
       expect(function() {
         const gra = RiGrammar.fromJSON({ a: "b" });
@@ -2449,3 +2445,6 @@ index#${i}=[${syls[i]}]
     return x instanceof RegExp && y instanceof RegExp && x.source === y.source && x.global === y.global && x.ignoreCase === y.ignoreCase && x.multiline === y.multiline;
   }
 });
+function isNum(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}

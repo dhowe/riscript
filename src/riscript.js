@@ -67,13 +67,13 @@ class RiScript {
   static VERSION = '[VI]{{inject}}[/VI]';
 
   static Query = RiQuery;
-  static RiTaWarnings = { plurals: false, phones: false };
+  static RiTaWarnings = { plurals: false, phones: false, silent: false };
 
   static evaluate(script, context, opts = {}) {
     return new RiScript(opts).evaluate(script, context, opts);
   }
 
-  constructor(opts = {}) { // private ?
+  constructor(opts = { /*RiTa:0, compatibility: 2*/ }) {
     this.visitor = 0; // created in evaluate() or passed in here
     this.v2Compatible = opts.compatibility === 2;
     const { Constants, tokens } = getTokens(this.v2Compatible);
@@ -106,11 +106,10 @@ class RiScript {
       Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
     }
 
-    this.silent = false;
     this.textTypes = TextTypes
     this.lexer = new Lexer(tokens);
     this.parser = new RiScriptParser(tokens, this.textTypes);
-    this.RiTa = opts.RiTa || {
+    this.RiTa = (opts.RiTa && opts.RiTa.VERSION) ? opts.RiTa : {
       VERSION: 0,
       randi: (k) => Math.floor(Math.random() * k),
     }
@@ -189,7 +188,7 @@ class RiScript {
     }
 
     // check for unresolved symbols ([$#]) after removing HTML entities
-    if (!this.silent && !this.RiTa.SILENT) {
+    if (!opts.silent && !this.RiTa.SILENT) {
       if (this.regex.ValidSymbol.test(expr.replace(HtmlEntities, ''))) {
         console.warn('[WARN] Unresolved symbol(s) in "'
           + expr.replace(/\n/g, '\\n') + '" ');
@@ -359,8 +358,8 @@ class RiScript {
 
     let first = s.split(/\s+/)[0];
 
-    if (!RiScript.RiTa?.phones) {
-      if (!RiScript.RiTaWarnings.phones) {
+    if (!this.RiTa?.phones) {
+      if (!RiScript.RiTaWarnings.phones && !RiScript.RiTaWarnings.silent) {
         console.warn('[WARN] Install RiTa for proper phonemes');
         RiScript.RiTaWarnings.phones = true;
       }
@@ -368,7 +367,7 @@ class RiScript {
       return (/^[aeiou].*/i.test(first) ? 'an ' : 'a ') + s;
     }
 
-    let phones = RiScript.RiTa.phones(first, { silent: true });
+    let phones = this.RiTa.phones(first, { silent: true });
 
     // could still be original word if no phones found
     return (
@@ -393,14 +392,14 @@ class RiScript {
 
   // Default transform that pluralizes a string (requires RiTa)
   static pluralize(s) {
-    if (!RiScript.RiTa?.pluralize) {
-      if (!RiScript.RiTaWarnings.plurals) {
+    if (!this.RiTa?.pluralize) {
+      if (!RiScript.RiTaWarnings.plurals && !RiScript.RiTaWarnings.silent) {
         RiScript.RiTaWarnings.plurals = true;
         console.warn('[WARN] Install RiTa for proper pluralization');
       }
       return s.endsWith('s') ? s : s + 's';
     }
-    return RiScript.RiTa.pluralize(s);
+    return this.RiTa.pluralize(s);
   }
 
   // Default no-op transform

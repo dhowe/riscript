@@ -4,6 +4,7 @@ class BaseVisitor {
     this.input = 0;
 
     this.path = '';
+    this.nowarn = false;
     this.tracePath = true;
     this.scripting = riScript;
     this.warnOnInvalidGates = false;
@@ -70,8 +71,10 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   start(opts = {}) {
+    
     this.input = opts.input;
     this.trace = opts.trace;
+    this.nowarn = opts.silent;
     this.traceTx = opts.traceTx;
     if (!opts.cst) throw Error('no cst');
     return super.visit(opts.cst);
@@ -122,7 +125,7 @@ class RiScriptVisitor extends BaseVisitor {
       if (!this.warnOnInvalidGates) {
         throw Error(`Invalid gate[2]: "@${raw}@"\n\nRootCause -> ${e}`);
       }
-      if (!this.scripting.RiTa.SILENT && !this.scripting.silent) {
+      if (!this.scripting.RiTa.SILENT && !this.nowarn) {
         console.warn(`[WARN] Ignoring invalid gate: @${raw}@\n`, e);
       }
       return { decision: 'accept' };
@@ -173,11 +176,11 @@ class RiScriptVisitor extends BaseVisitor {
 
   assign(ctx, opts) {
     const sym = ctx.SYM[0].image;
-    let value;
-    let info;
+
     const ident = sym.replace(this.scripting.regex.AnySymbol, '');
     const isStatic = sym.startsWith(this.symbols.STATIC);
 
+    let value, info;
     if (isStatic) {
       value = this.visit(ctx.expr);
       if (this.scripting.isParseable(value)) {
@@ -667,7 +670,7 @@ class RiScriptVisitor extends BaseVisitor {
       if (target.hasOwnProperty(tx)) {
         result = target[tx];
       } else {
-        if (!this.scripting.RiTa.SILENT && !this.scripting.silent) {
+        if (!this.scripting.RiTa.SILENT && !this.silent) {
           console.warn('[WARN] Unresolved transform: ' + raw);
         }
 
