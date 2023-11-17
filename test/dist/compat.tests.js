@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import RiScript from "./index.js";
-const title = `RiScript.compat ${isNum(RiScript.VERSION) ? "v" + RiScript.VERSION : "[DEV]"}`;
+const version = RiScript.VERSION;
+const title = `RiScript.compat ${isNum(version) ? `v${version}` : "[DEV]"}`;
 describe(title, function() {
   const TRACE = { trace: 1 };
   const LTR = 0;
@@ -8,10 +9,12 @@ describe(title, function() {
   const PL = { preserveLookups: 1 };
   const TRX = { trace: 1, traceTx: 1 };
   const TPL = { preserveLookups: 1, trace: 1 };
-  let riscript, RiScriptVisitor;
+  let riscript, RiScriptVisitor, IfRiTa;
   before(function() {
     riscript = new RiScript({ compatibility: 2 });
     RiScriptVisitor = RiScript.Visitor;
+    IfRiTa = typeof riscript.RiTa.VERSION === "string";
+    RiScript.RiTaWarnings.silent = !IfRiTa;
   });
   describe("Assignment.v2", function() {
     it("Should end single assignments on line break", function() {
@@ -89,7 +92,7 @@ describe(title, function() {
     });
   });
   describe("Evaluation.v2", function() {
-    it("Should handle abbreviations.v2", function() {
+    it("Should handle abbreviations", function() {
       expect(riscript.evaluate("The C.D failed", {})).eq("The C.D failed");
       expect(
         riscript.evaluate("The $C.D failed", {
@@ -98,7 +101,7 @@ describe(title, function() {
         })
       ).eq("The c failed");
     });
-    it("Should resolve expressions.v2", function() {
+    it("Should resolve expressions", function() {
       expect(riscript.evaluate("foo")).eq("foo");
       expect(riscript.evaluate("(foo)", {})).eq("foo");
       expect(riscript.evaluate("foo!", {})).eq("foo!");
@@ -407,7 +410,7 @@ describe(title, function() {
     });
   });
   describe("Entities.v2", function() {
-    it("Should decode escaped characters.v2", function() {
+    it("Should decode escaped characters", function() {
       expect(riscript.evaluate("The (word) has parens")).eq(
         "The word has parens"
       );
@@ -424,7 +427,7 @@ describe(title, function() {
         "The (word) has brackets"
       );
     });
-    it("Should decode escaped characters in choices.v2", function() {
+    it("Should decode escaped characters in choices", function() {
       expect(riscript.evaluate("The (\\(word\\) | \\(word\\)) has parens")).eq(
         "The (word) has parens"
       );

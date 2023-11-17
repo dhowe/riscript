@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import RiScript from "./index.js";
-const title = `RiScript.v3 ${isNum(RiScript.VERSION) ? "v" + RiScript.VERSION : "[DEV]"}`;
+const version = RiScript.VERSION;
+const title = `RiScript.v3 ${isNum(version) ? `v${version}` : "[DEV]"}`;
 describe(title, function() {
   const TRACE = { trace: 1 };
   const LTR = 0;
@@ -944,10 +945,8 @@ describe(title, function() {
       expect(res).eq("The dog rhymes with bog");
       RiScript.removeTransform("rhymes");
       expect(RiScript.transforms.rhymes).is.undefined;
-      riscript.RiTa.SILENT = true;
-      res = riscript.evaluate("The [dog | dog | dog].rhymes");
+      res = riscript.evaluate("The [dog | dog | dog].rhymes", 0, { silent: true });
       expect(res).eq("The dog.rhymes");
-      riscript.RiTa.SILENT = false;
     });
     it("Should handle anonymous transforms", function() {
       const ctx = { capB: (s) => "B" };
@@ -1151,9 +1150,9 @@ describe(title, function() {
       IfRiTa && expect(riscript.evaluate("How many [tooth | tooth].pluralize() do you have?")).eq("How many teeth do you have?");
     });
     it("Should preserve non-existent transforms", function() {
-      expect(riscript.evaluate("[a | a].up()", {})).eq("a.up()");
-      expect(riscript.evaluate("$dog.toUpperCase()", {})).eq("$dog.toUpperCase()");
-      expect(riscript.evaluate("The $C.D failed", {})).eq("The $C.D failed");
+      expect(riscript.evaluate("[a | a].up()", 0, { silent: true })).eq("a.up()");
+      expect(riscript.evaluate("$dog.toUpperCase()", 0, { silent: true })).eq("$dog.toUpperCase()");
+      expect(riscript.evaluate("The $C.D failed", 0, { silent: true })).eq("The $C.D failed");
     });
     it("Should resolve symbol transforms", function() {
       expect(riscript.evaluate("$dog.toUpperCase()", { dog: "spot" })).eq(
