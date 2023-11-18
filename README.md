@@ -69,7 +69,7 @@ Create a new file on your desktop called 'test.html' with the following lines, s
 
 #### With [p5.js](http://p5js.org/)
  
-Create a new file on your desktop called 'test.html', add the following lines, save and drag it into a browser:
+Create a new file on your desktop called 'test.html' with the following lines,, save and drag it into a browser:
 
 ```html
 <html>
