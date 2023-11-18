@@ -1,2 +1,2 @@
-import RiScript from "../../dist/riscript.js";
-export {  RiScript as default };
+import { RiScript } from "../../dist/riscript.js";
+export { RiScript };

@@ -10,7 +10,7 @@
     "test": "NODE_ENV=dev mocha",
     "test:dist": "NODE_ENV=dev mocha test/dist",
     "build": "rm -rf ./dist/ && npx tsup",
-    "pub": "./npnb/source/cli.js --no-release-draft patch",
+    "pub": "./npnb/source/cli.js --no-release-draft --test-script test:dist patch",
     "prepub": "npm version patch && npm run build",
     "types": "npx tsc"
   },
