@@ -7,7 +7,8 @@ RiScript is a grammar expansion micro-language designed for writers working in c
 ### Installation
 
 * For node: `npm install riscript`
-* For [browsers](#a-simple-sketch): ```<script src="https://unpkg.com/riscript"></script>```
+* For [browsers](#a-simple-browser-sketch): ```<script src="https://unpkg.com/riscript"></script>```
+* For [esm-browsers](#an-esm-browser-sketch):
 * For [developers](#developing)
 
 
@@ -46,7 +47,7 @@ Please make contributions via [fork-and-pull](https://reflectoring.io/github-for
 
 ## Quick Start 
 
-#### A simple sketch
+#### A Simple Browser Sketch
  
 Create a new file on your desktop called 'test.html' with the following lines, save and drag it into a browser:
 
@@ -62,6 +63,27 @@ Create a new file on your desktop called 'test.html' with the following lines, s
 </script>
 <div id="content" width=200 height=200></div>
 </html>
+```
+
+#### An ESM Browser Sketch
+ 
+Create a new file on your desktop called 'test.html' with the following lines, save and drag it into a browser:
+
+```html
+<html>
+<body>
+  <div id="content" width=200 height=200></div>
+  <script type="module">
+
+    import { RiScript } from "https://esm.sh/riscript";
+    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].\
+                   $name finds $place cold and wet in winter.";
+    let html = RiScript.evaluate(script);
+
+    document.getElementById("content").innerHTML = html; 
+  </script>
+</body>
+<html>
 ```
 
 #### With [p5.js](http://p5js.org/)
