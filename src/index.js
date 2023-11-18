@@ -5,4 +5,4 @@ import { RiScriptVisitor } from './visitor.js';
 RiScript.Grammar = RiGrammar;
 RiScript.Visitor = RiScriptVisitor;
 
-export default RiScript
+export { RiScript }

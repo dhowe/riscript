@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import RiScript from "./index.js";
+import { RiScript } from "./index.js";
 const version = RiScript.VERSION;
 const title = `RiScript.v3 ${isNum(version) ? `v${version}` : "[DEV]"}`;
 describe(title, function() {

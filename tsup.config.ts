@@ -3,9 +3,6 @@ import { defineConfig } from 'tsup';
 import { esbuildPluginVersionInjector } from 'esbuild-plugin-version-injector';
 // import { umdWrapper } from "esbuild-plugin-umd-wrapper"
 
-const footer = "if (typeof window !== 'undefined') window.RiScript = RiScript.default;"
-  + "if (typeof module !== 'undefined') module.exports = RiScript.default;";
-
 const baseConfig: Options = {
   name: "riscript",
   entry: { riscript: 'src/index.js' },
@@ -44,9 +41,9 @@ const iife: Options = {
   format: ['iife'],
   minify: false, // tmp
   platform: "browser",
-  globalName: "RiScript",
+  globalName: "iife",
   outExtension({ format }) { return { js: `.min.js` } },
-  footer: { js: footer }
+  footer: { js: "RiScript = iife.RiScript" }
 }
 
 const testEsm: Options = {

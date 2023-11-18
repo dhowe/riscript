@@ -1,4 +1,4 @@
-import RiScript from  '../../dist/riscript.js';
+import { RiScript } from  '../../dist/riscript.js';
 
 let str = '\nRiScript v' + RiScript.VERSION + '\n\n';
 // Object.getOwnPropertyNames(RiScript).forEach(p => str += `RiScript.${p} '${/^class/.test(RiScript[p]+"")?'class':'function'}'\n`);

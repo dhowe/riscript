@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import RiScript from './index.js';
+import { RiScript } from './index.js';
 
 /*
   TODO:
