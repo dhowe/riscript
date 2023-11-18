@@ -29,7 +29,7 @@ console.log(result);
 <br><hr><br>
 
 ## Developing
-To install/build the library and run tests (with npm/mocha and node v14.x):
+To install/build the library and run tests:
 ```sh
 
 $ git clone https://github.com/dhowe/riscript.git
