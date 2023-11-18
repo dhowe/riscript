@@ -1,0 +1,19 @@
+<html>
+  <script src="https://unpkg.com/p5"></script>
+  <script src="https://unpkg.com/riscript"></script>
+  <script>
+  function setup() {
+
+    createCanvas(600,200);
+    background(245);
+    textAlign(CENTER)
+    textSize(18);
+
+    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]. $name finds $place cold and wet in winter.";
+    let result = RiScript.evaluate(script);
+    text(result, 300, 100);
+
+    createButton("refresh").mousePressed(() => location.reload());
+  }
+  </script>
+</html>
