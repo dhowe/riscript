@@ -26,7 +26,7 @@ let result = RiScript.evaluate(script);
 console.log(result);
 ```
 
-<hr><br>
+<br>
 
 ## Developing
 To install/build the library and run tests:
