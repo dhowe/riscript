@@ -1,0 +1,11 @@
+<html>
+  <script src="https://unpkg.com/jquery"></script>
+  <script src="https://unpkg.com/riscript"></script>
+  <script>
+    window.onload = function() {
+      let script = "[#mammal=[dog | child | ox]].pluralize().cap() are unruly, but my $mammal is the best.";
+      $('#content').text(RiScript.evaluate(script));
+    };
+  </script>
+  <div id="content" width=200 height=200></div>
+<html>
