@@ -17,10 +17,12 @@ RiScript is a micro-language designed for writers working in computational media
 ```javascript
 
 import { RiScript } from "https://esm.sh/riscript"; // for esm
+
 // let { RiScript }  = require('riscript');        // for node
 
 let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
   + " $name finds $place cold and wet in winter.";
+
 let result = RiScript.evaluate(script);
 
 console.log(result);
