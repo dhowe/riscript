@@ -45,6 +45,13 @@ If all goes well, you should see a list of successful tests and find the library
 
 Please make contributions via [fork-and-pull](https://reflectoring.io/github-fork-and-pull/) - thanks!
 
+## About
+
+* Author:   [Daniel C. Howe](http://rednoise.org/daniel)
+* Web Site:          [https://rednoise.org/rita](http://rednoise.org/rita)
+* Github Repo:       [https://github.com/dhowe/rita](https://github.com/dhowe/rita)
+* Issues:       [https://github.com/dhowe/rita/issues](https://github.com/dhowe/rita/issues)
+* Reference:    [https://rednoise.org/rita/reference](http://rednoise.org/rita/reference)
 
 &nbsp;
 
