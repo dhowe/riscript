@@ -50,10 +50,10 @@ Please make contributions via [fork-and-pull](https://reflectoring.io/github-for
 ## About
 
 * Author:   [Daniel C. Howe](http://rednoise.org/daniel)
-* Web Site:          [https://rednoise.org/rita](http://rednoise.org/rita)
-* Github Repo:       [https://github.com/dhowe/rita](https://github.com/dhowe/rita)
-* Issues:       [https://github.com/dhowe/rita/issues](https://github.com/dhowe/rita/issues)
+* Github Repo:       [https://github.com/dhowe/riscript](https://github.com/dhowe/riscript)
+* Issues:       [https://github.com/dhowe/riscript/issues](https://github.com/dhowe/riscript/issues)
 * Reference:    [https://rednoise.org/rita/reference](http://rednoise.org/rita/reference)
+* RiTa Web:          [https://rednoise.org/rita](http://rednoise.org/rita)
 
 &nbsp;
 
