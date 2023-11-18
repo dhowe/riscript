@@ -6,8 +6,7 @@ RiScript is a micro-language designed for writers working in computational media
 
 ### Installation
 
-* For [node](#with-nodejs-and-npm): `npm install riscript`
-            ```let { RiScript }  = require('riscript');```
+* For [node](#with-nodejs-and-npm): `$ npm install riscript` and then ```let { RiScript }  = require('riscript');```
 * For [browsers](#a-simple-browser-sketch): ```<script src="https://unpkg.com/riscript"></script>```
 * For [esm](#an-esm-browser-sketch): ```import { RiScript } from "https://esm.sh/riscript";```
 * For [developers](#developing)
@@ -17,7 +16,7 @@ RiScript is a micro-language designed for writers working in computational media
 
 ```javascript
 
-import { RiScript } from "https://esm.sh/riscript"; // for esm
+import { RiScript } from "https://esm.sh/riscript";
 
 let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
   + " $name finds $place cold and wet in winter.";
