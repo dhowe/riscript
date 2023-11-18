@@ -45,6 +45,8 @@ If all goes well, you should see a list of successful tests and find the library
 
 Please make contributions via [fork-and-pull](https://reflectoring.io/github-fork-and-pull/) - thanks!
 
+<br>
+
 ## About
 
 * Author:   [Daniel C. Howe](http://rednoise.org/daniel)
