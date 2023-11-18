@@ -2,9 +2,7 @@
 
 ## RiScript: a scripting language for writers
 
-RiScript is a grammar expansion micro-language designed for writers working in computational media. It runs in a variety of environments, including the Browser, Node, Observable, P5.js, Android and others. It is free/libre/open-source via the GPL license.
-
-RiScript is a writer-focused scripting language integrated with RiTa. It enables simple generative primitives within plain text for dynamic expansion at runtime. RiScript primitives can be used as part of any [RiTa grammar](https://rednoise.org/rita/reference/RiTa/grammar/) or executed directly using [RiTa.evaluate()](https://rednoise.org/rita/reference/RiTa/evaluate/). For more info, see [this interactive notebook](https://observablehq.com/@dhowe/riscript).
+RiScript is a grammar expansion micro-language designed for writers working in computational media. It runs in a variety of environments, including the Browser, Node, Observable, P5.js, Android and others. RiScript primitives can be used as part of any [RiTa grammar](https://rednoise.org/rita/reference/RiTa/grammar/) or executed directly using RiScript.evaluate()). For more info, see [this interactive notebook](https://observablehq.com/@dhowe/riscript).
 
 ### Installation
 
@@ -20,7 +18,9 @@ let { RiScript }  = require('riscript');
 
 let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].\
               $name finds $place cold and wet in winter.";
+
 let result = RiScript.evaluate(script);
+
 console.log(result);
 ```
 
@@ -69,7 +69,7 @@ Create a new file on your desktop called 'test.html' with the following lines, s
 
 #### With [p5.js](http://p5js.org/)
  
-Create a new file on your desktop called 'test.html' and download the latest rita.js from [here](http://rednoise.org/rita/download/rita.min.js), add the following lines, save and drag it into a browser:
+Create a new file on your desktop called 'test.html', add the following lines, save and drag it into a browser:
 
 ```html
 <html>
@@ -87,7 +87,7 @@ Create a new file on your desktop called 'test.html' and download the latest rit
                   $name finds $place cold and wet in winter.";
     let html = RiScript.evaluate(script);
 
-    let words = RiTa.tokenize("The elephant took a bite!")
+    //let words = RiTa.tokenize("The elephant took a bite!")
     for (let i=0; i < words.length; i++) {
         text(words[i], 50, 50 + i*20);
     }
@@ -98,7 +98,7 @@ Create a new file on your desktop called 'test.html' and download the latest rit
 
 #### With [node.js](http://nodejs.org/) and [npm](https://www.npmjs.com/)
  
-To install: `$ npm install rita`
+To install: `$ npm install riscript`
 
 ```javascript
 let { RiScript }  = require('riscript');
