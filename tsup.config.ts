@@ -39,11 +39,12 @@ const cjs: Options = {
 const iife: Options = {
   ...baseConfig,
   format: ['iife'],
-  minify: false, // tmp
+  minify: true,
   platform: "browser",
   globalName: "iife",
-  outExtension({ format }) { return { js: `.min.js` } },
-  footer: { js: "RiScript = iife.RiScript" }
+  footer: { js: "RiScript = iife.RiScript" },
+  outExtension({ format }) { return { js: `.min.js` } }
+
 }
 
 const testEsm: Options = {
