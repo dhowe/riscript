@@ -17,7 +17,8 @@ RiScript is a grammar expansion micro-language designed for writers working in c
 ```javascript
 let { RiScript }  = require('riscript');
 
-let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]. $name finds $place cold and wet in winter.";
+let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
+  + " $name finds $place cold and wet in winter.";
 let result = RiScript.evaluate(script);
 
 console.log(result);
@@ -56,7 +57,7 @@ Create a new file on your desktop called 'test.html' with the following lines, s
 <script src="https://unpkg.com/riscript"></script>
 <script>
   window.onload = function () {
-    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].";
+    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
       + " $name finds $place cold and wet in winter.";
     let html = RiScript.evaluate(script);
     document.getElementById("content").innerHTML = html;
@@ -77,7 +78,8 @@ Create a new file on your desktop called 'test.html' with the following lines, s
   <script type="module">
 
     import { RiScript } from "https://esm.sh/riscript";
-    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].";
+
+    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
       + " $name finds $place cold and wet in winter.";
     let html = RiScript.evaluate(script);
 
@@ -103,7 +105,7 @@ Create a new file on your desktop called 'test.html' with the following lines,, 
     textAlign(CENTER)
     textSize(18);
 
-    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].";
+    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
       + " $name finds $place cold and wet in winter.";
     let result = RiScript.evaluate(script);
     text(result, 300, 100);
@@ -121,8 +123,11 @@ To install: `$ npm install riscript`
 ```javascript
 let { RiScript }  = require('riscript');
 
-let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].";
-  + " $name finds $place cold and wet in winter.";let result = RiScript.evaluate(script);
+let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
+  + " $name finds $place cold and wet in winter.";
+
+let result = RiScript.evaluate(script);
+
 console.log(result);
 ```
 
