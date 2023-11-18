@@ -9,6 +9,7 @@ RiScript is a micro-language designed for writers working in computational media
 * For node: `npm install riscript`
 * For [browsers](#a-simple-browser-sketch): ```<script src="https://unpkg.com/riscript"></script>```
 * For [esm](#an-esm-browser-sketch): ```import { RiScript } from "https://esm.sh/riscript";```
+* For [node](#nodejs-and-npm): ```let { RiScript }  = require('riscript');```
 * For [developers](#developing)
 
 
@@ -17,8 +18,6 @@ RiScript is a micro-language designed for writers working in computational media
 ```javascript
 
 import { RiScript } from "https://esm.sh/riscript"; // for esm
-
-// let { RiScript }  = require('riscript');        // for node
 
 let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
   + " $name finds $place cold and wet in winter.";
