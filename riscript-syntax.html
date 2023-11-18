@@ -1,0 +1,540 @@
+
+<!-- This is a generated file -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  body {
+    background-color: hsl(30, 20%, 95%)
+  }
+</style>
+
+
+<link rel='stylesheet' href='https://unpkg.com/chevrotain@11.0.3/diagrams/diagrams.css'>
+
+<script src='https://unpkg.com/chevrotain@11.0.3/diagrams/vendor/railroad-diagrams.js'></script>
+<script src='https://unpkg.com/chevrotain@11.0.3/diagrams/src/diagrams_builder.js'></script>
+<script src='https://unpkg.com/chevrotain@11.0.3/diagrams/src/diagrams_behavior.js'></script>
+<script src='https://unpkg.com/chevrotain@11.0.3/diagrams/src/main.js'></script>
+
+<div id="diagrams" align="center"></div>    
+
+<script>
+    window.serializedGrammar = [
+  {
+    "type": "Rule",
+    "name": "script",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "expr",
+            "idx": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "pgate",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "PendingGate",
+        "label": "PendingGate",
+        "idx": 0,
+        "pattern": "@@([0-9]{9,11})"
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "TF",
+            "label": "TF",
+            "idx": 0,
+            "pattern": "\\.[A-Za-z_0-9][A-Za-z_0-9]*(\\(\\))?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "entity",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Entity",
+        "label": "Entity",
+        "idx": 0,
+        "pattern": "&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "gate",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "EnterGate",
+        "label": "EnterGate",
+        "idx": 0,
+        "pattern": "@\\s*"
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "Gate",
+            "label": "Gate",
+            "idx": 0,
+            "pattern": "[^@]+"
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "ExitGate",
+        "label": "ExitGate",
+        "idx": 0,
+        "pattern": "\\s*@"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "silent",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "OS",
+        "label": "OS",
+        "idx": 0,
+        "pattern": "\\{\\s*"
+      },
+      {
+        "type": "Option",
+        "idx": 1,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "gate",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "SYM",
+        "label": "SYM",
+        "idx": 0,
+        "pattern": "(\\$|#[A-Za-z_0-9])[A-Za-z_0-9]*"
+      },
+      {
+        "type": "Option",
+        "idx": 2,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "EQ",
+            "label": "EQ",
+            "idx": 0,
+            "pattern": "\\s*=\\s*"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "expr",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "CS",
+        "label": "CS",
+        "idx": 0,
+        "pattern": "\\s*\\}"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "assign",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "SYM",
+        "label": "SYM",
+        "idx": 0,
+        "pattern": "(\\$|#[A-Za-z_0-9])[A-Za-z_0-9]*"
+      },
+      {
+        "type": "Terminal",
+        "name": "EQ",
+        "label": "EQ",
+        "idx": 0,
+        "pattern": "\\s*=\\s*"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "expr",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "symbol",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "SYM",
+        "label": "SYM",
+        "idx": 0,
+        "pattern": "(\\$|#[A-Za-z_0-9])[A-Za-z_0-9]*"
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "TF",
+            "label": "TF",
+            "idx": 0,
+            "pattern": "\\.[A-Za-z_0-9][A-Za-z_0-9]*(\\(\\))?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "accept",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "or_expr",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "reject",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "or_expr",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "or_expr",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "RepetitionWithSeparator",
+        "idx": 0,
+        "separator": {
+          "type": "Terminal",
+          "name": "OR",
+          "label": "OR",
+          "idx": 1,
+          "pattern": "\\s*\\|\\s*"
+        },
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "wexpr",
+            "idx": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "choice",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "OC",
+        "label": "OC",
+        "idx": 0,
+        "pattern": "\\[\\s*"
+      },
+      {
+        "type": "Option",
+        "idx": 1,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "gate",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "NonTerminal",
+        "name": "accept",
+        "idx": 0
+      },
+      {
+        "type": "Option",
+        "idx": 2,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "ELSE",
+            "label": "ELSE",
+            "idx": 0,
+            "pattern": "\\s*\\|\\|\\s*"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "reject",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "CC",
+        "label": "CC",
+        "idx": 0,
+        "pattern": "\\s*\\]"
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "TF",
+            "label": "TF",
+            "idx": 0,
+            "pattern": "\\.[A-Za-z_0-9][A-Za-z_0-9]*(\\(\\))?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "wexpr",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Alternation",
+            "idx": 0,
+            "definition": [
+              {
+                "type": "Alternative",
+                "definition": [
+                  {
+                    "type": "NonTerminal",
+                    "name": "expr",
+                    "idx": 0
+                  }
+                ]
+              },
+              {
+                "type": "Alternative",
+                "definition": [
+                  {
+                    "type": "Terminal",
+                    "name": "Weight",
+                    "label": "Weight",
+                    "idx": 0,
+                    "pattern": "\\s*\\^.+\\^\\s*"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "expr",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "RepetitionMandatory",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "atom",
+            "idx": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "atom",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "silent",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "assign",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "symbol",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "choice",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "pgate",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "text",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "entity",
+                "idx": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "text",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "Raw",
+                "label": "Raw",
+                "idx": 0,
+                "pattern": "[^\\|\\|\\|\\$#&@@@@\\{\\}\\[\\]\\^\\^~]+"
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "STAT",
+                "label": "STAT",
+                "idx": 0,
+                "pattern": "#"
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "AMP",
+                "label": "AMP",
+                "idx": 0,
+                "pattern": "&"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+];
+</script>
+
+<script>
+    var diagramsDiv = document.getElementById("diagrams");
+    main.drawDiagramsFromSerializedGrammar(serializedGrammar, diagramsDiv);
+</script>

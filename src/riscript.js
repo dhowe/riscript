@@ -106,7 +106,7 @@ class RiScript {
       Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
     }
 
-    this.textTypes = TextTypes
+    this.textTypes = TextTypes;
     this.lexer = new Lexer(tokens);
     this.parser = new RiScriptParser(tokens, this.textTypes);
     this.RiTa = (opts.RiTa && opts.RiTa.VERSION) ? opts.RiTa : {
