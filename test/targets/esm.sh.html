@@ -9,7 +9,7 @@
   <div id="content"></div>
 
   <script type="module">
-    import RiScript from "https://esm.sh/riscript";
+    import { RiScript } from "https://esm.sh/riscript";
     let html = '<h3>RiScript v' + RiScript.VERSION + '</h3>';
     Object.getOwnPropertyNames(RiScript)
       .filter(p => !p.startsWith('_') && typeof RiScript[p] === "function")
