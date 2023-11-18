@@ -8,7 +8,7 @@ RiScript is a grammar expansion micro-language designed for writers working in c
 
 * For node: `npm install riscript`
 * For [browsers](#a-simple-browser-sketch): ```<script src="https://unpkg.com/riscript"></script>```
-* For [esm-browsers](#an-esm-browser-sketch):
+* For [esm-contexts](#an-esm-browser-sketch): ```import { RiScript } from "https://esm.sh/riscript";```
 * For [developers](#developing)
 
 
