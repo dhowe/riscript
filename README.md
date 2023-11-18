@@ -16,9 +16,7 @@ RiScript is a grammar expansion micro-language designed for writers working in c
 ```javascript
 let { RiScript }  = require('riscript');
 
-let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].\
-              $name finds $place cold and wet in winter.";
-
+let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]. $name finds $place cold and wet in winter.";
 let result = RiScript.evaluate(script);
 
 console.log(result);
@@ -57,8 +55,7 @@ Create a new file on your desktop called 'test.html' with the following lines, s
 <script src="https://unpkg.com/riscript"></script>
 <script>
   window.onload = function () {
-    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].\
-                  $name finds $place cold and wet in winter.";
+    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]. $name finds $place cold and wet in winter.";
     let html = RiScript.evaluate(script);
     document.getElementById("content").innerHTML = html;
   };
@@ -78,19 +75,16 @@ Create a new file on your desktop called 'test.html' with the following lines,, 
   <script>
   function setup() {
 
-    createCanvas(200,200);
-    background(50);
-    textSize(20);
-    noStroke();
+    createCanvas(600,200);
+    background(245);
+    textAlign(CENTER)
+    textSize(18);
 
-    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].\
-                  $name finds $place cold and wet in winter.";
-    let html = RiScript.evaluate(script);
+    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]. $name finds $place cold and wet in winter.";
+    let result = RiScript.evaluate(script);
+    text(result, 300, 100);
 
-    //let words = RiTa.tokenize("The elephant took a bite!")
-    for (let i=0; i < words.length; i++) {
-        text(words[i], 50, 50 + i*20);
-    }
+    createButton("refresh").mousePressed(() => location.reload());
   }
   </script>
 </html>
@@ -103,9 +97,7 @@ To install: `$ npm install riscript`
 ```javascript
 let { RiScript }  = require('riscript');
 
-let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].\
-              $name finds $place cold and wet in winter.";
-
+let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]. $name finds $place cold and wet in winter.";
 let result = RiScript.evaluate(script);
 console.log(result);
 ```
