@@ -36,7 +36,7 @@ $ git clone https://github.com/dhowe/riscript.git
 $ cd riscript 
 $ npm install
 $ npm run build 
-$ npm run test
+$ npm test
 
 ```
 If all goes well, you should see a list of successful tests and find the library built in 'dist'
