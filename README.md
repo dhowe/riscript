@@ -12,10 +12,12 @@ RiScript is a grammar expansion micro-language designed for writers working in c
 * For [developers](#developing)
 
 
-### Example (node)
+### Example
 
 ```javascript
-let { RiScript }  = require('riscript');
+
+import { RiScript } from "https://esm.sh/riscript"; // for esm
+// let { RiScript }  = require('riscript');  // or for node
 
 let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
   + " $name finds $place cold and wet in winter.";
