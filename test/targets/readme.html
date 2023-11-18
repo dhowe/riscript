@@ -3,7 +3,8 @@
   <script src="https://unpkg.com/riscript"></script>
   <script>
     window.onload = function() {
-      let script = "[#mammal=[dog | child | ox]].pluralize().cap() are unruly, but my $mammal is the best.";
+      let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].\
+                    $name finds $place cold and wet in winter.";
       $('#content').text(RiScript.evaluate(script));
     };
   </script>
