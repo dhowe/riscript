@@ -1,0 +1,20 @@
+<html>
+<script src="https://unpkg.com/jquery"></script>
+<script src="https://unpkg.com/riscript"></script>
+<script>
+  window.onload = function () {
+
+  };
+</script>
+
+<body>
+  <div id="content" width=200 height=200></div>
+  <script type="module">
+    import { RiScript } from "https://esm.sh/riscript";
+    let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]].\
+                    $name finds $place cold and wet in winter.";
+    let html = (RiScript.evaluate(script));
+    document.getElementById("content").innerHTML = html; 
+  </script>
+</body>
+<html>
