@@ -19,7 +19,7 @@ RiScript is a micro-language designed for writers working in computational media
 
 import { RiScript } from "https://esm.sh/riscript";
 
-let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
+let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin]]."
   + " $name finds $place cold and wet in winter.";
 
 let result = RiScript.evaluate(script);
