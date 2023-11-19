@@ -1,3 +1,33 @@
+### Comparison
+
+The following operators can be used in queries to compare values:
+
+    $eq: Values are equal
+    $ne: Values are not equal
+    $gt: Value is greater than another value
+    $gte: Value is greater than or equal to another value
+    $lt: Value is less than another value
+    $lte: Value is less than or equal to another value
+    $in: Value is matched within an array
+
+### Logical
+
+The following operators can logically compare multiple queries.
+
+    $and: Returns documents where both queries match
+    $or: Returns documents where either query matches
+    $nor: Returns documents where both queries fail to match
+    $not: Returns documents where the query does not match
+
+### valuation
+
+The following operators assist in evaluating documents.
+
+    $regex: Allows the use of regular expressions when evaluating field values
+    $text: Performs a text search
+    $where: Uses a JavaScript expression to match documents
+
+
 <table>
 <thead><tr>
 <th>Operator</th>
@@ -8,37 +38,32 @@
 <tr>
 <td>$gt&nbsp;</td>
 <td>greater than&nbsp;</td>
-<td><code>@{class:{$gt:'T'}</code></td>
+<td><code>@{ $symbol: { $gt: 3 }</code></td>
 </tr>
 <tr>
 <td>$gte&nbsp;</td>
 <td>greater than equals</td>
-<td><code>@{class:{$gt:'T'}</code></td>
+<td><code>@{ $symbol: { $gte: 3}</code></td>
 </tr>
 <tr>
 <td>$lt&nbsp;</td>
 <td>lesser than&nbsp;</td>
-<td><code>@{class:{$lt:'T'}</code></td>
+<td><code>@{ $symbol: { $lt: 4}</code></td>
 </tr>
 <tr>
 <td>$lte</td>
 <td>lesser than equals</td>
-<td><code>@{class:{$lte:'T'}</code></td>
+<td><code>@{ $symbol: { $lte: 4}</code></td>
 </tr>
 <tr>
 <td>$exists</td>
 <td>does an attribute exist or not</td>
-<td><code>@{class:{$gt:'T'}</code></td>
+<td><code>@{ $symbol: { $exists: 'T'}</code></td>
 </tr>
 <tr>
 <td>$regex</td>
 <td>Matching pattern in pearl-style</td>
-<td><code>@{name:{$regex:'^USS\\sE'}})</code></td>
-</tr>
-<tr>
-<td>$type&nbsp;</td>
-<td>search by type of an element</td>
-<td><code>@{name : {$type:4}})</code></td>
+<td><code>@{ $name:{ $regex: '^USS\\sE'}})</code></td>
 </tr>
 </tbody>
 </table>
