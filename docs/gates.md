@@ -14,7 +14,7 @@ The following operators can be used in queries to compare values:
 
 ### Logical
 
-The following operators can logically compare multiple queries.
+The following operators logically combine multiple queries:
 
     $and: Returns documents where both queries match
     $or: Returns documents where either query matches
@@ -23,11 +23,11 @@ The following operators can logically compare multiple queries.
 
 ### Evaluation
 
-The following operators assist in evaluating documents.
+The following operators assist in evaluating documents:
 
-    $regex: Allows the use of regular expressions when evaluating field values
     $text: Performs a text search
-    $where: Uses a JavaScript expression to match documents
+    $regex: Match symbol values with regular expressions
+    $where: Uses JS expressions to match fields
 
 ### Operators
 
