@@ -41,32 +41,32 @@ The following operators assist in evaluating documents:
 <tr>
 <td>$gt&nbsp;</td>
 <td>greater than&nbsp;</td>
-<td><code>@{ $symbol: { $gt: 3 }</code></td>
+<td><code>@{ symbol: { $gt: 3 }</code></td>
 </tr>
 <tr>
 <td>$gte&nbsp;</td>
 <td>greater than equals</td>
-<td><code>@{ $symbol: { $gte: 3}</code></td>
+<td><code>@{ symbol: { $gte: 3}</code></td>
 </tr>
 <tr>
 <td>$lt&nbsp;</td>
 <td>lesser than&nbsp;</td>
-<td><code>@{ $symbol: { $lt: 4}</code></td>
+<td><code>@{ symbol: { $lt: 4}</code></td>
 </tr>
 <tr>
 <td>$lte</td>
 <td>lesser than equals</td>
-<td><code>@{ $symbol: { $lte: 4}</code></td>
+<td><code>@{ symbol: { $lte: 4}</code></td>
 </tr>
 <tr>
 <td>$exists</td>
 <td>does an attribute exist or not</td>
-<td><code>@{ $symbol: { $exists: 'T'}</code></td>
+<td><code>@{ symbol: { $exists: 'T'}</code></td>
 </tr>
 <tr>
 <td>$regex</td>
 <td>Matching pattern in pearl-style</td>
-<td><code>@{ $name:{ $regex: '^USS\\sE'}})</code></td>
+<td><code>@{ name:{ $regex: '^USS\\sE'}})</code></td>
 </tr>
 </tbody>
 </table>
