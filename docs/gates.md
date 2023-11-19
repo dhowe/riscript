@@ -75,52 +75,54 @@ The following operators assist in evaluating documents:
 
 ### Examples
 
+
 The $exists operator will look for values that do or do not exist:  
-```@{ secret: { $exists: true}
-    @{ secret: { $exists: false}
+```
+@{ secret: { $exists: true}
+@{ secret: { $exists: false}
 ```
 
 The $eq and $ne operator will look for values match or do not match a value:  
-```@{ gender: { $ne: "male" } }
-    @{ name: { $eq: "kerri" } }
 ```
-
+@{ gender: { $ne: "male" } }
+@{ name: { $eq: "kerri" } }
+```
 The $in operator will look for equal values that match anything specified in an array:  
-`@{ rank: { $in: [ "warrior", "scholar", "sage" ] } }`
+```@{ rank: { $in: [ "warrior", "scholar", "sage" ] } }```
 
 The $nin operator will look for equal values that do NOT match anything in an array:  
-`@{ rank: { $nin: [ "novice", "precept", "learner" ] } }`
+```@{ rank: { $nin: [ "novice", "precept", "learner" ] } }```
 
 The $all operator for matching all the elements in an array for a specified field:  
-`@{ items: { $all: [ "bread", "nut butter", "jam" ] } }`
+```@{ items: { $all: [ "bread", "nut butter", "jam" ] } }```
 
 The $elemMatch operator for matching ANY element in an array for a specified field:  
-`@{ items: { $elemMatch: { "crowbar", "key", "spell", "explosive" } } }`
+```@{ items: { $elemMatch: { "crowbar", "key", "spell", "explosive" } } }```
 
 The $and operator logically combines two or more queries:  
-`@{ $and: [ { age: { $gt: 12 } }, { age: { $exists: true } } ] }`
+```@{ $and: [ { age: { $gt: 12 } }, { age: { $exists: true } } ] }```
 
 The $or operator logically combines two or more queries:  
-`@{ $or: [ { age: { $gt: 12 } }, { age: { $exists: false } } ] }`
+```@{ $or: [ { age: { $gt: 12 } }, { age: { $exists: false } } ] }```
 
 The $nor operator logically combines two or more queries:  
-`@{ $nor: [ { age: { $lt: 12 } }, { age: { $exists: false } } ] }`
+```@{ $nor: [ { age: { $lt: 12 } }, { age: { $exists: false } } ] }```
 
 
 --------
 
 Search by regular expression:  
-`@{ $name: { $regex: /^M.*/}}`
+```@{ $name: { $regex: /^M.*/}}```
 
 Regex options: case insensitive:  
-`@{ $name: { $regex: /^jan.*/, $options: "i"}}`
+```@{ $name: { $regex: /^jan.*/, $options: "i"}}```
 
 Find by elements in array:
 This matches documents that contain all of these array elements:  
-`@{ $skills: { $all: }}`
+```@{ $skills: { $all: }}```
 
 Match on any element in the array:  
-`@{ $skills: "negotiation"}`
+```@{ $skills: "negotiation"}```
 
 Match on inequality:  
-`@{ $strength: { $gt: 18 } }`  
+```@{ $strength: { $gt: 18 } }```  
