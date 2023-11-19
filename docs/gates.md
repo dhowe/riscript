@@ -1,3 +1,5 @@
+## RiScript Gates (with Mingo-style operators)
+
 ### Comparison
 
 The following operators can be used in queries to compare values:
@@ -19,7 +21,7 @@ The following operators can logically compare multiple queries.
     $nor: Returns documents where both queries fail to match
     $not: Returns documents where the query does not match
 
-### valuation
+### Evaluation
 
 The following operators assist in evaluating documents.
 
@@ -27,6 +29,7 @@ The following operators assist in evaluating documents.
     $text: Performs a text search
     $where: Uses a JavaScript expression to match documents
 
+### Operators
 
 <table>
 <thead><tr>
@@ -69,7 +72,7 @@ The following operators assist in evaluating documents.
 </table>
 
 
-**Search and return only certain fields**
+### Examples
 
 **Search by regular expression (use the slash or quote marks as a delimiter).
 **@{$name: {$regex: /^M.*/}}
