@@ -75,7 +75,7 @@ The following operators assist in evaluating documents:
 
 ### Examples
 
-**The $exists operator will look for values that do or do not exist:**
+**The $exists operator will look for values that do or do not exist:**  
     `@{ secret: { $exists: true} `
     `@{ secret: { $exists: false} `
 
