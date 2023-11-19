@@ -89,8 +89,11 @@ The following operators assist in evaluating documents:
 **The $nin operator will look for equal values that do NOT match anything in an array:**
 @{ rank: { $nin: [ "novice", "precept", "learner" ] } }
 
-**The operator $all returns documents that match all the elements in an array of a specified field:**
+**The $all operator for matching all the elements in an array for a specified field:**
 { items: { $all: [ "bread", "nut butter", "jam" ] } }
+
+**The $elemMatch operator for matching ANY element in an array for a specified field:**
+{ items: { $elemMatch: { "crowbar", "key", "spell", "explosive" } } }
 
 **The $and operator logically combines two or more queries:**
 { $and: [ { age: { $gt: 12 } }, { age: { $exists: true } } ] }
