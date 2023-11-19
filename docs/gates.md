@@ -77,11 +77,13 @@ The following operators assist in evaluating documents:
 
 The $exists operator will look for values that do or do not exist:  
 ```@{ secret: { $exists: true}
-    @{ secret: { $exists: false}```
+    @{ secret: { $exists: false}
+```
 
 The $eq and $ne operator will look for values match or do not match a value:  
 ```@{ gender: { $ne: "male" } }
-    @{ name: { $eq: "kerri" } }```
+    @{ name: { $eq: "kerri" } }
+```
 
 The $in operator will look for equal values that match anything specified in an array:  
 `@{ rank: { $in: [ "warrior", "scholar", "sage" ] } }`
