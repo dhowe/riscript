@@ -1,7 +1,7 @@
 ## RiScript Gates (with Mingo-style operators)
 
 ### Comparison
-
+   
 The following operators can be used in queries to compare values:
 
     $eq: Values are equal
@@ -21,6 +21,12 @@ The following operators logically combine multiple queries:
     $nor: Returns documents where both queries fail to match
     $not: Returns documents where the query does not match
 
+### Existence
+The following operators can be used in queries the existence of fields:
+
+    $exists: symbols exists 
+    not $exists: symbols doesn't exists 
+    
 ### Evaluation
 
 The following operators assist in evaluating documents:
@@ -29,7 +35,7 @@ The following operators assist in evaluating documents:
     $regex: Match symbol values with regular expressions
     $where: Uses JS expressions to match fields
 
-### Operators
+### Operator Table
 
 <table>
 <thead><tr>
