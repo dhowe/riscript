@@ -71,21 +71,51 @@ The following operators assist in evaluating documents:
 </tbody>
 </table>
 
+-------
 
 ### Examples
 
-**Search by regular expression (use the slash or quote marks as a delimiter).
-**@{$name: {$regex: /^M.*/}}
+**The $exists operator will look for values that do or do not exist:**
+{ secret: { $exists: true} 
+{ secret: { $exists: false} 
 
-**Case insensitive:
-**@{$name: {$regex: /^jan.*/, $options: "i"}}
+**The $eq and $ne operator will look for values match or do not match a value:**
+@{ gender: { $ne: "male" } }
+@{ name: { $eq: "kerri" } }
 
-**Find by elements in array
-**This matches documents that contain all of these array elements:
-@{$skills: {$all: }}
+**The $in operator will look for equal values that match anything specified in an array:**
+@{ rank: { $in: [ "warrior", "scholar", "sage" ] } }
 
-**Match on any element in the array:
-**@{$skills: "negotiation"}
+**The $nin operator will look for equal values that do NOT match anything in an array:**
+@{ rank: { $nin: [ "novice", "precept", "learner" ] } }
 
-**Match on inequality
+**The operator $all returns documents that match all the elements in an array of a specified field:**
+{ items: { $all: [ "bread", "nut butter", "jam" ] } }
+
+**The $and operator logically combines two or more queries:**
+{ $and: [ { age: { $gt: 12 } }, { age: { $exists: true } } ] }
+
+**The $or operator logically combines two or more queries:**
+{ $or: [ { age: { $gt: 12 } }, { age: { $exists: false } } ] }
+
+**The $nor operator logically combines two or more queries:**
+{ $nor: [ { age: { $lt: 12 } }, { age: { $exists: false } } ] }
+
+
+--------
+
+**Search by regular expression:**
+@{ $name: { $regex: /^M.*/}}
+
+**Regex options: case insensitive:**
+@{ $name: { $regex: /^jan.*/, $options: "i"}}
+
+**Find by elements in array:**
+This matches documents that contain all of these array elements:
+@{ $skills: { $all: }}
+
+**Match on any element in the array:**
+@{ $skills: "negotiation"}
+
+**Match on inequality:**
 @{ $strength: { $gt: 18 } }
