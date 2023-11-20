@@ -124,6 +124,10 @@ The $and operator logically combines two or more queries:
 ```
 @{ $and: [ { age: { $gt: 12 } }, { age: { $exists: true } } ] }
 ```
+(equivalent to)  
+```
+@{ { age: { $gt: 12, $exists: true } }
+```
 
 The $or operator logically combines two or more queries:  
 
@@ -158,7 +162,7 @@ This matches documents that contain all of these array elements:
 ```
 @{ protection: { $all: "helmet", "armor" }}
 ```
-(equivalent to:)
+(equivalent to)
 ```
 { $and: [ { protection: "helmet" }, { protection: "armor" } ] }
 ```
@@ -172,4 +176,5 @@ Match on any element in the array:
 Match on inequality:  
 
 ```
-@{ strength: { $gt: 18 } }```  
+@{ strength: { $gt: 18 } }
+```  
