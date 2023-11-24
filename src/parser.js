@@ -12,7 +12,6 @@ class RiScriptParser extends CstParser {
 
   parse(opts) {
     this.input = opts.tokens; // superclass member (do not change)
-
     let cst = this.script();
     if (this.errors.length > 0) throw Error
       ("[PARSING]\n" + this.errors[0].message);
@@ -38,8 +37,13 @@ class RiScriptParser extends CstParser {
 
     $.RULE("gate", () => {
       $.CONSUME(Tokens.EnterGate);
-      $.MANY(() => $.CONSUME(Tokens.Gate));
-      $.CONSUME(Tokens.ExitGate);
+      $.MANY(() => {
+        $.OR([
+          { ALT: () => $.CONSUME(Tokens.GateOpenBracket) },
+          { ALT: () => $.CONSUME(Tokens.GateContent) },
+          { ALT: () => $.CONSUME(Tokens.GateCloseBracket) },
+        ])
+      });
     });
 
     $.RULE("silent", () => {

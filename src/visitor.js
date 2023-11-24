@@ -42,6 +42,7 @@ class BaseVisitor {
     if (this.tracePath && !/(expr|atom|silent)/.test(name)) {
       this.path += name + '.';
     }
+    //console.log('calling ' + name + '()');
     return this[name](cstNode.children, param);
   }
 
@@ -71,7 +72,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   start(opts = {}) {
-    
+
     this.input = opts.input;
     this.trace = opts.trace;
     this.nowarn = opts.silent;
@@ -94,14 +95,12 @@ class RiScriptVisitor extends BaseVisitor {
     // this.print('expr', ctx);
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
-    const exprs = ctx.atom.map((c) => this.visit(c));
+    const exprs = ctx.atom.map(c => this.visit(c));
     // handle special cases of the form: "not [quite|] far enough"
     for (let i = 1; i < exprs.length - 1; i++) {
-      if (
-        exprs[i].length === 0 &&
+      if (exprs[i].length === 0 &&
         exprs[i - 1].endsWith(' ') &&
-        exprs[i + 1].startsWith(' ')
-      ) {
+        exprs[i + 1].startsWith(' ')) {
         exprs[i + 1] = exprs[i + 1].substring(1);
       }
     }
@@ -115,18 +114,19 @@ class RiScriptVisitor extends BaseVisitor {
   gate(ctx) {
     // returns { decision: [accept | reject] } or { decision: 'defer', operands: [] }
 
-    if (ctx.Gate.length !== 1) throw Error('Invalid gate: ' + ctx.Gate);
+    // if (ctx.Gate.length !== 1) throw Error('Invalid gate: ' + ctx.Gate);
+    //const raw = ctx.Gate[0].image;
+    let rawGate = this.nodeText.replace(/^@/, '');
 
     let mingoQuery;
-    const raw = ctx.Gate[0].image;
     try {
-      mingoQuery = this.scripting._query(raw);
+      mingoQuery = this.scripting._query(rawGate);
     } catch (e) {
       if (!this.warnOnInvalidGates) {
-        throw Error(`Invalid gate[2]: "@${raw}@"\n\nRootCause -> ${e}`);
+        throw Error(`Invalid gate[2]: "@${rawGate}"\n\nRootCause -> ${e}`);
       }
       if (!this.scripting.RiTa.SILENT && !this.nowarn) {
-        console.warn(`[WARN] Ignoring invalid gate: @${raw}@\n`, e);
+        console.warn(`[WARN] Ignoring invalid gate: @${rawGate}\n`, e);
       }
       return { decision: 'accept' };
     }
@@ -139,7 +139,7 @@ class RiScriptVisitor extends BaseVisitor {
 
       if (typeof result === 'function') {
         // while {} ?
-        result = result.call(); // call it
+        result = result.call(); // call it // should be silent ?
         resolved = !this.scripting.isParseable(result);
       }
       if (typeof result === 'undefined' || !resolved) {
@@ -158,25 +158,26 @@ class RiScriptVisitor extends BaseVisitor {
       }
     });
 
-    if (
-      Object.keys(resolvedOps).length + unresolvedOps.length !==
-      operands.length
-    ) { throw Error('invalid operands'); }
+    if (Object.keys(resolvedOps).length + unresolvedOps.length !== operands.length) {
+      throw Error('invalid operands');
+    }
 
     // if we have unresolved operands, return them (and defer)
-    if (unresolvedOps.length) { return { decision: 'defer', operands: unresolvedOps }; }
+    if (unresolvedOps.length) {
+      return { rawGate, decision: 'defer', operands: unresolvedOps };
+    }
 
     let result = mingoQuery.test(resolvedOps); // do test
     if (!result && this.castValues(resolvedOps)) {
       result = mingoQuery.test(resolvedOps); // redo test after casting
     }
 
-    return { decision: result ? 'accept' : 'reject' };
+    return { rawGate, decision: result ? 'accept' : 'reject' };
   }
 
   assign(ctx, opts) {
-    const sym = ctx.SYM[0].image;
 
+    const sym = ctx.SYM[0].image;
     const ident = sym.replace(this.scripting.regex.AnySymbol, '');
     const isStatic = sym.startsWith(this.symbols.STATIC);
 
@@ -193,17 +194,14 @@ class RiScriptVisitor extends BaseVisitor {
           console.log('  [pending.delete]', sym,
             this.pendingSymbols.length
               ? JSON.stringify(this.pendingSymbols)
-              : ''
-          );
+              : '');
       }
       info = `${sym} = ${this.RiScript._escapeText(value)}` +
-        ` [#static] ${opts?.silent ? '{silent}' : ''}`;
+        ` [#static]${opts?.silent ? ' {silent}' : ''}`;
     } else {
-      const $ = this;
-
       // dynamic: store as func to be resolved later, perhaps many times
-      value = () => $.visit(ctx.expr);
-      info = `${sym} = <f*:pending>` + (opts?.silent ? '{silent}' : '');
+      value = () => this.visit(ctx.expr);
+      info = `${sym} = <f*:pending>` + (opts?.silent ? ' {silent}' : '');
 
       // NOTE: this function may contain a choice, which needs to be handled
       // when called from a symbol with a norepeat transform (??) TODO: test
@@ -295,13 +293,13 @@ class RiScriptVisitor extends BaseVisitor {
         this.symbols.DYNAMIC + ident + "' ?"
         : "non-dynamic symbol '" + ident + "'. Did you mean to define '" +
         this.symbols.DYNAMIC + ident + "' in riscript?");
-      throw Error(msg);
     }
 
     if (typeof result === 'undefined') {
       // nothing found, defer
       this.print('symbol', symbol + " -> '" + original + "' ctx=" +
-        this.lookupsToString(), '[deferred]', opts?.silent ? '{silent}' : '');
+        this.
+          lookupsToString(), '[deferred]', opts?.silent ? '{silent}' : '');
       return original;
     }
 
@@ -375,7 +373,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   else(ctx) {
-    // this.print('else', this.nodeText);
+    this.print('else', this.nodeText);
     return this.visit(ctx.expr).trim();
   }
 
@@ -384,41 +382,67 @@ class RiScriptVisitor extends BaseVisitor {
     let rawGate, gateResult;
     const original = this.nodeText;
     let info = original;
-    const choiceKey = this.RiScript._stringHash(original + ' #' + this.choiceId(ctx));
+    const choiceKey = this.RiScript._stringHash
+      (original + ' #' + this.choiceId(ctx));
 
     if (!this.isNoRepeat && this.hasNoRepeat(ctx.TF)) {
-      throw Error('noRepeat() not allowed on choice (use a $variable instead): ' + original);
+      throw Error('noRepeat() not valid on choice (use a $symbol instead?): ' + original);
     }
 
-    let decision = 'accept';
-    if (opts?.forceReject) {
-      decision = 'reject';
-    } else {
-      if (ctx.gate) {
-        // do we have a gate
-        rawGate = ctx.gate[0].children.Gate[0].image;
-        gateResult = this.visit(ctx.gate);
-        decision = gateResult.decision;
-        info += `\n  [gate] ${rawGate} -> ${decision !== 'defer'
-          ? decision.toUpperCase()
-          : `DEFER ${$.PENDING_GATE}${choiceKey}`
-          }  ${this.lookupsToString()}`;
-      }
+    // function aggregate(gate) {
+    //   let s = '';
+    //   let kids = gate[0].children
+    //   for (let key in kids) {
+    //     let val = kids[key];
+    //     // if (val.length > 1) throw Error('length > 0: '+JSON.stringify(val));
+    //     s += val.map(t => t.image).join('');
+    //   }
+    //   console.log('aggregate: ' + s);
+    //   if (s.startsWith('@')) s = s.substring(1);
+    //   console.log('aggregate2: ' + s);
+    //   return s.trim();
+    // }
 
-      if (gateResult) {
-        if (gateResult.decision === 'defer') {
-          this.pendingGates[choiceKey] = {
-            deferredContext: ctx,
-            operands: gateResult.operands
-          };
-          return `${$.PENDING_GATE}${choiceKey}`; // gate defers
-        }
+    this.print('choice', info);
+    info = "";
+
+    let decision = 'accept';
+    if (opts?.forceReject) { // force-rejected in postParse()
+      decision = 'reject';
+      info = ` {force-reject}`;
+      this.print('choice.gate', info);
+    }
+    else {
+      if (ctx.gate) {
+        // console.log(ctx.gate);
+        // do we have a gate ?
+        // rawGate = ctx.gate[0].children.Gate[0].image;
+        // rawGate = aggregate(ctx.gate);//.map(c => c.image).join('');
+        ///console.log('rawGate:"' + rawGate + '"');
+
+        gateResult = this.visit(ctx.gate);
+        ({rawGate, decision} = gateResult);
+        // rawGate = gateResult.rawGate;
+        // decision = gateResult.decision;
+        // info += `\n  [gate] ${rawGate} -> ${decision !== 'defer'
+        info = `${rawGate} -> ${(decision !== 'defer' ? decision.toUpperCase()
+          : `DEFER ${$.PENDING_GATE}${choiceKey}`)}  ${this.lookupsToString()}`;
+      }
+      this.print('choice.gate', info);
+
+      if (gateResult && gateResult.decision === 'defer') {
+        this.pendingGates[choiceKey] = {
+          deferredContext: ctx,
+          operands: gateResult.operands
+        };
+        return `${$.PENDING_GATE}${choiceKey}`; // gate defers
       }
     }
 
     if (decision === 'reject' && !('reject' in ctx)) {
       return ''; // rejected without reject expr, return ''
     }
+
 
     const orExpr = ctx[decision]?.[0]?.children?.or_expr?.[0]; // yuck
     const options = this.parseOptions(orExpr); // get options

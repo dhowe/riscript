@@ -76,6 +76,7 @@ class RiScript {
   constructor(opts = { /*RiTa:0, compatibility: 2*/ }) {
     this.visitor = 0; // created in evaluate() or passed in here
     this.v2Compatible = opts.compatibility === 2;
+
     const { Constants, tokens } = getTokens(this.v2Compatible);
     const { Escaped, Symbols } = Constants;
 
@@ -108,6 +109,7 @@ class RiScript {
 
     this.textTypes = TextTypes;
     this.lexer = new Lexer(tokens);
+    console.log('tokens', tokens.modes.normal.filter(t => t.name === 'PendingGate')[0].PATTERN);
     this.parser = new RiScriptParser(tokens, this.textTypes);
     this.RiTa = (opts.RiTa && opts.RiTa.VERSION) ? opts.RiTa : {
       VERSION: 0,
@@ -274,7 +276,9 @@ class RiScript {
     let decoded = decode(input);
 
     // clean up whitespace, linebreaks
-    let result = decoded.replace(this.regex.Whitespace, ' ').replace(this.regex.EndingBreak, '');
+    let result = decoded
+      .replace(this.regex.Whitespace, ' ')
+      .replace(this.regex.EndingBreak, '');
 
     // handle unresolved gates
     let gates = [...result.matchAll(this.Symbols.PENDING_GATE_RE)];
@@ -324,8 +328,7 @@ class RiScript {
 
     // console.log("escaped: '"+escaped+"'");
 
-    let result = JSON.parse(escaped),
-      urp = unescapeRegexProperty;
+    let result = JSON.parse(escaped), urp = unescapeRegexProperty;
     Object.keys(result).forEach((k) => (result[k] = urp(result[k])));
     return result;
   }
@@ -424,7 +427,9 @@ class RiScript {
       hash |= 0; // Convert to 32bit integer
     }
     let strHash = hash.toString();
-    return hash < 0 ? strHash.replace('-', '0') : strHash;
+    let res = hash < 0 ? strHash.replace('-', '0') : strHash;
+    if (res.length < 8) return res.padStart(8, '0');
+    return res;
   }
 }
 
