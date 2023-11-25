@@ -13,10 +13,12 @@ class BaseVisitor {
 
   isCstNode(o) {
     return (typeof o === 'object' &&
-      ('accept' in o || ('name' in o && 'location' in o && 'children' in o)));
+      'accept' in o  // pending gate deferredContext
+      || ('name' in o && 'location' in o && 'children' in o
+        && 'startOffset' in o.location && 'endOffset' in o.location));
   }
 
-  visit(cstNode, param) {
+  visit(cstNode, opts = {}) {
     if (Array.isArray(cstNode)) {
       cstNode = cstNode[0];
     }
@@ -27,13 +29,13 @@ class BaseVisitor {
       throw Error('Non-cstNode passed to visit: ' + JSON.stringify(cstNode));
     }
 
-    const { name, location } = cstNode;
+    this.nodeText = opts?.nodeText || this.input.substring(
+      cstNode.location.startOffset,
+      cstNode.location.endOffset + 1
+    )
+    //textFromCstNode(cstNode, this.input);
 
-    this.nodeText = this.input.substring(
-      location.startOffset,
-      location.endOffset + 1
-    );
-
+    const name = opts?.name || cstNode.name;
     if (typeof this[name] !== 'function') {
       throw Error('BaseVisitor.visit: expecting function for this[' +
         `${name}], found ${typeof this[name]}: ${JSON.stringify(this[name])}`);
@@ -43,7 +45,7 @@ class BaseVisitor {
       this.path += name + '.';
     }
     //console.log('calling ' + name + '()');
-    return this[name](cstNode.children, param);
+    return this[name](cstNode.children, opts);
   }
 
   validateVisitor() {
@@ -111,12 +113,13 @@ class RiScriptVisitor extends BaseVisitor {
     this.print('wexpr');
   }
 
-  gate(ctx) {
+  gate(ctx, opts = {}) {
     // returns { decision: [accept | reject] } or { decision: 'defer', operands: [] }
 
     // if (ctx.Gate.length !== 1) throw Error('Invalid gate: ' + ctx.Gate);
     //const raw = ctx.Gate[0].image;
-    let rawGate = this.nodeText.replace(/^@/, '');
+
+    let rawGate = opts?.gateText ? opts.gateText : this.nodeText.replace(/^@/, '');
 
     let mingoQuery;
     try {
@@ -368,7 +371,8 @@ class RiScriptVisitor extends BaseVisitor {
 
     if (stillUnresolved) return original; // still deferred
 
-    const result = this.choice(lookup.deferredContext); // execute the gate
+    let { deferredContext, nodeText, gateText } = lookup;
+    const result = this.choice(deferredContext, { nodeText, gateText, name: 'choice' }); // execute the gate
     return result;
   }
 
@@ -380,7 +384,7 @@ class RiScriptVisitor extends BaseVisitor {
   choice(ctx, opts) {
     const $ = this.symbols;
     let rawGate, gateResult;
-    const original = this.nodeText;
+    const original = this.nodeText || opts.nodeText;
     let info = original;
     const choiceKey = this.RiScript._stringHash
       (original + ' #' + this.choiceId(ctx));
@@ -421,7 +425,7 @@ class RiScriptVisitor extends BaseVisitor {
         ///console.log('rawGate:"' + rawGate + '"');
 
         gateResult = this.visit(ctx.gate);
-        ({rawGate, decision} = gateResult);
+        ({ rawGate, decision } = gateResult);
         // rawGate = gateResult.rawGate;
         // decision = gateResult.decision;
         // info += `\n  [gate] ${rawGate} -> ${decision !== 'defer'
@@ -433,6 +437,8 @@ class RiScriptVisitor extends BaseVisitor {
       if (gateResult && gateResult.decision === 'defer') {
         this.pendingGates[choiceKey] = {
           deferredContext: ctx,
+          gateText: rawGate.trim(),
+          nodeText: original.trim(),
           operands: gateResult.operands
         };
         return `${$.PENDING_GATE}${choiceKey}`; // gate defers
@@ -740,6 +746,15 @@ class RiScriptVisitor extends BaseVisitor {
   tindent() {
     return ' '.repeat((this.order + '').length + 1);
   }
+}
+
+function textFromCstNode(cstNode, input) {
+
+  const { location } = cstNode;
+  return input.substring(
+    location.startOffset,
+    location.endOffset + 1
+  );
 }
 
 function transformNames(txs) {

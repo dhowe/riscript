@@ -109,7 +109,7 @@ class RiScript {
 
     this.textTypes = TextTypes;
     this.lexer = new Lexer(tokens);
-    console.log('tokens', tokens.modes.normal.filter(t => t.name === 'PendingGate')[0].PATTERN);
+    // console.log('tokens', tokens.modes.normal.filter(t => t.name === 'PendingGate')[0].PATTERN);
     this.parser = new RiScriptParser(tokens, this.textTypes);
     this.RiTa = (opts.RiTa && opts.RiTa.VERSION) ? opts.RiTa : {
       VERSION: 0,
@@ -208,10 +208,11 @@ class RiScript {
     let s = tokens.reduce((str, t) => {
       let { name } = t.tokenType;
       let tag = name;
+      if (tag === 'EnterGate') tag = 'GATE';
       if (tag === 'TEXT') tag = RiScript._escapeText(t.image, 1);
       if (tag === 'SYM') tag = 'sym(' + t.image + ')';
       if (tag === 'TX') tag = 'tx(' + t.image + ')';
-      return str + tag + ', ';
+      return str + (/^Gate*/.test(tag) ? '' : tag + ', ');
     }, '')
       .slice(0, -2);
     console.log('\nTokens: [ ' + s + ' ]  Context:',
