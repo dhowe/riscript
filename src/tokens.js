@@ -10,8 +10,8 @@ function getTokens(v2Compatible) {
     DYNAMIC: '$',
     STATIC: '#',
     ENTITY: '&',
-    OPEN_GATE: '@',
-    CLOSE_GATE: '@',
+    //OPEN_GATE: '@',
+    //CLOSE_GATE: '@',
     PENDING_GATE: '@@',
     OPEN_SILENT: '{',
     CLOSE_SILENT: '}',
@@ -44,27 +44,75 @@ function getTokens(v2Compatible) {
   Escaped.SPECIAL = Object.values(Escaped).join('').replace(/[<>]/g, ''); // allow <> for html 
   Symbols.PENDING_GATE_RE = new RegExp(PENDING_GATE_PATTERN.source, 'g'); // for unresolved gates
 
-  const ExitGate = createToken({
-    name: "ExitGate",
-    pattern: new RegExp(`\\s*${Escaped.CLOSE_GATE}`),
-    pop_mode: true
-  });
+  // const ExitGate = createToken({
+  //   name: "ExitGate",
+  //   // pattern: new RegExp(`\\s*${Escaped.CLOSE_GATE}`),
+  //   pattern: bracketMatch,
+  //   pop_mode: true
+  // });
 
   const Gate = createToken({
     name: "Gate",
-    pattern: new RegExp(`[^${Escaped.CLOSE_GATE}]+`)
+    pattern: bracketMatch,
+    line_breaks: true,
+    //pattern: new RegExp(`[^${Escaped.CLOSE_GATE}]+`)
   });
+
+  function bracketMatch(text, startOffset) {
+    let endOffset = startOffset, dbug = false;
+    let charCode = text.charCodeAt(endOffset);
+    if (charCode !== 64) return null; // 64 = '@'
+    
+    if (dbug) console.log('bracketMatch', text, startOffset);
+    endOffset++;
+    charCode = text.charCodeAt(endOffset);
+    
+    // spaces between the @ and the open brace 
+    while (charCode === 32) {
+      endOffset++;
+      charCode = text.charCodeAt(endOffset);
+    }
+    if (charCode !== 123) {
+      if (dbug) console.log(`  "${text.substring(startOffset, endOffset)}" -> null1`);
+      return null; // 123 = '{'
+    }
+    endOffset++;
+    charCode = text.charCodeAt(endOffset);
+    let depth = 1;
+    while (depth > 0) {
+      if (charCode === 123) depth++;
+      else if (charCode === 125) depth--;
+      else if (charCode === 64) {
+        if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null2`);
+        return null; // 64 = '@'
+      }
+      if (dbug) console.log('  depth', depth,text.substring(startOffset, endOffset));
+      endOffset++;
+      charCode = text.charCodeAt(endOffset);
+    }
+
+    // No match, must return null xsto conform with the RegExp.prototype.exec signature
+    if (endOffset === startOffset) {
+      if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null3`);
+      return null;
+    } else {
+      let matchedString = text.substring(startOffset, endOffset);
+      // according to the RegExp.prototype.exec API the first item in the returned array must be the whole matched string.
+      if (dbug) console.log('  returned -> ',[matchedString]);
+      return [matchedString];
+    }
+  }
 
   const PendingGate = createToken({
     name: "PendingGate",
     pattern: PENDING_GATE_PATTERN
   });
 
-  const EnterGate = createToken({
-    name: "EnterGate",
-    pattern: new RegExp(`${Escaped.OPEN_GATE}\\s*`),
-    push_mode: "gate_mode"
-  });
+  // const EnterGate = createToken({
+  //   name: "EnterGate",
+  //   pattern: new RegExp(`${Escaped.OPEN_GATE}\\s*`),
+  //   push_mode: "gate_mode"
+  // });
 
   const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
   const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
@@ -85,18 +133,18 @@ function getTokens(v2Compatible) {
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
 
-  const normalMode = [Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, DYN, STAT, AMP, TF, OS, CS, PendingGate, Raw, EnterGate];
-  const gateMode = [Gate, ExitGate];
+  const tokens = [Gate, Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, DYN, STAT, AMP, TF, OS, CS, PendingGate, Raw ];
+  // const gateMode = [Gate, ExitGate];
 
-  const multiMode = {
-    modes: {
-      normal: normalMode,
-      gate_mode: gateMode
-    },
-    defaultMode: 'normal'
-  };
+  // const multiMode = {
+  //   modes: {
+  //     normal: normalMode,
+  //     gate_mode: gateMode
+  //   },
+  //   defaultMode: 'normal'
+  // };
 
-  return { tokens: multiMode, Constants: { Symbols, Escaped } };
+  return { tokens, Constants: { Symbols, Escaped } };
 }
 
 function escapeRegex(s) {

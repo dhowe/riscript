@@ -99,7 +99,7 @@ class RiScript {
       JSOLIdent: new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g'),
       ChoiceWrap: new RegExp('^' + open + '[^' + open + close + ']*' + close + '$'),
       ValidSymbol: new RegExp('(' + Escaped.DYNAMIC + '|' + Escaped.STATIC + '[A-Za-z_0-9])[A-Za-z_0-9]*'),
-      Entity: tokens.modes.normal.filter(t => t.name === 'Entity')[0].PATTERN,
+      Entity: tokens./*modes.normal.*/filter(t => t.name === 'Entity')[0].PATTERN,
       StaticSymbol: new RegExp(Escaped.STATIC + '[A-Za-z_0-9][A-Za-z_0-9]*'),
       Special: new RegExp(`[${Escaped.SPECIAL.replace('&', '')}]`),
       Continue: new RegExp(Escaped.CONTINUATION + '\\r?\\n', 'g'),
@@ -281,12 +281,12 @@ class RiScript {
     gates.forEach((g) => {
       if (!g || !g[0] || !g[1]) throw Error('bad gate: ' + g);
       let deferredGate = this.visitor.pendingGates[g[1]];
-      let { deferredContext, operands } = deferredGate;
+      let { deferredContext, operands, gateText } = deferredGate;
       if (!operands.length) throw Error('no operands');
       let reject = this.visitor.choice(deferredContext, { forceReject: true });
 
       result = result.replace(g[0], reject);
-      if (opts.trace) console.log('  ' + g[0] + '-> ' + reject);
+      if (opts.trace) console.log('Unresolved gate: \'' + gateText + '\' {reject}');
     });
 
     if (opts.trace) console.log(`\nFinal: '${result}'`);

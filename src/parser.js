@@ -37,9 +37,9 @@ class RiScriptParser extends CstParser {
     });
 
     $.RULE("gate", () => {
-      $.CONSUME(Tokens.EnterGate);
+      // $.CONSUME(Tokens.EnterGate);
       $.MANY(() => $.CONSUME(Tokens.Gate));
-      $.CONSUME(Tokens.ExitGate);
+      // $.CONSUME(Tokens.ExitGate);
     });
 
     $.RULE("silent", () => {

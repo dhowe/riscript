@@ -71,7 +71,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   start(opts = {}) {
-    
+
     this.input = opts.input;
     this.trace = opts.trace;
     this.nowarn = opts.silent;
@@ -117,8 +117,10 @@ class RiScriptVisitor extends BaseVisitor {
 
     if (ctx.Gate.length !== 1) throw Error('Invalid gate: ' + ctx.Gate);
 
-    let mingoQuery;
-    const raw = ctx.Gate[0].image;
+    let raw = ctx.Gate[0].image, mingoQuery;
+    if (raw.startsWith('@')) {//this.Symbols.OPEN_GATE)) {
+      raw = raw.substring(1);
+    }
     try {
       mingoQuery = this.scripting._query(raw);
     } catch (e) {
@@ -370,8 +372,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     if (stillUnresolved) return original; // still deferred
 
-    const result = this.choice(lookup.deferredContext); // execute the gate
-    return result;
+    return this.choice(lookup.deferredContext); // execute the gate
   }
 
   else(ctx) {
@@ -381,13 +382,14 @@ class RiScriptVisitor extends BaseVisitor {
 
   choice(ctx, opts) {
     const $ = this.symbols;
-    let rawGate, gateResult;
     const original = this.nodeText;
-    let info = original;
-    const choiceKey = this.RiScript._stringHash(original + ' #' + this.choiceId(ctx));
+    let gateText, gateResult, info = original;
+    const choiceKey = this.RiScript._stringHash
+      (original + ' #' + this.choiceId(ctx));
 
     if (!this.isNoRepeat && this.hasNoRepeat(ctx.TF)) {
-      throw Error('noRepeat() not allowed on choice (use a $variable instead): ' + original);
+      throw Error('noRepeat() not allowed on choice '
+        + '(use a $variable instead): ' + original);
     }
 
     let decision = 'accept';
@@ -396,10 +398,10 @@ class RiScriptVisitor extends BaseVisitor {
     } else {
       if (ctx.gate) {
         // do we have a gate
-        rawGate = ctx.gate[0].children.Gate[0].image;
+        gateText = ctx.gate[0].children.Gate[0].image;
         gateResult = this.visit(ctx.gate);
         decision = gateResult.decision;
-        info += `\n  [gate] ${rawGate} -> ${decision !== 'defer'
+        info += `\n  [gate] ${gateText} -> ${decision !== 'defer'
           ? decision.toUpperCase()
           : `DEFER ${$.PENDING_GATE}${choiceKey}`
           }  ${this.lookupsToString()}`;
@@ -408,6 +410,7 @@ class RiScriptVisitor extends BaseVisitor {
       if (gateResult) {
         if (gateResult.decision === 'defer') {
           this.pendingGates[choiceKey] = {
+            gateText,
             deferredContext: ctx,
             operands: gateResult.operands
           };
