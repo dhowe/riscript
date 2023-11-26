@@ -10,8 +10,7 @@ function getTokens(v2Compatible) {
     DYNAMIC: '$',
     STATIC: '#',
     ENTITY: '&',
-    //OPEN_GATE: '@',
-    //CLOSE_GATE: '@',
+    OPEN_GATE: '@',
     PENDING_GATE: '@@',
     OPEN_SILENT: '{',
     CLOSE_SILENT: '}',
@@ -44,24 +43,17 @@ function getTokens(v2Compatible) {
   Escaped.SPECIAL = Object.values(Escaped).join('').replace(/[<>]/g, ''); // allow <> for html 
   Symbols.PENDING_GATE_RE = new RegExp(PENDING_GATE_PATTERN.source, 'g'); // for unresolved gates
 
-  // const ExitGate = createToken({
-  //   name: "ExitGate",
-  //   // pattern: new RegExp(`\\s*${Escaped.CLOSE_GATE}`),
-  //   pattern: bracketMatch,
-  //   pop_mode: true
-  // });
-
   const Gate = createToken({
     name: "Gate",
     pattern: bracketMatch,
     line_breaks: true,
-    //pattern: new RegExp(`[^${Escaped.CLOSE_GATE}]+`)
-  });
+   });
 
   function bracketMatch(text, startOffset) {
+    const openGate = Symbols.OPEN_GATE.charCodeAt(0);
     let endOffset = startOffset, dbug = false;
     let charCode = text.charCodeAt(endOffset);
-    if (charCode !== 64) return null; // 64 = '@'
+    if (charCode !== openGate) return null; // 64 = '@'
     
     if (dbug) console.log('bracketMatch', text, startOffset);
     endOffset++;
@@ -72,19 +64,19 @@ function getTokens(v2Compatible) {
       endOffset++;
       charCode = text.charCodeAt(endOffset);
     }
-    if (charCode !== 123) {
+    if (charCode !== 123) { // 123 = '{'
       if (dbug) console.log(`  "${text.substring(startOffset, endOffset)}" -> null1`);
-      return null; // 123 = '{'
+      return null; 
     }
     endOffset++;
     charCode = text.charCodeAt(endOffset);
     let depth = 1;
     while (depth > 0) {
-      if (charCode === 123) depth++;
-      else if (charCode === 125) depth--;
-      else if (charCode === 64) {
+      if (charCode === 123) depth++; // 123 = '{'
+      else if (charCode === 125) depth--; // 123 = '}'
+      else if (charCode === openGate) {
         if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null2`);
-        return null; // 64 = '@'
+        return null;
       }
       if (dbug) console.log('  depth', depth,text.substring(startOffset, endOffset));
       endOffset++;

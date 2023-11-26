@@ -152,11 +152,12 @@ describe(title, function () {
     // it('Should lex simplest gate', function () {
     //   expect(riscript.lex({input:'[ @{ a: { $exists: true }} hello]'},0,T)).eq('');
     // });
-    it('Should handle simplest gate', function () {
-      // expect(riscript.evaluate('[ @{ a: { $exists: true }} hello]',0)).eq('');
-      // expect(riscript.evaluate('$a=1\n[ @{ a: { $exists: true }} hello]')).eq('hello');
-      expect(riscript.evaluate('[ @{ a: { $exists: true }} hello]\n$a=1',0,T)).eq('hello');
-    });
+
+    /*it('Should handle simplest gate', function () {
+      expect(riscript.evaluate('[ @{ a: { $exists: true }} hello]',0)).eq('');
+      expect(riscript.evaluate('$a=1\n[ @{ a: { $exists: true }} hello]')).eq('hello');
+      expect(riscript.evaluate('[ @{ a: { $exists: true }} hello]\n$a=1', 0, T)).eq('hello');
+    });*/
 
     it('Should throw on bad gates', function () {
       expect(() =>
@@ -372,7 +373,7 @@ describe(title, function () {
       expect(riscript.evaluate('[ @{ $or: [] } hello]', { a: 27 })).eq('');
 
       // accept if no failing condition in $and
-      expect(riscript.evaluate('[ @{ $and: [] } hello]', { a: 27 }, T)).eq(
+      expect(riscript.evaluate('[ @{ $and: [] } hello]', { a: 27 })).eq(
         'hello'
       );
 

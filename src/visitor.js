@@ -2,7 +2,6 @@
 class BaseVisitor {
   constructor(riScript) {
     this.input = 0;
-
     this.path = '';
     this.nowarn = false;
     this.tracePath = true;
@@ -12,8 +11,8 @@ class BaseVisitor {
   }
 
   isCstNode(o) {
-    return (typeof o === 'object' &&
-      ('accept' in o || ('name' in o && 'location' in o && 'children' in o)));
+    return (typeof o === 'object' && ('accept' in o
+      || ('name' in o && 'location' in o && 'children' in o)));
   }
 
   visit(cstNode, param) {
@@ -95,6 +94,7 @@ class RiScriptVisitor extends BaseVisitor {
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
     const exprs = ctx.atom.map((c) => this.visit(c));
+    
     // handle special cases of the form: "not [quite|] far enough"
     for (let i = 1; i < exprs.length - 1; i++) {
       if (
@@ -398,7 +398,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     this.print('choice', info);
     info = ""
-    
+
     let decision = 'accept';
     if (opts?.forceReject) {
       decision = 'reject';
@@ -473,7 +473,7 @@ class RiScriptVisitor extends BaseVisitor {
     return false;
   }
 
-  checkContext(ident, opts={}) {
+  checkContext(ident, opts = {}) {
     let isStatic = false;
     let isUser = false;
     let result;
@@ -714,7 +714,7 @@ class RiScriptVisitor extends BaseVisitor {
 
   print(s, ...args) {
     if (this.trace) {
-      if (this.path && s !== 'script' ) {
+      if (this.path && s !== 'script') {
         s = this.path.replace(/\.$/, '');
       }
       if (!s.endsWith('gate.text')) { // ignore these
