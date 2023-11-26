@@ -403,7 +403,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (opts?.forceReject) {
       decision = 'reject';
     } else {
-      if (ctx.gate) {
+      if (ctx?.gate?.[0]?.children?.Gate) {
         // do we have a gate
         gateText = ctx.gate[0].children.Gate[0].image;
         gateResult = this.visit(ctx.gate);

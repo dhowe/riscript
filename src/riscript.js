@@ -424,7 +424,7 @@ class RiScript {
       hash = (hash << 5) - hash + chr;
       hash |= 0; // Convert to 32bit integer
     }
-    let strHash = hash.toString();
+    let strHash = hash.toString().padStart(9, '0');
     return hash < 0 ? strHash.replace('-', '0') : strHash;
   }
 }
