@@ -72,7 +72,7 @@ The following operators assist in evaluating documents:
 <tr>
 <td>$regex</td>
 <td>matches a regular expression pattern </td>
-<td><code>@{ name:{ $regex: '^USS\\sE'}})</code></td>
+<td><code>@{ symbol: { $regex: /^USS\sE/ }})</code></td>
 </tr>
 </tbody>
 </table>
