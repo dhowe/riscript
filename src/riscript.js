@@ -278,6 +278,7 @@ class RiScript {
 
     // handle unresolved gates
     let gates = [...result.matchAll(this.Symbols.PENDING_GATE_RE)];
+    if (opts.trace && gates.length) console.log();
     gates.forEach((g) => {
       if (!g || !g[0] || !g[1]) throw Error('bad gate: ' + g);
       let deferredGate = this.visitor.pendingGates[g[1]];

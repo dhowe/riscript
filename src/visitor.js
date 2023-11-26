@@ -205,7 +205,7 @@ class RiScriptVisitor extends BaseVisitor {
 
       // dynamic: store as func to be resolved later, perhaps many times
       value = () => $.visit(ctx.expr);
-      info = `${sym} = <f*:pending>` + (opts?.silent ? '{silent}' : '');
+      info = `${sym} = <f*:pending> ` + (opts?.silent ? '{silent}' : '');
 
       // NOTE: this function may contain a choice, which needs to be handled
       // when called from a symbol with a norepeat transform (??) TODO: test
@@ -350,6 +350,7 @@ class RiScriptVisitor extends BaseVisitor {
 
   pgate(ctx) {
     this.print('pgate', this.nodeText);
+
     // new RegExp(`^${this.symbols.PENDING_GATE}`
     const original = this.nodeText;
     const ident = original.replace(this.symbols.PENDING_GATE, '');
@@ -364,7 +365,10 @@ class RiScriptVisitor extends BaseVisitor {
       let { result, resolved } = this.checkContext(o);
       if (typeof result === 'function') {
         // while {} ?
+        // let tracing = this.trace;
+        // this.trace = false; // disable tracing
         result = result.call(); // call it
+        //this.trace = tracing;
         resolved = !this.scripting.isParseable(result);
       }
       return typeof result === 'undefined' || !resolved;
@@ -392,6 +396,9 @@ class RiScriptVisitor extends BaseVisitor {
         + '(use a $variable instead): ' + original);
     }
 
+    this.print('choice', info);
+    info = ""
+    
     let decision = 'accept';
     if (opts?.forceReject) {
       decision = 'reject';
@@ -401,10 +408,9 @@ class RiScriptVisitor extends BaseVisitor {
         gateText = ctx.gate[0].children.Gate[0].image;
         gateResult = this.visit(ctx.gate);
         decision = gateResult.decision;
-        info += `\n  [gate] ${gateText} -> ${decision !== 'defer'
-          ? decision.toUpperCase()
-          : `DEFER ${$.PENDING_GATE}${choiceKey}`
-          }  ${this.lookupsToString()}`;
+        let ginfo = `${gateText} -> ${(decision !== 'defer' ? decision.toUpperCase()
+          : `DEFER ${$.PENDING_GATE}${choiceKey}`)}  ${this.lookupsToString()}`;
+        this.print('gate', ginfo);
       }
 
       if (gateResult) {
@@ -467,7 +473,7 @@ class RiScriptVisitor extends BaseVisitor {
     return false;
   }
 
-  checkContext(ident) {
+  checkContext(ident, opts={}) {
     let isStatic = false;
     let isUser = false;
     let result;
@@ -708,10 +714,12 @@ class RiScriptVisitor extends BaseVisitor {
 
   print(s, ...args) {
     if (this.trace) {
-      if (this.path && s !== 'script') {
+      if (this.path && s !== 'script' ) {
         s = this.path.replace(/\.$/, '');
       }
-      console.log(++this.order, `[${s}]`, ...args);
+      if (!s.endsWith('gate.text')) { // ignore these
+        console.log(++this.order, `[${s}]`, ...args);
+      }
       this.path = '';
     }
   }
