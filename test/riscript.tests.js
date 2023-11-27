@@ -1272,8 +1272,7 @@ describe(title, function () {
     it('Should resolve across assignment types', function () {
       let ctx;
 
-      expect(riscript.evaluate('The [$foo=blue] [dog | dog]', (ctx = {}), PL)
-      ).eq('The blue dog');
+      expect(riscript.evaluate('The [$foo=blue] [dog | dog]', (ctx = {}), TPL)).eq('The blue dog');
       expect(riscript.visitor.dynamics.foo()).eq('blue');
 
       expect(riscript.evaluate('The [$foo=blue [dog | dog]]',
