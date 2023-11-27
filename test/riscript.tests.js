@@ -811,6 +811,17 @@ describe(title, function () {
 
   describe('Evaluation', function () {
 
+    it('Should resolve simplest expression', function () {
+      expect(RiScript.evaluate('hello', 0,T)).eq('hello');
+return;
+      expect(RiScript.evaluate('[hello]', 0,T)).eq('hello');
+return;
+      expect(RiScript.evaluate('[@{a:2} hello (2)]', 0,T)).eq('');
+      // expect(RiScript.evaluate('[@{a:2} hello (2)]', 0,T)).eq('');
+      expect(RiScript.evaluate('[hello (2)]', 0,T)).eq('hello');
+      expect(RiScript.evaluate('[hello]', 0,T)).eq('hello');
+    });
+
     it('Should be statically callable from RiScript', function () {
       expect(RiScript.evaluate('(foo)', {})).eq('(foo)');
       expect(RiScript.evaluate('foo!', {})).eq('foo!');
@@ -835,12 +846,15 @@ describe(title, function () {
     it('Should resolve expressions', function () {
       expect(riscript.evaluate('foo')).eq('foo');
       expect(riscript.evaluate('(foo)', {})).eq('(foo)');
+
       expect(riscript.evaluate('foo!', {})).eq('foo!');
       expect(riscript.evaluate('!foo', {})).eq('!foo');
       expect(riscript.evaluate('foo.', {})).eq('foo.');
       expect(riscript.evaluate('"foo"', {})).eq('"foo"');
       expect(riscript.evaluate("'foo'", {})).eq("'foo'");
-      expect(riscript.evaluate('$a=hello\n', 0)).eq('\n');
+
+      expect(riscript.evaluate('$a=hello\n', 0,T)).eq('\n');
+
       expect(riscript.evaluate('hello\n', 0)).eq('hello\n');
       expect(riscript.evaluate('*%©\n', 0)).eq('*%©\n');
     });

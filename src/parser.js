@@ -5,7 +5,7 @@ class RiScriptParser extends CstParser {
 
   constructor(allTokens, textTypes) {
     super(allTokens, { nodeLocationTracking: "full" });
-    this.atomTypes = ['silent', 'assign', 'symbol', 'choice', 'pgate', 'text', 'entity'];
+    this.atomTypes = ['assign',  'choice',  'silent',  'symbol','pgate', 'entity', 'text'];
     this.textTypes = textTypes; // defined in tokens.js
     this.buildRules();
   }
@@ -18,8 +18,100 @@ class RiScriptParser extends CstParser {
       ("[PARSING]\n" + this.errors[0].message);
     return cst;
   }
-
+/*
+  Specification:
+    script: expr+
+    expr: (assign | choice | silent | symbol | pgate | entity | text)     
+    orExpr: gate? options elseExpr?
+    options: expr weight? (OR expr weight?)
+    elseExpr: ELSE options
+    choice: OC orExpr CC transform*
+    assign: $symbol EQ expr
+    symbol: $symbol transform*
+    silent: OS assign CS 
+    text: Raw (=> from tokens.textTypes)
+    gate: @mingo
+*/
   buildRules() {
+
+    const $ = this, Tokens = this.tokensMap;
+
+    $.RULE("script", () => {
+      $.MANY(() => $.SUBRULE($.expr));
+    });
+
+    $.RULE("expr", () => {
+      $.OR(this.atomTypes.map(t => ({ ALT: () => $.SUBRULE($[t]) })));
+    });
+
+    $.RULE("orExpr", () => {
+      $.OPTION1(() => $.SUBRULE1($.gate));
+      $.SUBRULE2($.options);
+      $.OPTION2(() => $.SUBRULE3($.elseExpr));
+    });
+
+    $.RULE("options", () => {
+      $.SUBRULE1($.expr);
+      $.OPTION1(() => $.CONSUME1(Tokens.Weight));
+      $.MANY_SEP({
+        SEP: Tokens.OR,
+        DEF: () => {
+          $.SUBRULE2($.expr)
+          $.OPTION2(() => $.CONSUME2(Tokens.Weight));
+        }
+      });
+    });
+
+    $.RULE("elseExpr", () => {
+      $.CONSUME(Tokens.ELSE);
+      $.SUBRULE($.options);
+    });
+
+    $.RULE("choice", () => {
+      $.CONSUME(Tokens.OC);
+      $.SUBRULE($.orExpr);
+      $.CONSUME(Tokens.CC);
+      $.MANY(() => $.CONSUME(Tokens.Transform));
+    });
+
+    $.RULE("assign", () => {
+      $.CONSUME(Tokens.Symbol);
+      $.CONSUME(Tokens.EQ);
+      $.SUBRULE($.expr);
+    });
+
+    $.RULE("silent", () => {
+      $.CONSUME(Tokens.OS);
+      $.SUBRULE($.assign);
+      $.CONSUME(Tokens.CS);
+    });
+
+    $.RULE("symbol", () => {
+      $.CONSUME(Tokens.Symbol);
+      $.MANY(() => $.CONSUME(Tokens.Transform));
+    });
+
+    $.RULE("entity", () => {
+      $.CONSUME(Tokens.Entity);
+    });
+
+    $.RULE("gate", () => {
+      $.CONSUME(Tokens.Gate);
+    });
+
+    $.RULE("pgate", () => {
+      $.CONSUME(Tokens.PendingGate);
+    });
+
+    $.RULE("text", () => {
+      $.OR(this.textTypes.map(t => ({ ALT: () => $.CONSUME(Tokens[t]) })));
+    });
+
+    this.performSelfAnalysis(); // keep
+  }
+
+
+  buildRulesX() {
 
     const $ = this, Tokens = this.tokensMap;
 
@@ -29,7 +121,7 @@ class RiScriptParser extends CstParser {
 
     $.RULE("pgate", () => {
       $.CONSUME(Tokens.PendingGate);
-      $.MANY(() => $.CONSUME(Tokens.TF));
+      $.MANY(() => $.CONSUME(Tokens.transform));
     });
 
     $.RULE("entity", () => {
@@ -45,7 +137,7 @@ class RiScriptParser extends CstParser {
     $.RULE("silent", () => {
       $.CONSUME(Tokens.OS);
       $.OPTION1(() => $.SUBRULE($.gate));
-      $.CONSUME(Tokens.SYM);
+      $.CONSUME(Tokens.symbol);
       $.OPTION2(() => {
         $.CONSUME(Tokens.EQ);
         $.SUBRULE($.expr);
@@ -54,14 +146,14 @@ class RiScriptParser extends CstParser {
     });
 
     $.RULE("assign", () => {
-      $.CONSUME(Tokens.SYM);
+      $.CONSUME(Tokens.symbol);
       $.CONSUME(Tokens.EQ);
       $.SUBRULE($.expr);
     });
 
     $.RULE("symbol", () => {
-      $.CONSUME(Tokens.SYM);
-      $.MANY(() => $.CONSUME(Tokens.TF));
+      $.CONSUME(Tokens.symbol);
+      $.MANY(() => $.CONSUME(Tokens.transform));
     });
 
     $.RULE("accept", () => {
@@ -89,7 +181,7 @@ class RiScriptParser extends CstParser {
         $.SUBRULE($.reject)
       });
       $.CONSUME(Tokens.CC);
-      $.MANY(() => $.CONSUME(Tokens.TF));
+      $.MANY(() => $.CONSUME(Tokens.transform));
     });
 
     $.RULE("wexpr", () => {
