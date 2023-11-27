@@ -105,12 +105,9 @@ class RiScriptVisitor extends BaseVisitor {
 
   assign(ctx, opts) {
     this.print('assign', this.nodeText);
-
     if (ctx.symbol.length !== 1) throw Error('invalid assign');
     return this.doAssign(ctx.symbol[0].image, ctx.transform, opts);
   }
-
-  // gate(ctx, opts) {}
 
   symbol(ctx, opts) {
     if (ctx.symbol.length !== 1) throw Error('invalid symbol');
@@ -121,7 +118,8 @@ class RiScriptVisitor extends BaseVisitor {
     if (ctx?.options?.length !== 1) throw Error('invalid orExpr');
 
     this.print('orExpr', this.nodeText);
-    let exprKey = this.RiScript._stringHash(this.nodeText + ' #' + this.choiceId(ctx));
+    let exprKey = this.RiScript._stringHash
+      (this.nodeText + ' #' + this.choiceId(ctx));
 
     let gateResult = this.doGate(ctx, exprKey);
     if (gateResult === 'reject' || opts.forceReject) {
@@ -135,6 +133,9 @@ class RiScriptVisitor extends BaseVisitor {
 
   options(ctx) {
     this.print('options', this.nodeText);
+
+    // working here
+    
   }
 
   choice(ctx) {
@@ -145,7 +146,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   elseExpr(ctx) {
-    if (Object.keys(ctx.elseExpr).length !== 1) throw Error('invalid text');
+    if (ctx?.expr?.length !== 1) throw Error('invalid elseExpr');
     this.print('elseExpr', this.nodeText);
     return this.visit(ctx.expr)
   }
@@ -156,6 +157,10 @@ class RiScriptVisitor extends BaseVisitor {
     const image = ctx[type][0].image; // any of riscript.textTypes
     this.print('text', this.RiScript._escapeText("'" + image + "'"));
     return image;
+  }
+
+  gate(ctx, opts) {
+    this.print('gate{no-op}', this.nodeText);
   }
 
   // Helpers ================================================
