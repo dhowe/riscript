@@ -21,20 +21,6 @@ import { getTokens, TextTypes } from './tokens.js';
     raw: Raw
 */
 
-/*
-  Specification2:
-    script: expr+
-    expr: (assign | choice | symbol | text | silent | pgate | entity) transform*
-    choice: [ orExpr ]   
-    silent: { assign | orExpr }  
-    orExpr: gate? expr weight? (OR expr weight?)* else?
-    assign: $symbol = expr
-    symbol: $symbol
-    gate: @mingo
-    else: || expr
-    raw: Raw
-*/
-
 const { decode } = he;
 const Vowels = /[aeiou]/;
 const RegexEscape = '_RE_';

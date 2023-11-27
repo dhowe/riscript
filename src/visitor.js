@@ -19,6 +19,9 @@ class BaseVisitor {
     if (Array.isArray(cstNode)) {
       cstNode = cstNode[0];
     }
+    if (typeof cstNode === 'undefined') {
+      return undefined;
+    }
     if (!this.isCstNode(cstNode)) {
       throw Error('Non-cstNode passed to visit: ' + JSON.stringify(cstNode));
     }
@@ -38,9 +41,6 @@ class BaseVisitor {
     if (this.tracePath && !/(expr|atom|silent)/.test(name)) {
       this.path += name + '.';
     }
-
-    if (this.trace) console.log(`calling ${name}()`);
-
     return this[name](cstNode.children, param);
   }
 
@@ -79,198 +79,195 @@ class RiScriptVisitor extends BaseVisitor {
     return super.visit(opts.cst);
   }
 
-  // Parser rules ================================================
-
   script(ctx) {
-    if (!ctx.expr) throw Error('invalid script');
     this.order = 0;
+    const count = ctx.expr ? ctx.expr.length : 0;
     this.print('script', "'" + this.RiScript._escapeText(this.input)
-      + "' :: " + ctx.expr.length + ' expression(s)');
-    return ctx.expr.length ? this.visit(ctx.expr) : '';
+      + "' :: " + count + ' expression(s)');
+    if (!count) return '';
+    if (Object.keys(ctx).length !== 1) throw Error('script: invalid expr');
+    return this.visit(ctx.expr);
   }
 
   expr(ctx) {
+    // this.print('expr', ctx);
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
-    return this.visit(ctx[types[0]]);
+    const exprs = ctx.atom.map((c) => this.visit(c));
+    
+    // handle special cases of the form: "not [quite|] far enough"
+    for (let i = 1; i < exprs.length - 1; i++) {
+      if (
+        exprs[i].length === 0 &&
+        exprs[i - 1].endsWith(' ') &&
+        exprs[i + 1].startsWith(' ')
+      ) {
+        exprs[i + 1] = exprs[i + 1].substring(1);
+      }
+    }
+    return exprs.join('');
   }
 
-  silent(ctx, opts = {}) {
-    this.print('silent', this.nodeText);
-    opts.silent = true;
-    if (ctx.assign.length !== 1) throw Error('invalid silent');
-    this.assign(ctx.assign, opts);
-    return '';
+  wexpr(ctx) {
+    this.print('wexpr');
+  }
+
+  gate(ctx) {
+    // returns { decision: [accept | reject] } or { decision: 'defer', operands: [] }
+
+    if (ctx.Gate.length !== 1) throw Error('Invalid gate: ' + ctx.Gate);
+
+    let raw = ctx.Gate[0].image, mingoQuery;
+    if (raw.startsWith('@')) {//this.Symbols.OPEN_GATE)) {
+      raw = raw.substring(1);
+    }
+    try {
+      mingoQuery = this.scripting._query(raw);
+    } catch (e) {
+      if (!this.warnOnInvalidGates) {
+        throw Error(`Invalid gate[2]: "@${raw}@"\n\nRootCause -> ${e}`);
+      }
+      if (!this.scripting.RiTa.SILENT && !this.nowarn) {
+        console.warn(`[WARN] Ignoring invalid gate: @${raw}@\n`, e);
+      }
+      return { decision: 'accept' };
+    }
+
+    const resolvedOps = {};
+    const unresolvedOps = [];
+    const operands = mingoQuery.operands();
+    operands.forEach((sym) => {
+      let { result, resolved, isStatic, isUser } = this.checkContext(sym);
+
+      if (typeof result === 'function') {
+        // while {} ?
+        result = result.call(); // call it
+        resolved = !this.scripting.isParseable(result);
+      }
+      if (typeof result === 'undefined' || !resolved) {
+        unresolvedOps.push(sym);
+      } else {
+        // add to appropriate context
+        if (isStatic) {
+          this.statics[sym] = result;
+        } else if (isUser) {
+          this.context[sym] = result;
+        } else {
+          this.dynamics[sym] = result;
+        }
+        // store resolved result
+        resolvedOps[sym] = result;
+      }
+    });
+
+    if (
+      Object.keys(resolvedOps).length + unresolvedOps.length !==
+      operands.length
+    ) { throw Error('invalid operands'); }
+
+    // if we have unresolved operands, return them (and defer)
+    if (unresolvedOps.length) { return { decision: 'defer', operands: unresolvedOps }; }
+
+    let result = mingoQuery.test(resolvedOps); // do test
+    if (!result && this.castValues(resolvedOps)) {
+      result = mingoQuery.test(resolvedOps); // redo test after casting
+    }
+
+    return { decision: result ? 'accept' : 'reject' };
   }
 
   assign(ctx, opts) {
-    this.print('assign', this.nodeText);
+    const sym = ctx.SYM[0].image;
 
-    if (ctx.symbol.length !== 1) throw Error('invalid assign');
-    return this.doAssign(ctx.symbol[0].image, ctx.transform, opts);
-  }
+    const ident = sym.replace(this.scripting.regex.AnySymbol, '');
+    const isStatic = sym.startsWith(this.symbols.STATIC);
 
-  // gate(ctx, opts) {}
+    let value, info;
+    if (isStatic) {
+      value = this.visit(ctx.expr);
+      if (this.scripting.isParseable(value)) {
+        this.statics[ident] = value; // store in lookup table ??
+        value = this.inlineAssignment(ident, ctx.TF, value);
+      } else {
+        this.statics[ident] = value; // store in lookup table
+        this.pendingSymbols.delete(ident); // no longer pending
+        this.trace &&
+          console.log('  [pending.delete]', sym,
+            this.pendingSymbols.length
+              ? JSON.stringify(this.pendingSymbols)
+              : ''
+          );
+      }
+      info = `${sym} = ${this.RiScript._escapeText(value)}` +
+        ` [#static] ${opts?.silent ? '{silent}' : ''}`;
+    } else {
+      const $ = this;
 
-  symbol(ctx, opts) {
-    if (ctx.symbol.length !== 1) throw Error('invalid symbol');
-    return this.doSymbol(ctx.symbol[0].image, ctx.transform, opts);
-  }
+      // dynamic: store as func to be resolved later, perhaps many times
+      value = () => $.visit(ctx.expr);
+      info = `${sym} = <f*:pending> ` + (opts?.silent ? '{silent}' : '');
 
-  orExpr(ctx, opts = {}) {
-    if (ctx?.options?.length !== 1) throw Error('invalid orExpr');
+      // NOTE: this function may contain a choice, which needs to be handled
+      // when called from a symbol with a norepeat transform (??) TODO: test
 
-    this.print('orExpr', this.nodeText);
-    let exprKey = this.RiScript._stringHash(this.nodeText + ' #' + this.choiceId(ctx));
-
-    let gateResult = this.doGate(ctx, exprKey);
-    if (gateResult === 'reject' || opts.forceReject) {
-      return ctx?.elseExpr ? this.visit(ctx.elseExpr) : '';
+      this.dynamics[ident] = value; // store in lookup table
     }
-    if (gateResult === 'defer') {
-      return `${this.Symbols.PENDING_GATE}${exprKey}`;
+    this.print('assign', info);
+
+    return value;
+  }
+
+  silent(ctx) {
+    if (ctx.EQ) {
+      this.assign(ctx, { silent: true });
+    } else {
+      this.symbol(ctx, { silent: true });
     }
-    return this.visit(ctx.options); // accept
+    return '';
   }
 
-  options(ctx) {
-    this.print('options', this.nodeText);
-  }
+  atom(ctx) {
+    let result;
+    const types = Object.keys(ctx);
+    if (types.length !== 1) throw Error('invalid atom: ' + types);
+    this.scripting.parser.atomTypes.forEach((type) => {
+      const context = ctx[type];
+      if (context) {
+        if (context.length !== 1) {
+          throw Error(type + ': bad length -> ' + ctx[type].length);
+        }
+        // console.log(type + ':', context[0]);
+        result = this.visit(context[0]);
+      }
+    });
 
-  choice(ctx) {
-    if (ctx?.orExpr?.length !== 1) throw Error('invalid choice');
-    this.print('choice', this.nodeText);
-    let result = this.visit(ctx.orExpr);
-    return this.applyTransforms(result, ctx.transform);
-  }
-
-  elseExpr(ctx) {
-    if (Object.keys(ctx.elseExpr).length !== 1) throw Error('invalid text');
-    this.print('elseExpr', this.nodeText);
-    return this.visit(ctx.expr)
+    // pending function, call it
+    if (typeof result === 'function') {
+      result = result.call();
+    }
+    return result;
   }
 
   text(ctx) {
-    if (Object.keys(ctx).length !== 1) throw Error('invalid text');
+    if (Object.keys(ctx).length !== 1) throw Error('[2] invalid text');
     const type = this.scripting.textTypes.filter(t => ctx[t]);
     const image = ctx[type][0].image; // any of riscript.textTypes
     this.print('text', this.RiScript._escapeText("'" + image + "'"));
     return image;
   }
 
-  // Helpers ================================================
-
-  doGate(ctx, exprKey) {
-
-    let gateText = ctx?.gate?.[0]?.children?.Gate?.[0]?.image;
-    if (!gateText) return 'accept'; // no gate, accept
-
-    let { decision, operands } = this.doMingoQuery(gateText);
-    if (decision === 'defer') {
-      this.pendingGates[exprKey] = {
-        operands,
-        gateText: rawGate,
-        deferredContext: ctx
-      };
-    }
-    let msg = `${gateText} -> ${(result !== 'defer' ? decision.toUpperCase()
-      : `DEFER ${exprKey}`)}  ${this.lookupsToString()}`;
-
-    this.print('gate', msg);
-    return decision;
+  entity(ctx) {
+    return this.nodeText;
   }
 
-  doChoice(ctx, choiceId, transform, opts) {
-    const $ = this.symbols;
-    const original = this.nodeText;
-    const choiceKey = this.RiScript._stringHash(original + ' #' + choiceId);
-
-    if (!this.isNoRepeat && this.hasNoRepeat(transform)) {
-      throw Error('noRepeat() not allowed on choice (use a $variable instead): ' + original);
-    }
-
-    this.print('choice', original);
-
-    // do we have a gate ?
-
-
-    const orExpr = ctx.orExpr;
-    if (decision === 'reject') {
-      if (!('elseExpr' in ctx)) return ''; // rejected without else expr, return ''
-      orExpr = elseExpr; // elseExpr is the only option
-    }
-
-    const options = this.parseOptions(orExpr); // get options
-    if (!options) throw Error('No options in choice: ' + original);
-
-    const excluded = [];
-    let value = null, restored = false
-    while (value === null) {
-      value = this.choose(options, excluded).value;
-
-      // if we still have script, defer until its resolved
-      if (this.scripting.isParseable(value)) {
-        if (transform) value = this.restoreTransforms(value, transformF);
-        restored = true;
-        break;
-      }
-
-      // apply any remaining transforms
-      if (transform) value = this.applyTransforms(value, transform);
-
-      // we have 'norepeat' but value was already used, try again
-      if (this.isNoRepeat && value === this.choices[choiceKey]) {
-        this.print('choice.reject', value + ' [norepeat]');
-        excluded.push(value);
-        value = null;
-        continue;
-      }
-    }
-
-    if (!restored) this.choices[choiceKey] = value; // put in choice cache
-
-    return value;
-  }
-
-  doAssign(expr, transform, opts) {
-    const ident = sym.replace(this.scripting.regex.AnySymbol, '');
-    const isStatic = sym.startsWith(this.symbols.STATIC);
-
-    let value, info;
-    if (isStatic) {
-      // static: can be resolved immediately
-      value = this.visit(expr);
-      if (this.scripting.isParseable(value)) {
-        this.statics[ident] = value; // store in lookup table ??
-        value = this.inlineAssignment(ident, transform, value);
-      } else {
-        this.statics[ident] = value; // store in lookup table
-        this.pendingSymbols.delete(ident); // no longer pending
-        this.trace && console.log('  [pending.delete]', sym,
-          this.pendingSymbols.length ? JSON.stringify(this.pendingSymbols) : '');
-      }
-      info = `${sym} = ${this.RiScript._escapeText(value)}` +
-        ` [#static] ${opts?.silent ? '{silent}' : ''}`;
-
-    } else {
-
-      // dynamic: store as func to be resolved later, perhaps many times
-      value = () => this.visit(expr);
-      info = `${sym} = <f*:pending> ` + (opts?.silent ? '{silent}' : '');
-      this.dynamics[ident] = value; // store in lookup table
-    }
-
-    this.print('assign', info);
-
-    return value;
-  }
-
-  doSymbol(symbol, transform, opts) {
+  symbol(ctx, opts) {
+    if (ctx.SYM.length !== 1) throw Error('[1] invalid symbol');
 
     const original = this.nodeText;
+    const symbol = ctx.SYM[0].image;
     const ident = symbol.replace(this.scripting.regex.AnySymbol, '');
 
-    this.isNoRepeat = this.hasNoRepeat(transform);
+    this.isNoRepeat = this.hasNoRepeat(ctx.TF);
 
     if (this.pendingSymbols.has(ident)) {
       this.print('symbol', `${symbol} [is-pending]`);
@@ -305,20 +302,21 @@ class RiScriptVisitor extends BaseVisitor {
 
     if (typeof result === 'undefined') {
       // nothing found, defer
-      this.print('symbol', `${symbol} -> "${original}" ctx=${this.lookupsToString()} [deferred]`);
+      this.print('symbol', symbol + " -> '" + original + "' ctx=" +
+        this.lookupsToString(), '[deferred]', opts?.silent ? '{silent}' : '');
       return original;
     }
 
-    let info = original + " -> '" + result + "'";
+    let info = original + " -> '" + result + "'" + (opts?.silent ? ' {silent}' : '');
 
     // defer if we still have unresolved riscript
     if (typeof result === 'string' && !resolved) {
       if (isStatic) {
         this.pendingSymbols.add(ident);
-        result = this.inlineAssignment(ident, ctx.transform, result);
+        result = this.inlineAssignment(ident, ctx.TF, result);
         this.print('symbol*', `${original} -> ${result} :: pending.add(${ident})`);
       } else {
-        if (transform) result = this.restoreTransforms(result, transform);
+        if (ctx.TF) result = this.restoreTransforms(result, ctx.TF);
         this.print('symbol', info);
       }
       return result;
@@ -326,13 +324,13 @@ class RiScriptVisitor extends BaseVisitor {
 
     if (isStatic) {
       // store !untransformed! result in static context
-      this.statics[ident] = result;
+      this.statics[ident] = result; // ADDED 8/18/23 - FIXED 10/8/23
     }
 
-    if (transform) {
-      result = this.applyTransforms(result, transform);
+    if (ctx.TF) {
+      result = this.applyTransforms(result, ctx.TF);
       info += " -> '" + result + "'";
-      // info += " -> " + ctx.transform.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
+      // info += " -> " + ctx.TF.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
       // console.log("INFO: " + info);
       if (this.isNoRepeat) info += ' (norepeat)';
     }
@@ -350,6 +348,123 @@ class RiScriptVisitor extends BaseVisitor {
     return result;
   }
 
+  pgate(ctx) {
+    this.print('pgate', this.nodeText);
+
+    // new RegExp(`^${this.symbols.PENDING_GATE}`
+    const original = this.nodeText;
+    const ident = original.replace(this.symbols.PENDING_GATE, '');
+    const lookup = this.pendingGates[ident];
+
+    if (!lookup) {
+      throw Error('no pending gate="' + original + '" pgates=' +
+        JSON.stringify(Object.keys(this.pendingGates)));
+    }
+
+    const stillUnresolved = lookup.operands.some((o) => {
+      let { result, resolved } = this.checkContext(o);
+      if (typeof result === 'function') {
+        // while {} ?
+        // let tracing = this.trace;
+        // this.trace = false; // disable tracing
+        result = result.call(); // call it
+        //this.trace = tracing;
+        resolved = !this.scripting.isParseable(result);
+      }
+      return typeof result === 'undefined' || !resolved;
+    });
+
+    if (stillUnresolved) return original; // still deferred
+
+    return this.choice(lookup.deferredContext); // execute the gate
+  }
+
+  else(ctx) {
+    // this.print('else', this.nodeText);
+    return this.visit(ctx.expr).trim();
+  }
+
+  choice(ctx, opts) {
+    const $ = this.symbols;
+    const original = this.nodeText;
+    let gateText, gateResult, info = original;
+    const choiceKey = this.RiScript._stringHash
+      (original + ' #' + this.choiceId(ctx));
+
+    if (!this.isNoRepeat && this.hasNoRepeat(ctx.TF)) {
+      throw Error('noRepeat() not allowed on choice '
+        + '(use a $variable instead): ' + original);
+    }
+
+    this.print('choice', info);
+    info = ""
+
+    let decision = 'accept';
+    if (opts?.forceReject) {
+      decision = 'reject';
+    } else {
+      if (ctx?.gate?.[0]?.children?.Gate) {
+        // do we have a gate
+        gateText = ctx.gate[0].children.Gate[0].image;
+        gateResult = this.visit(ctx.gate);
+        decision = gateResult.decision;
+        let ginfo = `${gateText} -> ${(decision !== 'defer' ? decision.toUpperCase()
+          : `DEFER ${$.PENDING_GATE}${choiceKey}`)}  ${this.lookupsToString()}`;
+        this.print('gate', ginfo);
+      }
+
+      if (gateResult) {
+        if (gateResult.decision === 'defer') {
+          this.pendingGates[choiceKey] = {
+            gateText,
+            deferredContext: ctx,
+            operands: gateResult.operands
+          };
+          return `${$.PENDING_GATE}${choiceKey}`; // gate defers
+        }
+      }
+    }
+
+    if (decision === 'reject' && !('reject' in ctx)) {
+      return ''; // rejected without reject expr, return ''
+    }
+
+    const orExpr = ctx[decision]?.[0]?.children?.or_expr?.[0]; // yuck
+    const options = this.parseOptions(orExpr); // get options
+    if (!options) throw Error('No options in choice: ' + original);
+
+    let value = null;
+    const excluded = [];
+    let restored = false;
+    while (value === null) {
+      value = this.choose(options, excluded).value;
+
+      // if we still have script, defer until its resolved
+      if (this.scripting.isParseable(value)) {
+        if (ctx.TF) value = this.restoreTransforms(value, ctx.TF);
+        restored = true;
+        break;
+      }
+
+      // apply any remaining transforms
+      if (ctx.TF) value = this.applyTransforms(value, ctx.TF);
+
+      // we have 'norepeat' but value was already used, try again
+      if (this.isNoRepeat && value === this.choices[choiceKey]) {
+        this.print('choice.reject', value + ' [norepeat]');
+        excluded.push(value);
+        value = null;
+        continue;
+      }
+    }
+
+    if (!restored) this.choices[choiceKey] = value; // put in choice cache
+
+    return value;
+  }
+
+  // Helpers ================================================
+
   hasNoRepeat(tfs) {
     const transforms = transformNames(tfs);
     if (transforms.length) {
@@ -359,17 +474,20 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   checkContext(ident, opts = {}) {
-    let isStatic = false, isUser = false;
+    let isStatic = false;
+    let isUser = false;
+    let result;
 
     if (ident.length === 0) {
       return { result: '', resolved: true, isStatic, isUser };
     }
 
     // check for dynamic symbol: $var
-    let result = this.dynamics[ident];
+    result = this.dynamics[ident];
     if (typeof result === 'undefined') {
+      // no dynamic
 
-      //  no dynamic, check for static symbol: #var
+      // check for static symbol: #var
       result = this.statics[ident];
       if (typeof result !== 'undefined') {
         isStatic = true; // found static
@@ -377,7 +495,8 @@ class RiScriptVisitor extends BaseVisitor {
     }
 
     if (typeof result === 'undefined') {
-      // no static, check for user/js symbol: context[var]
+      // no static
+      // check for user-defined symbol: context[var]
       result = this.context[ident];
       if (typeof result !== 'undefined') {
         isUser = true; // found user symbol
@@ -385,7 +504,8 @@ class RiScriptVisitor extends BaseVisitor {
         // check for user-defined dynamic? context[$var]
         result = this.context[this.symbols.DYNAMIC + ident];
         if (typeof result !== 'undefined') {
-          // no user, note: treat as dynamic, isUser = false
+          // no static
+          // note: treat as normal dynamic, isUser = false
         }
       }
     }
@@ -409,100 +529,7 @@ class RiScriptVisitor extends BaseVisitor {
     return ctx.OC[0].startOffset + '.' + ctx.OC[0].endOffset;
   }
 
-  doMingoQuery(raw) {
-    let mingoQuery;
-
-    if (raw.startsWith(this.Symbols.OPEN_GATE)) raw = raw.substring(1);
-
-    try {
-      mingoQuery = this.scripting._query(raw);
-    } catch (e) {
-      if (!this.warnOnInvalidGates) {
-        throw Error(`Invalid gate[2]: "@${raw}@"\n\nRootCause -> ${e}`);
-      }
-      if (!this.scripting.RiTa.SILENT && !this.nowarn) {
-        console.warn(`[WARN] Ignoring invalid gate: @${raw}@\n`, e);
-      }
-      return { decision: 'accept', operands: undefined }; // error
-    }
-
-    const resolvedOps = {};
-    const unresolvedOps = [];
-    const operands = mingoQuery.operands();
-    operands.forEach((sym) => {
-      let { result, resolved, isStatic, isUser } = this.checkContext(sym);
-
-      if (typeof result === 'function') {
-        // while {} ?
-        result = result.call(); // call it (silent?)
-        resolved = !this.scripting.isParseable(result);
-      }
-      if (typeof result === 'undefined' || !resolved) {
-        unresolvedOps.push(sym);
-      } else {
-        // add to appropriate context
-        if (isStatic) {
-          this.statics[sym] = result;
-        } else if (isUser) {
-          this.context[sym] = result;
-        } else {
-          this.dynamics[sym] = result;
-        }
-        // store resolved result
-        resolvedOps[sym] = result;
-      }
-    });
-
-    let resolvedOpCount = Object.keys(resolvedOps).length;
-    if (resolvedOpCount + unresolvedOps.length !== operands.length) {
-      throw Error('invalid operands');
-    }
-
-    let optsToReturn;
-    if (unresolvedOps.length) {
-      optsToReturn = unresolvedOps;
-    }
-    else { // do the query
-      let result = mingoQuery.test(resolvedOps);
-      if (!result && this.castValues(resolvedOps)) {
-        result = mingoQuery.test(resolvedOps); // redo query after casting
-      }
-    }
-
-    return { decision: result ? 'accept' : 'reject', operands: optsToReturn };
-  }
-
-  parseOptions(orExpr) {
-    const options = [];
-    if (orExpr) {
-      for (let i = 0; i < orExpr.length; i++) {
-        const expr = orExpr[i].children.expr;
-        const weight = orExpr[i].children.Weight;
-        if (!expr) continue;
-        if (expr.length != 1) { throw Error('invalid choice-expr: ' + expr.length); }
-        if (weight) {
-          if (weight.length != 1) { throw Error('invalid weight: ' + weight.length); }
-          let mult = 1;
-          try {
-            mult = parseInt(
-              this.symbols.CLOSE_WEIGHT.length
-                ? weight[0].image.trim().slice(1, -1)
-                : weight[0].image.trim().slice(1)
-            );
-          } catch (e) {
-            console.log('EX: ' + mult);
-          }
-          Array.from({ length: mult }, () => options.push(expr));
-        } else {
-          options.push(expr || '');
-        }
-      }
-    }
-    return options;
-  }
-
-
-  parseOptionsX(ctx) {
+  parseOptions(ctx) {
     const options = [];
     if (ctx && ctx?.children?.wexpr) {
       const wexprs = ctx.children.wexpr;
