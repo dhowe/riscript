@@ -39,7 +39,7 @@ class BaseVisitor {
       this.path += name + '.';
     }
 
-    if (this.trace) console.log(`calling ${name}()`);
+    //if (this.trace) console.log(`calling ${name}()`);
 
     return this[name](cstNode.children, param);
   }
@@ -99,18 +99,21 @@ class RiScriptVisitor extends BaseVisitor {
     this.print('silent', this.nodeText);
     opts.silent = true;
     if (ctx.assign.length !== 1) throw Error('invalid silent');
-    this.assign(ctx.assign, opts);
+    this.visit(ctx.assign, opts);
     return '';
   }
 
   assign(ctx, opts) {
-    this.print('assign', this.nodeText);
-    if (ctx.symbol.length !== 1) throw Error('invalid assign');
-    return this.doAssign(ctx.symbol[0].image, ctx.transform, opts);
+    if (ctx?.Symbol?.length !== 1) throw Error('invalid assign');
+    let res = this.doAssign(ctx.Symbol[0].image, ctx.transform, opts);
+
+    // WORKING HERE ON ASSIGN
+    
+    return res;
   }
 
   symbol(ctx, opts) {
-    if (ctx.symbol.length !== 1) throw Error('invalid symbol');
+    if (ctx?.symbol?.length !== 1) throw Error('invalid symbol');
     return this.doSymbol(ctx.symbol[0].image, ctx.transform, opts);
   }
 
@@ -119,7 +122,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     this.print('orExpr', this.nodeText);
     let exprKey = this.RiScript._stringHash
-      (this.nodeText + ' #' + this.choiceId(ctx));
+      (this.nodeText + ' #' + this.orExprId(ctx));
 
     let gateResult = this.doGate(ctx, exprKey);
     if (gateResult === 'reject' || opts.forceReject) {
@@ -128,14 +131,46 @@ class RiScriptVisitor extends BaseVisitor {
     if (gateResult === 'defer') {
       return `${this.Symbols.PENDING_GATE}${exprKey}`;
     }
-    return this.visit(ctx.options); // accept
+    let choice = this.visit(ctx.options, { exprKey }); // accept
+
+    return choice; // todo: apply transform
   }
 
-  options(ctx) {
-    this.print('options', this.nodeText);
+  options(ctx, opts = {}) {
 
-    // working here
-    
+    this.print('options', this.nodeText);
+    // if (!ctx?.wexpr?.length > 0) throw Error('invalid options');
+    let transform = ctx.transform;
+    let options = this.parseOptions(ctx.wexpr);
+    if (!options) throw Error('No options in choice: ' + original);
+
+    const excluded = [];
+    let value = null, restored = false
+    while (value === null) {
+      ({ value } = this.choose(options, excluded));
+
+      // if we still have script, defer until its resolved
+      if (this.scripting.isParseable(value)) {
+        if (transform) value = this.restoreTransforms(value, transform);
+        restored = true;
+        break;
+      }
+
+      // apply any remaining transforms
+      if (transform) value = this.applyTransforms(value, transform);
+
+      // we have 'norepeat' but value was already used, try again
+      if (this.isNoRepeat && value === this.choices[choiceKey]) {
+        this.print('choice.reject', value + ' [norepeat]');
+        excluded.push(value);
+        value = null;
+        continue;
+      }
+    }
+
+    if (!restored) this.choices[opts?.exprKey] = value; // put in choice cache
+
+    return value;
   }
 
   choice(ctx) {
@@ -178,7 +213,7 @@ class RiScriptVisitor extends BaseVisitor {
         deferredContext: ctx
       };
     }
-    let msg = `${gateText} -> ${(result !== 'defer' ? decision.toUpperCase()
+    let msg = `${gateText} -> ${(decision !== 'defer' ? decision.toUpperCase()
       : `DEFER ${exprKey}`)}  ${this.lookupsToString()}`;
 
     this.print('gate', msg);
@@ -237,14 +272,16 @@ class RiScriptVisitor extends BaseVisitor {
     return value;
   }
 
-  doAssign(expr, transform, opts) {
-    const ident = sym.replace(this.scripting.regex.AnySymbol, '');
-    const isStatic = sym.startsWith(this.symbols.STATIC);
+  doAssign(symbol, transform, opts) {
+    const ident = symbol.replace(this.scripting.regex.AnySymbol, '');
+    const isStatic = symbol.startsWith(this.symbols.STATIC);
 
     let value, info;
     if (isStatic) {
+      
       // static: can be resolved immediately
       value = this.visit(expr);
+
       if (this.scripting.isParseable(value)) {
         this.statics[ident] = value; // store in lookup table ??
         value = this.inlineAssignment(ident, transform, value);
@@ -261,7 +298,10 @@ class RiScriptVisitor extends BaseVisitor {
 
       // dynamic: store as func to be resolved later, perhaps many times
       value = () => this.visit(expr);
-      info = `${sym} = <f*:pending> ` + (opts?.silent ? '{silent}' : '');
+
+      // TODO: if expr is text and not parseable, store directly as string
+
+      info = `${symbol} = <f*:pending> ` + (opts?.silent ? '{silent}' : '');
       this.dynamics[ident] = value; // store in lookup table
     }
 
@@ -363,6 +403,66 @@ class RiScriptVisitor extends BaseVisitor {
     return false;
   }
 
+  parseOptions(wexprs) {
+    const options = [];
+    if (wexprs) {
+      for (let i = 0; i < wexprs.length; i++) {
+        const wexpr = wexprs[i];
+        const expr = wexpr.children.expr;
+        if (expr && expr.length != 1) {
+          throw Error('invalid choice-expr: ' + expr.length);
+        }
+
+        const weight = wexpr.children.Weight;
+        if (weight) {
+          if (weight.length != 1) { throw Error('invalid weight: ' + weight.length); }
+          let mult = 1;
+          try {
+            mult = parseInt(
+              this.symbols.CLOSE_WEIGHT.length
+                ? weight[0].image.trim().slice(1, -1)
+                : weight[0].image.trim().slice(1)
+            );
+          } catch (e) {
+            console.log('EX: ' + mult);
+          }
+          Array.from({ length: mult }, () => options.push(expr));
+        } else {
+          options.push(expr || '');
+        }
+      }
+    }
+    return options;
+  }
+  parseOptionsX(orExpr) {
+    const options = [];
+    if (orExpr) {
+      for (let i = 0; i < orExpr.length; i++) {
+        const expr = orExpr[i].children.expr;
+        const weight = orExpr[i].children.Weight;
+        if (!expr) continue;
+        if (expr.length != 1) { throw Error('invalid choice-expr: ' + expr.length); }
+        if (weight) {
+          if (weight.length != 1) { throw Error('invalid weight: ' + weight.length); }
+          let mult = 1;
+          try {
+            mult = parseInt(
+              this.symbols.CLOSE_WEIGHT.length
+                ? weight[0].image.trim().slice(1, -1)
+                : weight[0].image.trim().slice(1)
+            );
+          } catch (e) {
+            console.log('EX: ' + mult);
+          }
+          Array.from({ length: mult }, () => options.push(expr));
+        } else {
+          options.push(expr || '');
+        }
+      }
+    }
+    return options;
+  }
+
   checkContext(ident, opts = {}) {
     let isStatic = false, isUser = false;
 
@@ -409,16 +509,26 @@ class RiScriptVisitor extends BaseVisitor {
     return result;
   }
 
+  orExprId(ctx) {
+    if (ctx?.options?.length !== 1) {
+      throw Error('invalid options in orExprId()');
+    }
+    return ctx.options[0].location.startOffset
+      + '.' + ctx.options[0].location.endOffset;
+  }
+
   choiceId(ctx) {
     if (!ctx.OC || !ctx.OC.length) throw Error('invalid choice');
     return ctx.OC[0].startOffset + '.' + ctx.OC[0].endOffset;
   }
 
   doMingoQuery(raw) {
+
+    if (raw.startsWith(this.symbols.OPEN_GATE)) {
+      raw = raw.substring(1);
+    }
+
     let mingoQuery;
-
-    if (raw.startsWith(this.Symbols.OPEN_GATE)) raw = raw.substring(1);
-
     try {
       mingoQuery = this.scripting._query(raw);
     } catch (e) {
@@ -463,12 +573,12 @@ class RiScriptVisitor extends BaseVisitor {
       throw Error('invalid operands');
     }
 
-    let optsToReturn;
+    let result, optsToReturn;
     if (unresolvedOps.length) {
       optsToReturn = unresolvedOps;
     }
     else { // do the query
-      let result = mingoQuery.test(resolvedOps);
+      result = mingoQuery.test(resolvedOps);
       if (!result && this.castValues(resolvedOps)) {
         result = mingoQuery.test(resolvedOps); // redo query after casting
       }
@@ -477,7 +587,7 @@ class RiScriptVisitor extends BaseVisitor {
     return { decision: result ? 'accept' : 'reject', operands: optsToReturn };
   }
 
-  parseOptions(orExpr) {
+  parseOptionsOr(orExpr) {
     const options = [];
     if (orExpr) {
       for (let i = 0; i < orExpr.length; i++) {
@@ -579,10 +689,17 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   applyTransforms(value, txs) {
-    if (this.traceTx) { console.log('applyTransforms', this.formatTxs(...arguments)); }
-    for (let i = 0; i < txs.length; i++) {
-      value = this.applyTransform(value, txs[i]);
+    if (txs?.length) {
+
+      if (this.traceTx) {
+        console.log('applyTransforms', this.formatTxs(...arguments));
+      }
+
+      for (let i = 0; i < txs.length; i++) {
+        value = this.applyTransform(value, txs[i]);
+      }
     }
+
     return value;
   }
 

@@ -812,14 +812,17 @@ describe(title, function () {
   describe('Evaluation', function () {
 
     it('Should resolve simplest expression', function () {
-      expect(RiScript.evaluate('hello', 0,T)).eq('hello');
-return;
-      expect(RiScript.evaluate('[hello]', 0,T)).eq('hello');
-return;
-      expect(RiScript.evaluate('[@{a:2} hello (2)]', 0,T)).eq('');
+      // expect(RiScript.evaluate('hello', 0,T)).eq('hello');
+      // expect(RiScript.evaluate('[a|b]', 0,T)).is.oneOf(['a','b']);
+      // expect(RiScript.evaluate('[a|b (4)|c]', 0,T)).is.oneOf(['a','b','c']);
+      // expect(RiScript.evaluate('[hello (2)]', 0,T)).eq('hello');
+      // expect(RiScript.evaluate('[hello]', 0,T)).eq('hello');
+      //expect(RiScript.evaluate('[@{a:2} hello]', 0,T)).eq('');
+      expect(RiScript.evaluate('$a=2\n$a', 0,T)).eq('2');
+      //expect(RiScript.evaluate('$a=2\n[@{a:2} hello]', 0,T)).eq('hello');
       // expect(RiScript.evaluate('[@{a:2} hello (2)]', 0,T)).eq('');
-      expect(RiScript.evaluate('[hello (2)]', 0,T)).eq('hello');
-      expect(RiScript.evaluate('[hello]', 0,T)).eq('hello');
+      // expect(RiScript.evaluate('[@{a:2} hello (2)]', 0,T)).eq('');
+
     });
 
     it('Should be statically callable from RiScript', function () {

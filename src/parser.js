@@ -5,7 +5,7 @@ class RiScriptParser extends CstParser {
 
   constructor(allTokens, textTypes) {
     super(allTokens, { nodeLocationTracking: "full" });
-    this.atomTypes = ['assign',  'choice',  'silent',  'symbol','pgate', 'entity', 'text'];
+    this.atomTypes = ['assign', 'choice', 'silent', 'symbol', 'pgate', 'entity', 'text'];
     this.textTypes = textTypes; // defined in tokens.js
     this.buildRules();
   }
@@ -18,20 +18,22 @@ class RiScriptParser extends CstParser {
       ("[PARSING]\n" + this.errors[0].message);
     return cst;
   }
-/*
-  Specification:
-    script: expr+
-    expr: (assign | choice | silent | symbol | pgate | entity | text)     
-    orExpr: gate? options elseExpr?
-    options: expr weight? (OR expr weight?)
-    elseExpr: ELSE options
-    choice: OC orExpr CC transform*
-    assign: $symbol EQ expr
-    symbol: $symbol transform*
-    silent: OS assign CS 
-    text: Raw (=> from tokens.textTypes)
-    gate: @mingo
-*/
+
+  /*
+    Specification:
+      script: expr+
+      expr: (assign | choice | silent | symbol | pgate | entity | text)     
+      orExpr: gate? options elseExpr?
+      options: wexpr (OR wexpr)*
+      wexpr: expr weight?
+      elseExpr: ELSE options
+      choice: OC orExpr CC transform*
+      assign: $symbol EQ expr
+      symbol: $symbol transform*
+      silent: OS assign CS 
+      text: Raw (=> from tokens.textTypes)
+      gate: @mingo
+  */
   buildRules() {
 
     const $ = this, Tokens = this.tokensMap;
@@ -45,20 +47,20 @@ class RiScriptParser extends CstParser {
     });
 
     $.RULE("orExpr", () => {
-      $.OPTION1(() => $.SUBRULE1($.gate));
-      $.SUBRULE2($.options);
-      $.OPTION2(() => $.SUBRULE3($.elseExpr));
+      $.OPTION(() => $.SUBRULE($.gate));
+      $.SUBRULE($.options);
+      $.OPTION2(() => $.SUBRULE($.elseExpr));
+    });
+
+    $.RULE("wexpr", () => {
+      $.SUBRULE($.expr);
+      $.OPTION(() => $.CONSUME(Tokens.Weight));
     });
 
     $.RULE("options", () => {
-      $.SUBRULE1($.expr);
-      $.OPTION1(() => $.CONSUME1(Tokens.Weight));
       $.MANY_SEP({
         SEP: Tokens.OR,
-        DEF: () => {
-          $.SUBRULE2($.expr)
-          $.OPTION2(() => $.CONSUME2(Tokens.Weight));
-        }
+        DEF: () => $.SUBRULE2($.wexpr)
       });
     });
 
