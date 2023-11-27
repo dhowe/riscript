@@ -818,7 +818,10 @@ describe(title, function () {
       // expect(RiScript.evaluate('[hello (2)]', 0,T)).eq('hello');
       // expect(RiScript.evaluate('[hello]', 0,T)).eq('hello');
       //expect(RiScript.evaluate('[@{a:2} hello]', 0,T)).eq('');
+
+      // Failing here, never gets to 2nd $a
       expect(RiScript.evaluate('$a=2\n$a', 0,T)).eq('2');
+      
       //expect(RiScript.evaluate('$a=2\n[@{a:2} hello]', 0,T)).eq('hello');
       // expect(RiScript.evaluate('[@{a:2} hello (2)]', 0,T)).eq('');
       // expect(RiScript.evaluate('[@{a:2} hello (2)]', 0,T)).eq('');
@@ -1289,8 +1292,7 @@ describe(title, function () {
     it('Should resolve across assignment types', function () {
       let ctx;
 
-      expect(riscript.evaluate('The [$foo=blue] [dog | dog]', (ctx = {}), PL)
-      ).eq('The blue dog');
+      expect(riscript.evaluate('The [$foo=blue] [dog | dog]', (ctx = {}), TPL)).eq('The blue dog');
       expect(riscript.visitor.dynamics.foo()).eq('blue');
 
       expect(riscript.evaluate('The [$foo=blue [dog | dog]]',

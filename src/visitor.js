@@ -97,24 +97,21 @@ class RiScriptVisitor extends BaseVisitor {
 
   silent(ctx, opts = {}) {
     this.print('silent', this.nodeText);
-    opts.silent = true;
     if (ctx.assign.length !== 1) throw Error('invalid silent');
-    this.visit(ctx.assign, opts);
+    this.visit(ctx.assign, Object.assign(opts, {silent:true}));
     return '';
   }
 
   assign(ctx, opts) {
     if (ctx?.Symbol?.length !== 1) throw Error('invalid assign');
-    let res = this.doAssign(ctx.Symbol[0].image, ctx.transform, opts);
-
-    // WORKING HERE ON ASSIGN
-    
+    return this.doAssign(ctx.Symbol[0].image, ctx.Transform, opts);  
     return res;
   }
 
   symbol(ctx, opts) {
-    if (ctx?.symbol?.length !== 1) throw Error('invalid symbol');
-    return this.doSymbol(ctx.symbol[0].image, ctx.transform, opts);
+    this.print('symbol', this.nodeText);
+    if (ctx?.Symbol?.length !== 1) throw Error('invalid symbol');
+    return this.doSymbol(ctx.Symbol[0].image, ctx.Transform, opts);
   }
 
   orExpr(ctx, opts = {}) {
