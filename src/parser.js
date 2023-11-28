@@ -28,7 +28,7 @@ class RiScriptParser extends CstParser {
       wexpr: expr weight?
       elseExpr: ELSE options
       choice: OC orExpr CC transform*
-      assign: $symbol EQ expr
+      assign: $symbol EQ expr+
       symbol: $symbol transform*
       silent: OS assign CS 
       text: Raw (=> from tokens.textTypes)
@@ -79,7 +79,7 @@ class RiScriptParser extends CstParser {
     $.RULE("assign", () => {
       $.CONSUME(Tokens.Symbol);
       $.CONSUME(Tokens.EQ);
-      $.SUBRULE($.expr);
+      $.MANY(() => $.SUBRULE($.expr));
     });
 
     $.RULE("silent", () => {

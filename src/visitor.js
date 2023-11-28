@@ -3,6 +3,7 @@ class BaseVisitor {
   constructor(riScript) {
     this.input = 0;
     this.path = '';
+    this.prindent = 10;
     this.nowarn = false;
     this.tracePath = true;
     this.scripting = riScript;
@@ -103,10 +104,12 @@ class RiScriptVisitor extends BaseVisitor {
     return '';
   }
 
-  assign(ctx, opts) {
+  assign(ctx, opts = {}) {
     this.print('assign', this.nodeText, opts?.silent ? '{silent}' : '');
-    if (ctx?.Symbol?.length !== 1) throw Error('invalid assign');
-    return this.doAssign(ctx, ctx.Symbol[0].image, ctx.Transform, opts);
+    if (ctx?.Symbol?.length !== 1) throw Error('invalid symbol in assign');
+    if (ctx?.expr?.length < 1) throw Error('invalid exprs in assign');
+    let result = this.doAssign(ctx.Symbol, ctx.expr, ctx.Transform, opts); // why transform
+    return opts.silent ? '' : result;
   }
 
   symbol(ctx, opts) {
@@ -118,7 +121,7 @@ class RiScriptVisitor extends BaseVisitor {
   orExpr(ctx, opts = {}) {
     if (ctx?.options?.length !== 1) throw Error('invalid orExpr');
 
-    this.print('orExpr', this.nodeText);
+    this.print('orExpr', qq(this.nodeText));
     let exprKey = this.RiScript._stringHash
       (this.nodeText + ' #' + this.orExprId(ctx));
 
@@ -136,9 +139,10 @@ class RiScriptVisitor extends BaseVisitor {
 
   options(ctx, opts = {}) {
 
-    this.print('options', this.nodeText);
+    this.print('options', '['+this.nodeText.replace(/\s*\|\s*/g, ', ')+']');
+
     // if (!ctx?.wexpr?.length > 0) throw Error('invalid options');
-    let transform = ctx.transform;
+    let transform = ctx.Transform;
     let options = this.parseOptions(ctx.wexpr);
     if (!options) throw Error('No options in choice: ' + original);
 
@@ -173,9 +177,9 @@ class RiScriptVisitor extends BaseVisitor {
 
   choice(ctx) {
     if (ctx?.orExpr?.length !== 1) throw Error('invalid choice');
-    this.print('choice', this.nodeText);
+    this.print('choice', qq(this.nodeText));
     let result = this.visit(ctx.orExpr);
-    return this.applyTransforms(result, ctx.transform);
+    return this.applyTransforms(result, ctx.Transform);
   }
 
   elseExpr(ctx) {
@@ -195,6 +199,11 @@ class RiScriptVisitor extends BaseVisitor {
   gate(ctx, opts) {
     this.print('gate{no-op}', this.nodeText);
   }
+
+  entity(ctx) {
+    return this.nodeText;
+  }
+  
 
   // Helpers ================================================
 
@@ -270,8 +279,9 @@ class RiScriptVisitor extends BaseVisitor {
     return value;
   }
 
-  doAssign(ctx, symbol, transform, opts) {
-
+  doAssign(sym, exprs, transform, opts) {
+    const symbol = sym[0]?.image;
+    if (!symbol) throw Error('invalid symbol in doAssign');
     const ident = symbol.replace(this.scripting.regex.AnySymbol, '');
     const isStatic = symbol.startsWith(this.symbols.STATIC);
 
@@ -279,7 +289,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (isStatic) {
 
       // static: can be resolved immediately
-      value = this.visit(expr);
+      value = exprs.map(e => this.visit(e)).join('')
 
       if (this.scripting.isParseable(value)) {
         this.statics[ident] = value; // store in lookup table ??
@@ -296,16 +306,17 @@ class RiScriptVisitor extends BaseVisitor {
     } else {
 
       // dynamic: store as func to be resolved later, perhaps many times
-      value = () => this.visit(ctx.expr);
+      value = () => exprs.map(e => this.visit(e)).join('');
 
       // TODO: if expr is text and not parseable, store directly as string
 
       //info = `${symbol} = <f*:pending> ` + (opts?.silent ? ' {silent}' : '');
       info = `${symbol}: () => ${this.nodeText.substring(this.nodeText.indexOf('=') + 1)}`;
       this.dynamics[ident] = value; // store in lookup table
+      value = opts.silent ? '' : symbol; // return symbol
     }
 
-    if (this.trace) console.log(' '.repeat(10), info);
+    if (this.trace) console.log(' '.repeat(this.prindent+3), info);
 
     return value;
   }
@@ -360,7 +371,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (typeof result === 'string' && !resolved) {
       if (isStatic) {
         this.pendingSymbols.add(ident);
-        result = this.inlineAssignment(ident, ctx.transform, result);
+        result = this.inlineAssignment(ident, transform, result);
         this.print('symbol*', `${original} -> ${result} :: pending.add(${ident})`);
       } else {
         if (transform) result = this.restoreTransforms(result, transform);
@@ -377,7 +388,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (transform) {
       result = this.applyTransforms(result, transform);
       info += " -> '" + result + "'";
-      // info += " -> " + ctx.transform.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
+      // info += " -> " + ctx.Transform.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
       // console.log("INFO: " + info);
       if (this.isNoRepeat) info += ' (norepeat)';
     }
@@ -662,9 +673,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   choose(options, excludes = []) {
-    if (!options || !options.length) {
-      throw Error('Invalid choice: no options');
-    }
+    if (!options || !options.length) return ''; // empty choice
 
     const valid = options.filter((x) => !excludes.includes(x));
     if (!valid.length) {
@@ -813,7 +822,7 @@ class RiScriptVisitor extends BaseVisitor {
         s = this.path.replace(/\.$/, '');
       }
       if (!s.endsWith('gate.text')) { // ignore these
-        console.log(++this.order, `[${s}]`, ...args);
+        console.log((++this.order+"").padEnd(2), `[${s}]`.padEnd(this.prindent), ...args);
       }
       this.path = '';
     }
@@ -828,6 +837,10 @@ function transformNames(txs) {
   return txs && txs.length
     ? txs.map((tx) => tx.image.replace(/(^\.|\(\)$)/g, ''), [])
     : [];
+}
+
+function qq(str) {
+  return "'" + str + "'";
 }
 
 export { RiScriptVisitor };
