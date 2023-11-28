@@ -820,9 +820,10 @@ describe(title, function () {
       //expect(riscript.evaluate('[@{a:2} hello]', 0,T)).eq('');
 
       // Failing here, never gets to 2nd $a
-      expect(riscript.evaluate('[$a=2]', 0,T)).eq('2');
-return;
       expect(riscript.evaluate('$a=2\n$a', 0,T)).eq('2');
+
+//      expect(riscript.evaluate('[$a=2]', 0,T)).eq('2');
+return;
       
       //expect(riscript.evaluate('$a=2\n[@{a:2} hello]', 0,T)).eq('hello');
       // expect(riscript.evaluate('[@{a:2} hello (2)]', 0,T)).eq('');
