@@ -39,7 +39,7 @@ class BaseVisitor {
       this.path += name + '.';
     }
 
-    //if (this.trace) console.log(`calling ${name}()`);
+    if (this.trace) console.log(`calling ${name}()`);
 
     return this[name](cstNode.children, param);
   }
@@ -103,9 +103,9 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   assign(ctx, opts) {
+    this.print('assign', this.nodeText, 'opts.silent=' + (opts?.silent || false));
     if (ctx?.Symbol?.length !== 1) throw Error('invalid assign');
-    return this.doAssign(ctx.Symbol[0].image, ctx.Transform, opts);  
-    return res;
+    return this.doAssign(ctx.Symbol[0].image, ctx.Transform, opts);
   }
 
   symbol(ctx, opts) {
@@ -275,7 +275,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     let value, info;
     if (isStatic) {
-      
+
       // static: can be resolved immediately
       value = this.visit(expr);
 

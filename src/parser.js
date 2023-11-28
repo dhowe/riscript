@@ -84,7 +84,7 @@ class RiScriptParser extends CstParser {
 
     $.RULE("silent", () => {
       $.CONSUME(Tokens.OS);
-      $.SUBRULE($.assign);
+      $.SUBRULE($.assign, { silent: true });
       $.CONSUME(Tokens.CS);
     });
 
