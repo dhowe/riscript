@@ -19,6 +19,24 @@ class RiScriptParser extends CstParser {
     return cst;
   }
 
+  /*
+    Specification:
+      script: expr+
+      expr: atom+
+      atom: (choice | symbol | text | silent | entity | pgate | assign)
+      wexpr: (expr | Weight)*
+      symbol: SYM transform*
+      choice: [ gate? accept (ELSE reject)? ] transform*
+      assign: SYM EQ expr
+      silent: { gate? SYM (EQ expr)? }
+      or_expr: wexpr (OR wexpr)*
+      accept: or_expr
+      reject: or_expr
+      pgate: PGate transform*
+      entity: Entity
+      gate: Mingo
+      text: Raw | STAT | AMP 
+  */
   buildRules() {
 
     const $ = this, Tokens = this.tokensMap;
@@ -27,19 +45,45 @@ class RiScriptParser extends CstParser {
       $.MANY(() => $.SUBRULE($.expr));
     });
 
-    $.RULE("pgate", () => {
-      $.CONSUME(Tokens.PendingGate);
+    $.RULE("expr", () => {
+      $.AT_LEAST_ONE(() => $.SUBRULE($.atom));
+    });
+
+    $.RULE("atom", () => {
+      $.OR(this.atomTypes.map(t => ({ ALT: () => $.SUBRULE($[t]) })));
+    });
+
+    $.RULE("wexpr", () => {
+      $.MANY(() => {
+        $.OR([
+          { ALT: () => $.SUBRULE($.expr) },
+          { ALT: () => $.CONSUME(Tokens.Weight) },
+        ])
+      });
+    });
+
+    $.RULE("symbol", () => {
+      $.CONSUME(Tokens.SYM);
       $.MANY(() => $.CONSUME(Tokens.TF));
     });
 
-    $.RULE("entity", () => {
-      $.CONSUME(Tokens.Entity);
+   // choice: (LP (wexpr OR)* wexpr RP) transform*;
+   $.RULE("choice", () => {
+    $.CONSUME(Tokens.OC)
+    $.OPTION1(() => $.SUBRULE($.gate));
+    $.SUBRULE($.accept)
+    $.OPTION2(() => {
+      $.CONSUME(Tokens.ELSE);
+      $.SUBRULE($.reject)
     });
+    $.CONSUME(Tokens.CC);
+    $.MANY(() => $.CONSUME(Tokens.TF));
+  });
 
-    $.RULE("gate", () => {
-      // $.CONSUME(Tokens.EnterGate);
-      $.MANY(() => $.CONSUME(Tokens.Gate));
-      // $.CONSUME(Tokens.ExitGate);
+    $.RULE("assign", () => {
+      $.CONSUME(Tokens.SYM);
+      $.CONSUME(Tokens.EQ);
+      $.SUBRULE($.expr);
     });
 
     $.RULE("silent", () => {
@@ -53,15 +97,11 @@ class RiScriptParser extends CstParser {
       $.CONSUME(Tokens.CS);
     });
 
-    $.RULE("assign", () => {
-      $.CONSUME(Tokens.SYM);
-      $.CONSUME(Tokens.EQ);
-      $.SUBRULE($.expr);
-    });
-
-    $.RULE("symbol", () => {
-      $.CONSUME(Tokens.SYM);
-      $.MANY(() => $.CONSUME(Tokens.TF));
+    $.RULE("or_expr", () => {
+      $.MANY_SEP({
+        SEP: Tokens.OR,
+        DEF: () => $.SUBRULE($.wexpr)
+      });
     });
 
     $.RULE("accept", () => {
@@ -72,41 +112,17 @@ class RiScriptParser extends CstParser {
       $.SUBRULE($.or_expr);
     });
 
-    $.RULE("or_expr", () => {
-      $.MANY_SEP({
-        SEP: Tokens.OR,
-        DEF: () => $.SUBRULE($.wexpr)
-      });
-    });
-
-    // choice: (LP (wexpr OR)* wexpr RP) transform*;
-    $.RULE("choice", () => {
-      $.CONSUME(Tokens.OC)
-      $.OPTION1(() => $.SUBRULE($.gate));
-      $.SUBRULE($.accept)
-      $.OPTION2(() => {
-        $.CONSUME(Tokens.ELSE);
-        $.SUBRULE($.reject)
-      });
-      $.CONSUME(Tokens.CC);
+    $.RULE("pgate", () => {
+      $.CONSUME(Tokens.PendingGate);
       $.MANY(() => $.CONSUME(Tokens.TF));
     });
 
-    $.RULE("wexpr", () => {
-      $.MANY(() => {
-        $.OR([
-          { ALT: () => $.SUBRULE($.expr) },
-          { ALT: () => $.CONSUME(Tokens.Weight) },
-        ])
-      });
+    $.RULE("entity", () => {
+      $.CONSUME(Tokens.Entity);
     });
 
-    $.RULE("expr", () => {
-      $.AT_LEAST_ONE(() => $.SUBRULE($.atom));
-    });
-
-    $.RULE("atom", () => {
-      $.OR(this.atomTypes.map(t => ({ ALT: () => $.SUBRULE($[t]) })));
+    $.RULE("gate", () => {
+      $.MANY(() => $.CONSUME(Tokens.Gate));
     });
 
     $.RULE("text", () => {
