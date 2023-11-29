@@ -6,35 +6,6 @@ import { RiScriptParser } from './parser.js';
 import { RiScriptVisitor } from './visitor.js';
 import { getTokens, TextTypes } from './tokens.js';
 
-/*
-  Specification:
-    script: expr+
-    expr: (atom)+
-    wexpr: (atom)+ weight
-    symbol: SYM transform*
-    assign: SYM EQ expr transform*
-    gate: @mingo@
-    silent: { gate? expr }
-    atom: (choice | symbol | text | silent) weight?
-    choice: [ gate? ( expr | wexpr ) (OR  (expr | wexpr ) )* else? ] transform*
-    else: ELSE expr
-    raw: Raw
-*/
-
-/*
-  Specification2:
-    script: expr+
-    expr: (assign | choice | symbol | text | silent | pgate | entity) transform*
-    choice: [ orExpr ]   
-    silent: { assign | orExpr }  
-    orExpr: gate? expr weight? (OR expr weight?)* else?
-    assign: $symbol = expr
-    symbol: $symbol
-    gate: @mingo
-    else: || expr
-    raw: Raw
-*/
-
 const { decode } = he;
 const Vowels = /[aeiou]/;
 const RegexEscape = '_RE_';

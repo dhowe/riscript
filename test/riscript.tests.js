@@ -2,10 +2,13 @@ import { expect } from 'chai';
 import { RiScript } from './index.js';
 
 /*
+  TODO0: first deal with expr+ issue (see branch main)
+  
   TODO1: 
     - transforms
     - empty choice [a|]
     - norepeat
+
   TODO2:
     - line-breaks in choices
     - #postconditions# (post/effect/changes) => silent
@@ -625,9 +628,12 @@ describe(title, function () {
       expect(riscript.evaluate('This is \\(a parenthesed\\) expression')).eq(
         'This is (a parenthesed) expression'
       );
+      expect(riscript.evaluate('[[mountain | mountain] village]',0,T)).eq(
+        'This is (a parenthesed) expression'
+      );
       expect(riscript.evaluate(
         '[[mountain | mountain] village | [evening | evening] sunlight | [winter | winter] flower | [star | star]light above]'
-      )
+      ,0,T)
       ).to.be.oneOf([
         'mountain village',
         'evening sunlight',
@@ -1539,7 +1545,7 @@ describe(title, function () {
         '#noun': '[a | b]',
         start: '$noun\n$noun'
       };
-      const res = RiGrammar.expand(script);
+      const res = RiGrammar.expand(script,0,T);
       // console.log(res);
       expect(res).matches(/(a\na)|(b\nb)/);
     });

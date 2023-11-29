@@ -22,15 +22,18 @@ class RiScriptParser extends CstParser {
   /*
     Specification:
       script: expr+
-      expr: (assign | choice | silent | symbol | pgate | entity | text)     
+      expr: (choice | assign | silent | symbol | pgate | entity | text)     
+      
+      choice: OC orExpr CC transform*
       orExpr: gate? options elseExpr?
       options: wexpr (OR wexpr)*
       wexpr: expr weight?
       elseExpr: ELSE options
-      choice: OC orExpr CC transform*
-      assign: $symbol EQ expr+
-      symbol: $symbol transform*
+
+      assign: $name EQ expr+
+      symbol: $name transform*
       silent: OS assign CS 
+
       text: Raw (=> from tokens.textTypes)
       gate: @mingo
   */
