@@ -31,7 +31,7 @@ class RiScriptParser extends CstParser {
       silent: { gate? Symbol (EQ expr)? }
       orExpr: wexpr (OR wexpr)*
       elseExpr: ELSE orExpr
-      pgate: PendingGate
+      pgate: PGate
       entity: Entity
       gate: Mingo
       text: Raw | STAT | AMP 

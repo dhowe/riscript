@@ -82,10 +82,6 @@ class RiScriptVisitor extends BaseVisitor {
 
   script(ctx) {
     this.order = 0;
-    const count = ctx.expr ? ctx.expr.length : 0;
-    this.print('script', "'" + this.RiScript._escapeText(this.input)
-      + "' :: " + count + ' expression(s)');
-    if (!count) return '';
     if (Object.keys(ctx).length !== 1) throw Error('script: invalid expr');
     return this.visit(ctx.expr);
   }
@@ -94,7 +90,13 @@ class RiScriptVisitor extends BaseVisitor {
     // this.print('expr', ctx);
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
-    const exprs = ctx.atom.map((c) => this.visit(c));
+
+    const count = Object.keys(ctx).reduce((acc, k) => ctx[k].length + acc, 0);
+    this.print('script', "'" + this.RiScript._escapeText(this.input)
+      + "' :: " + count + ' atom(s)');
+    if (!count) return '';
+
+    const exprs = ctx.atom.map((c) => this.visit(c)); // collect each atom
 
     // handle special cases of the form: "not [quite|] far enough"
     for (let i = 1; i < exprs.length - 1; i++) {
@@ -114,20 +116,17 @@ class RiScriptVisitor extends BaseVisitor {
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid atom: ' + types);
     this.scripting.parser.atomTypes.forEach((type) => {
-      const context = ctx[type];
-      if (context) {
-        if (context.length !== 1) {
+      if (ctx[type]) {
+        if (ctx[type].length !== 1) {
           throw Error(type + ': bad length -> ' + ctx[type].length);
         }
-        // console.log(type + ':', context[0]);
-        result = this.visit(context[0]);
+        result = this.visit(ctx[type][0]);
+        // pending function, call it
+        if (typeof result === 'function') {
+          result = result.call();
+        }
       }
     });
-
-    // pending function, call it
-    if (typeof result === 'function') {
-      result = result.call();
-    }
     return result;
   }
 
