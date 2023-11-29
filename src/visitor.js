@@ -41,17 +41,18 @@ class BaseVisitor {
     if (this.tracePath && !/(expr|atom|silent)/.test(name)) {
       this.path += name + '.';
     }
+    
+    //if (this.trace) console.log('CALLING: ' + name + '()');
+
     return this[name](cstNode.children, param);
   }
 
-  validateVisitor() {
-    /* no-op */
-  }
+  validateVisitor() { /* no-op */ }
 }
 
 class RiScriptVisitor extends BaseVisitor {
   constructor(riScript, context = {}) {
-    super(riScript); // stored as global RiScript (TODO)
+    super(riScript); 
     this.context = context;
 
     this.trace = 0;
@@ -177,7 +178,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   assign(ctx, opts) {
-    const sym = ctx.SYM[0].image;
+    const sym = ctx.Symbol[0].image;
 
     const ident = sym.replace(this.scripting.regex.AnySymbol, '');
     const isStatic = sym.startsWith(this.symbols.STATIC);
@@ -187,7 +188,7 @@ class RiScriptVisitor extends BaseVisitor {
       value = this.visit(ctx.expr);
       if (this.scripting.isParseable(value)) {
         this.statics[ident] = value; // store in lookup table ??
-        value = this.inlineAssignment(ident, ctx.TF, value);
+        value = this.inlineAssignment(ident, ctx.Transform, value);
       } else {
         this.statics[ident] = value; // store in lookup table
         this.pendingSymbols.delete(ident); // no longer pending
@@ -261,13 +262,13 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   symbol(ctx, opts) {
-    if (ctx.SYM.length !== 1) throw Error('[1] invalid symbol');
+    if (ctx.Symbol.length !== 1) throw Error('[1] invalid symbol');
 
     const original = this.nodeText;
-    const symbol = ctx.SYM[0].image;
+    const symbol = ctx.Symbol[0].image;
     const ident = symbol.replace(this.scripting.regex.AnySymbol, '');
 
-    this.isNoRepeat = this.hasNoRepeat(ctx.TF);
+    this.isNoRepeat = this.hasNoRepeat(ctx.Transform);
 
     if (this.pendingSymbols.has(ident)) {
       this.print('symbol', `${symbol} [is-pending]`);
@@ -313,10 +314,10 @@ class RiScriptVisitor extends BaseVisitor {
     if (typeof result === 'string' && !resolved) {
       if (isStatic) {
         this.pendingSymbols.add(ident);
-        result = this.inlineAssignment(ident, ctx.TF, result);
+        result = this.inlineAssignment(ident, ctx.Transform, result);
         this.print('symbol*', `${original} -> ${result} :: pending.add(${ident})`);
       } else {
-        if (ctx.TF) result = this.restoreTransforms(result, ctx.TF);
+        if (ctx.Transform) result = this.restoreTransforms(result, ctx.Transform);
         this.print('symbol', info);
       }
       return result;
@@ -327,10 +328,10 @@ class RiScriptVisitor extends BaseVisitor {
       this.statics[ident] = result; // ADDED 8/18/23 - FIXED 10/8/23
     }
 
-    if (ctx.TF) {
-      result = this.applyTransforms(result, ctx.TF);
+    if (ctx.Transform) {
+      result = this.applyTransforms(result, ctx.Transform);
       info += " -> '" + result + "'";
-      // info += " -> " + ctx.TF.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
+      // info += " -> " + ctx.Transform.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
       // console.log("INFO: " + info);
       if (this.isNoRepeat) info += ' (norepeat)';
     }
@@ -391,7 +392,7 @@ class RiScriptVisitor extends BaseVisitor {
     const choiceKey = this.RiScript._stringHash
       (original + ' #' + this.choiceId(ctx));
 
-    if (!this.isNoRepeat && this.hasNoRepeat(ctx.TF)) {
+    if (!this.isNoRepeat && this.hasNoRepeat(ctx.Transform)) {
       throw Error('noRepeat() not allowed on choice '
         + '(use a $variable instead): ' + original);
     }
@@ -441,13 +442,13 @@ class RiScriptVisitor extends BaseVisitor {
 
       // if we still have script, defer until its resolved
       if (this.scripting.isParseable(value)) {
-        if (ctx.TF) value = this.restoreTransforms(value, ctx.TF);
+        if (ctx.Transform) value = this.restoreTransforms(value, ctx.Transform);
         restored = true;
         break;
       }
 
       // apply any remaining transforms
-      if (ctx.TF) value = this.applyTransforms(value, ctx.TF);
+      if (ctx.Transform) value = this.applyTransforms(value, ctx.Transform);
 
       // we have 'norepeat' but value was already used, try again
       if (this.isNoRepeat && value === this.choices[choiceKey]) {

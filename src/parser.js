@@ -25,10 +25,10 @@ class RiScriptParser extends CstParser {
       expr: atom+
       atom: (choice | symbol | text | silent | entity | pgate | assign)
       wexpr: (expr | Weight)*
-      symbol: SYM transform*
+      symbol: Symbol transform*
       choice: [ gate? accept (ELSE reject)? ] transform*
-      assign: SYM EQ expr
-      silent: { gate? SYM (EQ expr)? }
+      assign: Symbol EQ expr
+      silent: { gate? Symbol (EQ expr)? }
       or_expr: wexpr (OR wexpr)*
       accept: or_expr
       reject: or_expr
@@ -63,8 +63,8 @@ class RiScriptParser extends CstParser {
     });
 
     $.RULE("symbol", () => {
-      $.CONSUME(Tokens.SYM);
-      $.MANY(() => $.CONSUME(Tokens.TF));
+      $.CONSUME(Tokens.Symbol);
+      $.MANY(() => $.CONSUME(Tokens.Transform));
     });
 
    // choice: (LP (wexpr OR)* wexpr RP) transform*;
@@ -77,11 +77,11 @@ class RiScriptParser extends CstParser {
       $.SUBRULE($.reject)
     });
     $.CONSUME(Tokens.CC);
-    $.MANY(() => $.CONSUME(Tokens.TF));
+    $.MANY(() => $.CONSUME(Tokens.Transform));
   });
 
     $.RULE("assign", () => {
-      $.CONSUME(Tokens.SYM);
+      $.CONSUME(Tokens.Symbol);
       $.CONSUME(Tokens.EQ);
       $.SUBRULE($.expr);
     });
@@ -89,7 +89,7 @@ class RiScriptParser extends CstParser {
     $.RULE("silent", () => {
       $.CONSUME(Tokens.OS);
       $.OPTION1(() => $.SUBRULE($.gate));
-      $.CONSUME(Tokens.SYM);
+      $.CONSUME(Tokens.Symbol);
       $.OPTION2(() => {
         $.CONSUME(Tokens.EQ);
         $.SUBRULE($.expr);
@@ -114,7 +114,7 @@ class RiScriptParser extends CstParser {
 
     $.RULE("pgate", () => {
       $.CONSUME(Tokens.PendingGate);
-      $.MANY(() => $.CONSUME(Tokens.TF));
+      $.MANY(() => $.CONSUME(Tokens.Transform));
     });
 
     $.RULE("entity", () => {

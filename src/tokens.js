@@ -106,35 +106,24 @@ function getTokens(v2Compatible) {
   //   push_mode: "gate_mode"
   // });
 
+  const AMP = createToken({ name: "AMP", pattern: /&/ });
   const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
   const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
-  const AMP = createToken({ name: "AMP", pattern: /&/ });
-  //const AT = createToken({ name: "AT", pattern: /@/ });
-
   const OC = createToken({ name: "OC", pattern: new RegExp(Escaped.OPEN_CHOICE + '\\s*') });
   const CC = createToken({ name: "CC", pattern: new RegExp(`\\s*${Escaped.CLOSE_CHOICE}`) });
   const OR = createToken({ name: "OR", pattern: /\s*\|\s*/ });
-  const ELSE = createToken({ name: "ELSE", pattern: /\s*\|\|\s*/ });
   const EQ = createToken({ name: "EQ", pattern: /\s*=\s*/ });
-  const TF = createToken({ name: "TF", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
   const OS = createToken({ name: "OS", pattern: new RegExp(`${Escaped.OPEN_SILENT}\\s*`) });
   const CS = createToken({ name: "CS", pattern: new RegExp(`\\s*${Escaped.CLOSE_SILENT}`) });
-  const SYM = createToken({ name: "SYM", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*`) });
+  const ELSE = createToken({ name: "ELSE", pattern: /\s*\|\|\s*/ });
 
+  const Transform = createToken({ name: "Transform", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
+  const Symbol = createToken({ name: "Symbol", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*`) });
   const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
 
-  const tokens = [Gate, Entity, Weight, ELSE, OC, CC, OR, EQ, SYM, DYN, STAT, AMP, TF, OS, CS, PendingGate, Raw ];
-  // const gateMode = [Gate, ExitGate];
-
-  // const multiMode = {
-  //   modes: {
-  //     normal: normalMode,
-  //     gate_mode: gateMode
-  //   },
-  //   defaultMode: 'normal'
-  // };
+  const tokens = [Gate, Entity, Weight, ELSE, OC, CC, OR, EQ, Symbol, DYN, STAT, AMP, Transform, OS, CS, PendingGate, Raw ];
 
   return { tokens, Constants: { Symbols, Escaped } };
 }
@@ -142,7 +131,5 @@ function getTokens(v2Compatible) {
 function escapeRegex(s) {
   return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
-
-// console.log(getTokens().tokens.modes.normal.map(t => t.name));
 
 export { getTokens, TextTypes };

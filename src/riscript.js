@@ -192,7 +192,7 @@ class RiScript {
       let { name } = t.tokenType;
       let tag = name;
       if (tag === 'TEXT') tag = RiScript._escapeText(t.image, 1);
-      if (tag === 'SYM') tag = 'sym(' + t.image + ')';
+      if (tag === 'Symbol') tag = 'sym(' + t.image + ')';
       if (tag === 'TX') tag = 'tx(' + t.image + ')';
       return str + tag + ', ';
     }, '')
