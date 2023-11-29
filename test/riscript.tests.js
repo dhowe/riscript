@@ -33,22 +33,22 @@ describe(title, function () {
   });
 
   LTR && describe('OneOff', function () {
-    it('Should be a single problematic test', function () { });
+    it('Be a single problematic test', function () { });
   });
   describe('Markdown', function () {
-    it('Should handle basic markdown', function () {
+    it('Handle basic markdown', function () {
       let test = 'Some *italic* and **bold** and _other_ markdown';
       expect(riscript.evaluate(test)).eq(test)
       let test2 = '1. list 1\n2. list 2\n3. list 3';
       expect(riscript.evaluate(test2)).eq(test2)
     });
 
-    it('Should handle markdown headers', function () {
+    it('Handle markdown headers', function () {
       const res = riscript.evaluate('### Header');
       expect(res).eq('### Header');
     });
 
-    it('Should handle markdown links', function () {
+    it('Handle markdown links', function () {
       let res;
 
       res = riscript.evaluate('Some [RiTa](https://rednoise.org/rita) code');
@@ -66,7 +66,7 @@ describe(title, function () {
         ' with [RiScript](/@dhowe/riscript) links');
     });
 
-    it('Should handle formatted markdown', function () {
+    it('Handle formatted markdown', function () {
       let input = `### A Title 
       Some RiScript code
         that we can [format|format|format]
@@ -81,7 +81,7 @@ describe(title, function () {
 
 
   describe('Sequences', function () {
-    it('Should support norepeat choice transforms', function () {
+    it('Support norepeat choice transforms', function () {
       const count = 5;
       for (let i = 0; i < count; i++) {
         const res = riscript.evaluate('$names=[a|b]\n$names $names.norepeat()');
@@ -93,7 +93,7 @@ describe(title, function () {
       }
     });
 
-    it('Should support single norepeat choices ', function () {
+    it('Support single norepeat choices ', function () {
       // FIX FOR rita#157
       let res;
       for (let i = 0; i < 10; i++) {
@@ -106,7 +106,7 @@ describe(title, function () {
       }
     });
 
-    it('Should support single norepeat choices in context', function () {
+    it('Support single norepeat choices in context', function () {
       let res;
 
       for (let i = 0; i < 5; i++) {
@@ -119,7 +119,7 @@ describe(title, function () {
       }
     });
 
-    it('Should support norepeat symbol transforms', function () {
+    it('Support norepeat symbol transforms', function () {
       let fail = false;
       const count = 5;
       for (let i = 0; i < count; i++) {
@@ -137,32 +137,32 @@ describe(title, function () {
       expect(fail).false;
     });
 
-    it('Should throw on norepeat statics', function () {
+    it('Throw on norepeat statics', function () {
       expect(() => riscript.evaluate('#a=[a|b]\n$a $a.nr', 0)).to.throw();
       expect(() => riscript.evaluate('#a=[a|b]\n#a #a.nr', 0)).to.throw();
     });
 
-    it('Should throw on dynamics called as statics', function () {
+    it('Throw on dynamics called as statics', function () {
       expect(() => riscript.evaluate('{$foo=bar}#foo', 0)).to.throw();
     });
   });
 
   describe('Gates', function () {
-    // it('Should lex simplest gate', function () {
+    // it('Lex simplest gate', function () {
     //   expect(riscript.lex({input:'[ @{ a: { $exists: true }} hello]'},0,T)).eq('');
     // });
 
-    /*it('Should handle simplest gate', function () {
+    /*it('Handle simplest gate', function () {
       expect(riscript.evaluate('[ @{ a: { $exists: true }} hello]',0)).eq('');
       expect(riscript.evaluate('$a=1\n[ @{ a: { $exists: true }} hello]')).eq('hello');
       expect(riscript.evaluate('[ @{ a: { $exists: true }} hello]\n$a=1', 0, T)).eq('hello');
     });*/
 
-    it('Should throw on bad gates', function () {
+    it('Throw on bad gates', function () {
       expect(() => riscript.evaluate('$a=ok\n[ @{a: ok} hello]', 0)).to.throw();
     });
 
-    it('Should handle exists gates', function () {
+    it('Handle exists gates', function () {
       expect(riscript.evaluate('[ @{ a: { $exists: true }} hello]')).eq('');
       expect(riscript.evaluate('[ @{ a: { $exists: true }} hello][ @{ a: { $exists: true }} hello]')).eq('');
 
@@ -186,7 +186,7 @@ describe(title, function () {
       expect(riscript.evaluate('[#a=apogee]\n[ @{ a: { $exists: true }} static]')).eq('apogee\nstatic');
     });
 
-    it('Should handle matching gates', function () {
+    it('Handle matching gates', function () {
       expect(riscript.evaluate('[ @{ a: /^p/ } hello]', { a: 'apogee' })).eq('');
       expect(riscript.evaluate('[ @{ a: /^p/ } hello]', { a: 'puffer' })).eq('hello');
       expect(riscript.evaluate('[ @{ a: /^p/ } $a]', { a: 'pogue' })).eq('pogue');
@@ -196,7 +196,7 @@ describe(title, function () {
       expect(riscript.evaluate('[ @{ a: /^p/g } $a]', { a: 'pogue' })).eq('pogue');
     });
 
-    it('Should handle else gates', function () {
+    it('Handle else gates', function () {
       let res;
 
       res = riscript.evaluate('$x=1\n[@{x:1}a||b]', 0);
@@ -227,7 +227,7 @@ describe(title, function () {
       expect(res).eq('a');
     });
 
-    it('Should handle deferred else gates', function () {
+    it('Handle deferred else gates', function () {
       let res;
 
       res = riscript.evaluate('[@{a:1}a||b]\n$a=1', 0);
@@ -243,7 +243,7 @@ describe(title, function () {
       expect(res).eq('b');
     });
 
-    it('Should handle equality gates', function () {
+    it('Handle equality gates', function () {
       expect(riscript.evaluate('$a=3\n[ @{a: "3"} hello]', 0)).eq('hello');
       expect(riscript.evaluate('$a=2\n[ @{a: 3} hello]', 0)).eq('');
       expect(riscript.evaluate('$a=3\n[ @{a: 3} hello]', 0)).eq('hello');
@@ -252,7 +252,7 @@ describe(title, function () {
       expect(riscript.evaluate('$a=notok\n[ @{a: "ok"} hello]', 0)).eq('');
     });
 
-    it('Should handle deferred equality gates', function () {
+    it('Handle deferred equality gates', function () {
       expect(riscript.evaluate('[ @{a: 3} hello]', { a: 2 })).eq('');
       expect(riscript.evaluate('[ @{a: 3} hello]', { a: 3 })).eq('hello');
       expect(riscript.evaluate('[ @{a: 4} hello]', { a: 3 })).eq('');
@@ -260,14 +260,14 @@ describe(title, function () {
       expect(riscript.evaluate('[ @{a: "ok"} hello]', { a: 'fail' })).eq('');
     });
 
-    it('Should handle casting for arithmetic gates', function () {
+    it('Handle casting for arithmetic gates', function () {
       expect(riscript.evaluate('$a=4\n[ @{a: {$gt: 3}} hello]', 0)).eq('hello');
       expect(riscript.evaluate('$a=3\n[ @{a: {$gt: 3}} hello]', 0)).eq('');
       expect(riscript.evaluate('$a=3.1\n[ @{a: {$gt: 3}} hello]', 0)).eq('hello');
       expect(riscript.evaluate('$a=3.0\n[ @{a: {$gt: 3}} hello]', 0)).eq('');
     });
 
-    it('Should handle boolean gate logic', function () {
+    it('Handle boolean gate logic', function () {
       // reject if no valid conditions
       expect(riscript.evaluate('$a=2\n[ @{a: {}} hello]')).eq('');
 
@@ -294,13 +294,13 @@ describe(title, function () {
       expect(riscript.evaluate('$a=23\n[ @{ $and: [ {a: {$gt: 20}}, {b: {$lt: 25}} ] } hello]')).eq('');
     });
 
-    it('Should handle deferred dynamics', function () {
+    it('Handle deferred dynamics', function () {
       // deferred dynamics
       expect(riscript.evaluate('[ @{a: {}} hello]\n$a=2')).eq('');
       expect(riscript.evaluate('[ @{a: "ok"} hello]\n$a=ok', 0)).eq('hello');
     });
 
-    it('Should handle deferred booleans', function () {
+    it('Handle deferred booleans', function () {
       // reject if no valid conditions
       expect(riscript.evaluate('[ @{a: {}} hello]', { a: 2 })).eq('');
       expect(riscript.evaluate('[ @{a: {}} hello]\n$a=2', 0)).eq('');
@@ -328,21 +328,21 @@ describe(title, function () {
       expect(riscript.evaluate('[ @{ $and: [ {a: {$gt: 20}}, {b: {$lt: 25}} ] } hello]', { a: 23 })).eq('');
     });
 
-    it('Should extract operands from gate', function () {
+    it('Extract operands from gate', function () {
       const json = { a: 3, $or: [{ b: { $lt: 30 } }, { c: /^p*/ }] };
       const query = new RiScript.Query(riscript, json);
       const operands = query.operands(riscript, json);
       expect(operands).eql(['a', 'c', 'b']);
     });
 
-    it('Should call test on RiQuery', function () {
+    it('Call test on RiQuery', function () {
       const json = { a: 3, $or: [{ b: { $lt: 30 } }, { c: /^p*/ }] };
       const query = new RiScript.Query(riscript, json);
       const res = query.test({ a: 3, b: 10 });
       expect(res).true;
     });
 
-    it('Should handle complex boolean gate logic', function () {
+    it('Handle complex boolean gate logic', function () {
       //  AND plus OR
       let queryAsVar = '{ a: 3, $or: [ { b: { $lt: 30 } }, { c: /^p*/ } ] }';
       let ctxAsVar = '$a=27\n$b=10\n$c=pants\n';
@@ -366,7 +366,7 @@ describe(title, function () {
       expect(riscript.evaluate(`${ctxAsVar}[ @${queryAsVar} hello]`)).eq('hello');
     });
 
-    it('Should handle deferred complex boolean gate logic', function () {
+    it('Handle deferred complex boolean gate logic', function () {
       //  AND plus OR
       let queryAsVar = '{ a: 3, $or: [ { b: { $lt: 30 } }, { c: /^p*/ } ] }';
       expect(riscript.evaluate(`[ @${queryAsVar} hello]`, {
@@ -414,7 +414,7 @@ describe(title, function () {
       })).eq('hello');
     });
 
-    it('Should handle deferred gates', function () {
+    it('Handle deferred gates', function () {
       expect(riscript.evaluate('$a=$b\n[ @{ a: "dog" } hello]\n$b=[cat|cat]')).eq('');
       expect(riscript.evaluate('$a=$b\n[ @{ a: "cat" } hello]\n$b=[cat|cat]')).eq('hello');
 
@@ -429,7 +429,7 @@ describe(title, function () {
       expect(riscript.evaluate('[ @{ a: { $exists: true }} static]\n[#a=apogee]')).eq('static\napogee');
     });
 
-    it('Should handle gates with strings characters', function () {
+    it('Handle gates with strings characters', function () {
       expect(riscript.evaluate("$a=bc\n[@{a: 'bc'} $a]")).eq('bc');
       expect(riscript.evaluate("$a=bc\n[@{a: 'cd'} $a]")).eq('');
       expect(riscript.evaluate("$a=bc\n[@{a: 'bc'} $a]")).eq('bc');
@@ -439,7 +439,7 @@ describe(title, function () {
       expect(riscript.evaluate('$a=bc\n[@{a: "bc"} $a]')).eq('bc');
     });
 
-    it('Should handle gates with Chinese characters', function () {
+    it('Handle gates with Chinese characters', function () {
       expect(riscript.evaluate('$a=ab\n[@{a: "ab"} $a]')).eq('ab');
       expect(riscript.evaluate('$a=繁體\n[@{a: "繁體"} $a]')).eq('繁體');
       expect(riscript.evaluate('$a=繁體\n[@{a: "中文"} $a]')).eq('');
@@ -449,7 +449,7 @@ describe(title, function () {
   });
 
   describe('Choice', function () {
-    it('Should throw on bad choices', function () {
+    it('Throw on bad choices', function () {
       expect(() => riscript.evaluate('|')).to.throw();
       expect(() => riscript.evaluate('a |')).to.throw();
       expect(() => riscript.evaluate('a | b')).to.throw();
@@ -459,13 +459,13 @@ describe(title, function () {
       expect(() => riscript.evaluate('[$names=[a|b|c|d|e]].nr()')).to.throw(); // TODO: support this
     });
 
-    it('Should resolve choices in context', function () {
+    it('Resolve choices in context', function () {
       const res = riscript.evaluate('$bar:$bar', { bar: '[man | boy]' });
       // console.log(res);
       expect(/(man|boy):(man|boy)/.test(res)).true;
     });
 
-    it('Should repeat choices with randomSeed', function () {
+    it('Repeat choices with randomSeed', function () {
       if (!('randomSeed' in riscript.RiTa)) return;
       const seed = Math.random() * Number.MAX_SAFE_INTEGER;
       const script = '$a=[1|2|3|4|5|6]\n$a';
@@ -480,7 +480,7 @@ describe(title, function () {
       }
     });
 
-    it('Should select non-weighted choices evenly', function () {
+    it('Select non-weighted choices evenly', function () {
       const map = {};
       for (let i = 0; i < 1000; i++) {
         const res = riscript.evaluate('[quite|]');
@@ -491,7 +491,7 @@ describe(title, function () {
       expect(map['']).greaterThan(400);
     });
 
-    it('Should resolve choices', function () {
+    it('Resolve choices', function () {
       expect(riscript.evaluate('[|]')).eq('');
       expect(riscript.evaluate('[a]')).eq('a');
       expect(riscript.evaluate('[a | a]', 0)).eq('a');
@@ -515,7 +515,7 @@ describe(title, function () {
       ]);
     });
 
-    it('Should resolve multiword choices', function () {
+    it('Resolve multiword choices', function () {
       const silent = riscript.RiTa.SILENCE_LTS;
       riscript.RiTa.SILENCE_LTS = true;
       expect(riscript.evaluate('[A B | A B]')).eq('A B');
@@ -525,7 +525,7 @@ describe(title, function () {
       riscript.RiTa.SILENCE_LTS = silent;
     });
 
-    it('Should resolve choices in expressions', function () {
+    it('Resolve choices in expressions', function () {
       expect(riscript.evaluate('x [a | a | a] x')).eq('x a x');
       expect(riscript.evaluate('x [a | a | a]')).eq('x a');
       expect(riscript.evaluate('x [a | a | a]x')).eq('x ax');
@@ -550,7 +550,7 @@ describe(title, function () {
       ]);
     });
 
-    it('Should resolve weighted choices', function () {
+    it('Resolve weighted choices', function () {
       expect(riscript.evaluate('[ a (2) ]', {})).eq('a');
       expect(riscript.evaluate('[(2) |(3)]', {})).eq('');
       expect(riscript.evaluate('[a | b (2) |(3)]', {})).to.be.oneOf([
@@ -578,7 +578,7 @@ describe(title, function () {
   });
 
   describe('Assignment', function () {
-    it('Should end single assignments on line break', function () {
+    it('End single assignments on line break', function () {
       let res;
       expect((res = riscript.evaluate('hello\n$foo=a', 0, PL))).eq('hello'); // eslint-disable-line
       // console.log('\nResult="' + res + '"', riscript.visitor.dynamics.foo);
@@ -612,7 +612,7 @@ describe(title, function () {
       expect(riscript.visitor.dynamics.foo()).eq('hi');
     });
 
-    it('Should parse silent assignments', function () {
+    it('Parse silent assignments', function () {
       let ctx = {};
       expect(riscript.evaluate('{$foo=a}b', ctx, PL)).eq('b');
       expect(riscript.visitor.dynamics.foo()).eq('a');
@@ -667,7 +667,7 @@ describe(title, function () {
       expect(riscript.visitor.dynamics.foo()).eq('The boy walked his dog');
     });
 
-    it('Should resolve prior assignments', function () {
+    it('Resolve prior assignments', function () {
       expect(riscript.evaluate('$foo=dog\n$bar=$foo\n$baz=$foo\n$baz', 0)).eq('dog');
       expect(riscript.evaluate('$foo=hi\n$foo there')).eq('hi there');
       expect(riscript.evaluate('$foo=a\n$foo')).eq('a');
@@ -676,7 +676,7 @@ describe(title, function () {
 
   describe('Evaluation', function () {
 
-    it('Should resolve simple expressions', function () {
+    it('Resolve simple expressions', function () {
       expect(riscript.evaluate('hello', 0)).eq('hello');
       expect(riscript.evaluate('[a|b]', 0)).is.oneOf(['a', 'b']);
       expect(riscript.evaluate('[a|b (4)|c]', 0)).is.oneOf(['a', 'b', 'c']);
@@ -693,7 +693,7 @@ describe(title, function () {
       expect(riscript.evaluate('[@{a:2} hello (2)]', 0)).eq('');
     });
 
-    it('Should be statically callable from RiScript', function () {
+    it('Have static evaluate', function () {
       expect(RiScript.evaluate('(foo)', {})).eq('(foo)');
       expect(RiScript.evaluate('foo!', {})).eq('foo!');
       expect(RiScript.evaluate('!foo', {})).eq('!foo');
@@ -705,12 +705,12 @@ describe(title, function () {
       expect(RiScript.evaluate('*%©\n', 0)).eq('*%©\n');
     });
 
-    it('Should handle abbreviations', function () {
+    it('Handle abbreviations', function () {
       expect(riscript.evaluate('The C.D failed', {})).eq('The C.D failed');
       expect(riscript.evaluate('The $C.D failed', { C: 'C', D: (s) => s.toLowerCase() })).eq('The c failed');
     });
 
-    it('Should resolve expressions', function () {
+    it('Resolve expressions', function () {
       expect(riscript.evaluate('foo')).eq('foo');
       expect(riscript.evaluate('(foo)', {})).eq('(foo)');
       expect(riscript.evaluate('foo!', {})).eq('foo!');
@@ -723,7 +723,7 @@ describe(title, function () {
       expect(riscript.evaluate('*%©\n', 0)).eq('*%©\n');
     });
 
-    it('Should resolve choices', function () {
+    it('Resolve choices', function () {
       expect(riscript.evaluate('[a]')).eq('a');
       expect(riscript.evaluate('[a | a]')).eq('a');
       expect(riscript.evaluate('[a | ]')).to.be.oneOf(['a', '']);
@@ -738,11 +738,11 @@ describe(title, function () {
       expect(riscript.evaluate('{$names=[a|b|c|d|e]}$names $names', {})).to.match(/[abcde] [abcde]/);
     });
 
-    it('Should resolve multiword choices', function () {
+    it('Resolve multiword choices', function () {
       expect(riscript.evaluate('[A B | A B]')).eq('A B');
     });
 
-    it('Should resolve transformed choices', function () {
+    it('Resolve transformed choices', function () {
       expect(riscript.evaluate('[A B].toLowerCase()')).eq('a b');
       expect(riscript.evaluate('[A B | A B].toLowerCase()')).eq('a b');
       expect(riscript.evaluate('[A B | A B].articlize()')).eq('an A B');
@@ -750,7 +750,7 @@ describe(title, function () {
         .eq('Dogs are unruly, but my dog is the best.');
     });
 
-    it('Should resolve simple statics', function () {
+    it('Resolve simple statics', function () {
       expect(riscript.evaluate('{#foo=bar}baz', {})).eq('baz');
       expect(riscript.evaluate('{#foo=bar}$foo', {})).eq('bar');
       expect(riscript.evaluate('[#foo=bar]\nbaz', {})).eq('bar\nbaz');
@@ -761,7 +761,7 @@ describe(title, function () {
 
       let failed = false;
       for (let i = 0; i < 5; i++) {
-        // #: should always match (static)
+        // #: Always match (static)
         const res = riscript.evaluate('{#foo=[a|b|c|d]}$foo $foo $foo', {});
         // console.log(i + ") " + res);
         const pts = res.split(' ');
@@ -774,7 +774,7 @@ describe(title, function () {
       expect(failed).eq(false);
     });
 
-    it('Should resolve statics', function () {
+    it('Resolve statics', function () {
       let res = riscript.evaluate('{#bar=[man | boy]}$bar'); // silent
       expect(res === 'man' || res === 'boy').true;
 
@@ -782,7 +782,7 @@ describe(title, function () {
       expect(res === 'man:man' || res === 'boy:boy').true;
     });
 
-    it('Should resolve predefined statics', function () {
+    it('Resolve predefined statics', function () {
       let res, visitor;
 
       visitor = new RiScriptVisitor(riscript);
@@ -806,7 +806,7 @@ describe(title, function () {
       ).true;
     });
 
-    it('Should resolve expressions with line-breaks ', function () {
+    it('Resolve expressions with line-breaks ', function () {
       expect(riscript.evaluate('$foo=bar\nbaz', {})).eq('baz');
 
       expect(riscript.evaluate('foo\nbar', {})).eq('foo\nbar');
@@ -832,7 +832,7 @@ describe(title, function () {
       expect(riscript.evaluate('foo.bar', {}, { silent: 1 })).eq('foo.bar'); // KNOWN ISSUE
     });
 
-    it('Should resolve recursive expressions', function () {
+    it('Resolve recursive expressions', function () {
       let ctx, expr;
       ctx = { a: 'a' };
       expr = '[a|$a]';
@@ -853,7 +853,7 @@ describe(title, function () {
       expect(riscript.evaluate('$s', ctx)).eq('c');
     });
 
-    it('Should resolve recursive dynamics', function () {
+    it('Resolve recursive dynamics', function () {
       let ctx, expr;
 
       ctx = { a: '$b', b: '[c | c]' };
@@ -867,11 +867,11 @@ describe(title, function () {
   });
 
   describe('Symbols', function () {
-    it('Should handle deferred', function () {
+    it('Handle deferred', function () {
       expect(riscript.evaluate('$foo\n$foo=cat', 0)).eq('cat');
     });
 
-    it('Should handle statics', function () {
+    it('Handle statics', function () {
       let res;
 
       res = riscript.evaluate('[#bar=[boy]]:$bar');
@@ -903,7 +903,7 @@ describe(title, function () {
       ).true;
     });
 
-    it('Should handle norepeats', function () {
+    it('Handle norepeats', function () {
       let res;
       for (let i = 0; i < 5; i++) {
         res = riscript.evaluate('$foo=[cat|dog]\n$foo $foo.nr');
@@ -911,7 +911,7 @@ describe(title, function () {
       }
     });
 
-    it('Should handle internal line breaks', function () {
+    it('Handle internal line breaks', function () {
       expect(riscript.evaluate('$foo=[cat\ndog]\n$foo')).eq('cat\ndog');
       expect(riscript.evaluate('前半段句子\n後半段句子')).eq('前半段句子\n後半段句子');
       expect(riscript.evaluate('$foo=前半段\n$foo句子   \n後半段句子')).eq('前半段句子   \n後半段句子');
@@ -919,13 +919,13 @@ describe(title, function () {
       expect(riscript.evaluate('$foo=[前半段句子\n後半段句子]\n$foo')).eq('前半段句子\n後半段句子');
     });
 
-    it('Should handle silents', function () {
+    it('Handle silents', function () {
       expect(riscript.evaluate('{$a=b}', 0)).eq('');
       expect(riscript.evaluate('$a=b', 0)).eq('');
       expect(riscript.evaluate('$a=b\n$a', 0)).eq('b'); // not silent
     });
 
-    it('Should resolve transforms', function () {
+    it('Resolve transforms', function () {
       let ctx, rs;
 
       expect(riscript.evaluate('$foo=$bar.toUpperCase()\n$bar=baz\n$foo', 0)).eq('BAZ');
@@ -949,7 +949,7 @@ describe(title, function () {
 
   describe('Transforms', function () {
 
-    it('Should add/remove custom transforms', function () {
+    it('Add/remove custom transforms', function () {
       let addRhyme = function (word) {
         return word + ' rhymes with bog';
       }
@@ -964,7 +964,7 @@ describe(title, function () {
       expect(res).eq('The dog.rhymes');
     });
 
-    it('Should handle anonymous transforms', function () {
+    it('Handle anonymous transforms', function () {
       // ensure $.tf() === ''.tf() === [].tf()
       const ctx = { capB: (s) => 'B' };
       expect(riscript.evaluate('$.toUpperCase()')).eq('');
@@ -973,7 +973,7 @@ describe(title, function () {
       expect(riscript.evaluate('$.capB', ctx)).eq('B');
     });
 
-    it('Should resolve transforms containing riscript', function () {
+    it('Resolve transforms containing riscript', function () {
       let ctx;
       ctx = { tx: () => '[a | a]' };
       expect(riscript.evaluate('[c].tx()', ctx)).eq('a');
@@ -997,12 +997,12 @@ describe(title, function () {
       expect(riscript.evaluate('[d].tx()', ctx)).eq('FOO');
     });
 
-    it('Should resolve transforms in context', function () {
+    it('Resolve transforms in context', function () {
       const ctx = { capB: (s) => s || 'B' };
       expect(riscript.evaluate('[c].capB()', ctx)).eq('c');
     });
 
-    it('Should resolve transforms', function () {
+    it('Resolve transforms', function () {
       let ctx = {};
 
       expect(riscript.evaluate('[This].uc() is an acronym.', ctx)).eq('THIS is an acronym.');
@@ -1020,7 +1020,7 @@ describe(title, function () {
       expect(riscript.evaluate('$dog.ucf()', ctx)).eq('Terrier');
     });
 
-    it('Should resolve custom transforms', function () {
+    it('Resolve custom transforms', function () {
       const Blah = () => 'Blah';
       expect(riscript.evaluate('That is [ant].Blah().', { Blah })).eq('That is Blah.');
       const ctx = { Blah2: () => 'Blah2' };
@@ -1031,7 +1031,7 @@ describe(title, function () {
       expect(riscript.evaluate('That is [ant].Blah3.')).eq('That is Blah3.'); // no parens
     });
 
-    it('Should resolve transforms on literals', function () {
+    it('Resolve transforms on literals', function () {
       expect(riscript.evaluate('How many [teeth].quotify() do you have?')).eq('How many “teeth” do you have?');
       expect(riscript.evaluate('How many [].quotify() do you have?')).eq('How many “” do you have?');
       expect(riscript.evaluate('How many [teeth].toUpperCase() do you have?', 0)).eq('How many TEETH do you have?');
@@ -1054,7 +1054,7 @@ describe(title, function () {
       expect(riscript.evaluate('That is [ant].articlize.')).eq('That is an ant.');
     });
 
-    it('Should pluralize phrases', function () {
+    it('Pluralize phrases', function () {
       expect(riscript.evaluate('These [$state feeling].pluralize().', { state: '[bad | bad]' })).eq('These bad feelings.');
       expect(riscript.evaluate('These [bad feeling].pluralize().')).eq('These bad feelings.');
       expect(riscript.evaluate('She [pluralize].pluralize().')).eq('She pluralizes.');
@@ -1066,7 +1066,7 @@ describe(title, function () {
       expect(riscript.evaluate('#state=[bad | bad]\nThese [$state feeling].pluralize().', {})).eq('These bad feelings.');
     });
 
-    it('Should resolve across assignment types', function () {
+    it('Resolve across assignment types', function () {
       let ctx;
 
       expect(riscript.evaluate('The [$foo=blue] [dog | dog]', (ctx = {}), PL)).eq('The blue dog');
@@ -1085,7 +1085,7 @@ describe(title, function () {
       expect(riscript.visitor.dynamics.foo()).eq('blue dog');
     });
 
-    it('Should resolve statics across assignment types', function () {
+    it('Resolve statics across assignment types', function () {
       let ctx;
 
       expect(riscript.evaluate('The [#foo=blue] [dog | dog]', (ctx = {}), PL)).eq('The blue dog');
@@ -1104,7 +1104,7 @@ describe(title, function () {
       expect(riscript.visitor.statics.foo).eq('blue dog');
     });
 
-    it('Should resolve choice transforms', function () {
+    it('Resolve choice transforms', function () {
       expect(riscript.evaluate('[a | a].toUpperCase()', {})).eq('A');
       expect(riscript.evaluate('[a | a].up()', { up: (x) => x.toUpperCase() })).eq('A');
       expect(riscript.evaluate('[a | a].up', { up: (x) => x.toUpperCase() })).eq('A'); // no parens
@@ -1120,13 +1120,13 @@ describe(title, function () {
       IfRiTa && expect(riscript.evaluate('How many [tooth | tooth].pluralize() do you have?')).eq('How many teeth do you have?');
     });
 
-    it('Should preserve non-existent transforms', function () {
+    it('Preserve non-existent transforms', function () {
       expect(riscript.evaluate('[a | a].up()', 0, { silent: true })).eq('a.up()'); // note: no transform .up
       expect(riscript.evaluate('$dog.toUpperCase()', 0, { silent: true })).eq('$dog.toUpperCase()'); // note: no symbol $dog
       expect(riscript.evaluate('The $C.D failed', 0, { silent: true })).eq('The $C.D failed'); // note: no transform .D
     });
 
-    it('Should resolve symbol transforms', function () {
+    it('Resolve symbol transforms', function () {
       expect(riscript.evaluate('$dog.toUpperCase()', { dog: 'spot' })).eq('SPOT');
       expect(riscript.evaluate('$dog.capitalize()', { dog: 'spot' })).eq('Spot');
       expect(riscript.evaluate('$1dog.capitalize()', { '1dog': 'spot' })).eq('Spot');
@@ -1138,7 +1138,7 @@ describe(title, function () {
       expect(riscript.evaluate('$dog.articlize().capitalize()', { dog: 'spot' })).eq('A spot');
     });
 
-    it('Should resolve symbol multi-transforms', function () {
+    it('Resolve symbol multi-transforms', function () {
       expect(riscript.evaluate('[$pet | $animal].articlize().cap()', { pet: 'ant', animal: 'ant' })).eq('An ant');
       expect(riscript.evaluate('[$a=$dog] $a.articlize().capitalize()', { dog: 'spot' })).eq('spot A spot');
       expect(riscript.evaluate('[$a=$dog] $a.articlize().capitalize()', { dog: 'abe' })).eq('abe An abe');
@@ -1149,7 +1149,7 @@ describe(title, function () {
       expect(riscript.evaluate('<li>$start</li>\n$start=[$jrSr].capitalize()\n$jrSr=[junior|junior]')).eq('<li>Junior</li>');
     });
 
-    it('Should resolve functions on context props with transforms', function () {
+    it('Resolve functions on context props with transforms', function () {
       const s = '$player.name.toUpperCase().toLowerCase()';
       const gameState = { player: { name: 'Wing' } };
       const res = riscript.evaluate(s, gameState);
@@ -1160,7 +1160,7 @@ describe(title, function () {
       expect(rs).eq('result');
     });
 
-    it('Should resolve properties of context symbols', function () {
+    it('Resolve properties of context symbols', function () {
       let s = '$player.name';
       let gameState = { player: { name: 'Wing' } };
       let res = riscript.evaluate(s, gameState);
@@ -1181,20 +1181,20 @@ describe(title, function () {
       expect(/Wing has [0-9]{1,2} secs left\./.test(res)).true;
     });
 
-    it('Should resolve object properties', function () {
+    it('Resolve object properties', function () {
       const dog = { name: 'spot', color: 'white', hair: { color: 'white' } };
       expect(riscript.evaluate('It was a $dog.hair.color dog.', { dog })).eq('It was a white dog.');
       expect(riscript.evaluate('It was a $dog.color.toUpperCase() dog.', { dog })).eq('It was a WHITE dog.');
       expect(riscript.evaluate('It was a $dog.color.toUpperCase dog.', { dog })).eq('It was a WHITE dog.'); // no parens
     });
 
-    it('Should resolve member functions', function () {
+    it('Resolve member functions', function () {
       const dog = { name: 'Spot', getColor: () => 'red' };
       expect(riscript.evaluate('$dog.name was a $dog.getColor() dog.', { dog })).eq('Spot was a red dog.');
       expect(riscript.evaluate('$dog.name was a $dog.getColor dog.', { dog })).eq('Spot was a red dog.'); // no parens
     });
 
-    it('Should resolve transforms ending with punc', function () {
+    it('Resolve transforms ending with punc', function () {
       expect(riscript.evaluate('[a | b].toUpperCase().')).to.be.oneOf([
         'A.',
         'B.'
@@ -1217,13 +1217,13 @@ describe(title, function () {
       expect(riscript.evaluate('That was $user.name.', ctx)).eq('That was jen.');
     });
 
-    it('Should resolve property transforms in context', function () {
+    it('Resolve property transforms in context', function () {
       const ctx = { bar: { result: 'result' } }; // property transform
       const rs = riscript.evaluate('$foo=$bar.result\n$foo', ctx); // no parens
       expect(rs).eq('result');
     });
 
-    it('Should resolve transform props and method', function () {
+    it('Resolve transform props and method', function () {
       class TestClass {
         constructor() {
           this.prop = 'result';
@@ -1241,7 +1241,7 @@ describe(title, function () {
       expect(res).eq('result'); // no parens
     });
 
-    it('Should handle nested context', function () {
+    it('Handle nested context', function () {
       const ctx = { bar: { color: 'blue' } };
       const res = riscript.evaluate('#foo=$bar.color\n$foo', ctx);
       expect(res).eq('blue');
@@ -1285,7 +1285,7 @@ describe(title, function () {
       v: 'sing | cry | rise | bloom | dance | fall'
     };
 
-    it('Should handle simple grammars', function () {
+    it('Handle simple grammars', function () {
       const script = {
         noun: '[ox | oxen]',
         start: '$noun.art()'
@@ -1294,7 +1294,7 @@ describe(title, function () {
       expect(res).matches(/an ox(en)?/);
     });
 
-    it('Should handle simple statics', function () {
+    it('Handle simple statics', function () {
       const script = {
         '#noun': '[a | b]',
         start: '$noun\n$noun'
@@ -1304,7 +1304,7 @@ describe(title, function () {
       expect(res).matches(/(a\na)|(b\nb)/);
     });
 
-    it('Should handle simple wrapped statics ', function () {
+    it('Handle simple wrapped statics ', function () {
       const script = {
         '#noun': '[a | b]',
         start: '$noun $noun'
@@ -1313,7 +1313,7 @@ describe(title, function () {
       expect(res).matches(/(a a)|(b b)/);
     });
 
-    it('Should handle longer grammars', function () {
+    it('Handle longer grammars', function () {
       const res = RiGrammar.expand(rules);
       const lines = res.split(/\s*<br>\s*/g);
       // console.log(lines);
@@ -1335,7 +1335,7 @@ describe(title, function () {
         ));
     });
 
-    it('Should handle gates in grammars', function () {
+    it('Handle gates in grammars', function () {
       const script = {
         '#noun': '[man | woman]',
         start: '#noun[@{noun: "man"} :boy]'
@@ -1345,7 +1345,7 @@ describe(title, function () {
       expect(res === 'man:boy' || res === 'woman').eq(true);
     });
 
-    it('Should resolve inline grammars', function () {
+    it('Resolve inline grammars', function () {
       const script = [
         '$start = $nounp $verbp.',
         '$nounp = $determiner $noun',
@@ -1359,7 +1359,7 @@ describe(title, function () {
       expect(rs).eq('the woman shoots the woman.');
     });
 
-    it('Should reevaluate dynamics', function () {
+    it('Reevaluate dynamics', function () {
       const script = {
         noun: '[man | woman]',
         start: '$noun:$noun'
@@ -1379,7 +1379,7 @@ describe(title, function () {
       expect(ok).true;
     });
 
-    it('Should reuse statics', function () {
+    it('Reuse statics', function () {
       const script = {
         '#noun': '[man | woman]',
         start: '#noun:#noun'
@@ -1392,7 +1392,7 @@ describe(title, function () {
       }
     });
 
-    it('Should handle norepeat in grammars', function () {
+    it('Handle norepeat in grammars', function () {
       let res;
       const script = {
         noun: '[man | woman]',
@@ -1436,11 +1436,11 @@ describe(title, function () {
 
     const grammars = [sentences1, sentences2, sentences3];
 
-    it('Should call constructor', function () {
+    it('Call constructor', function () {
       expect(typeof new RiGrammar() !== 'undefined');
     });
 
-    it('Should support norepeat rules', function () {
+    it('Support norepeat rules', function () {
       let fail = false;
       const names = 'a|b|c|d|e';
       const g = { start: '$names $names.norepeat()', names };
@@ -1460,7 +1460,7 @@ describe(title, function () {
     });
 
     // QUESTION: can no-repeats be used directly on choice?
-    if (LTR) it('Should support norepeat symbol rules', function () {
+    if (LTR) it('Support norepeat symbol rules', function () {
       let fail = false;
       const names = '[a|b|c|d|e].nr()';
       const g = { start: '$names $names', names };
@@ -1480,8 +1480,8 @@ describe(title, function () {
 
     // QUESTION: can no-repeats be used inline? No, because they must be assigned to the variable?
     if (LTR)
-      it('Should support norepeat inline rules', function () {
-        // TODO: should prob support this
+      it('Support norepeat inline rules', function () {
+        // TODO: Prob support this
         let fail = false;
         const g = { start: '[$names=[a|b|c|d|e]].nr() $names' };
         for (let i = 0; i < SEQ_COUNT; i++) {
@@ -1498,7 +1498,7 @@ describe(title, function () {
         expect(fail).false;
       });
 
-    it('Should call constructorJSON', function () {
+    it('Call constructorJSON', function () {
       const json = JSON.stringify(sentences1);
 
       const gr1 = new RiGrammar(JSON.parse(json));
@@ -1512,7 +1512,7 @@ describe(title, function () {
       expect(() => new RiGrammar("notjson")).to.throw();
     });
 
-    it('Should call static expandFrom', function () {
+    it('Call static expandFrom', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet');
       rg.addRule('pet', '[$bird | $mammal]');
@@ -1525,7 +1525,7 @@ describe(title, function () {
       }
     });
 
-    it('Should handle phrase transforms', function () {
+    it('Handle phrase transforms', function () {
       const g = {
         start: '[$x=$y b].ucf()',
         y: '[a | a]'
@@ -1543,7 +1543,7 @@ describe(title, function () {
       }
     });
 
-    it('Should allow rules starting with numbers', function () {
+    it('Allow rules starting with numbers', function () {
       let rg, rs;
 
       rg = new RiGrammar({
@@ -1564,7 +1564,7 @@ describe(title, function () {
       expect(rs).to.be.oneOf(['Dave', 'Jill', 'Pete']);
     });
 
-    it('Should allow static rules starting with numbers', function () {
+    it('Allow static rules starting with numbers', function () {
       let rg, rs;
 
       rg = new RiGrammar({
@@ -1583,7 +1583,7 @@ describe(title, function () {
       expect(rs).to.be.oneOf(['Dave', 'Jill', 'Pete']);
     });
 
-    it('Should call setRules', function () {
+    it('Call setRules', function () {
       let rg = new RiGrammar();
       expect(typeof rg.rules !== 'undefined');
       expect(typeof rg.rules.start === 'undefined');
@@ -1603,7 +1603,7 @@ describe(title, function () {
       expect(rg.expand().length > 0);
     });
 
-    it('Should call fromJSON with string', function () {
+    it('Call fromJSON with string', function () {
       grammars.forEach((g) => {
         // as JSON strings
         const rg = RiGrammar.fromJSON(JSON.stringify(g));
@@ -1614,7 +1614,7 @@ describe(title, function () {
       });
     });
 
-    it('Should call removeRule', function () {
+    it('Call removeRule', function () {
       grammars.forEach((g) => {
         const rg1 = new RiGrammar(g);
         expect(rg1.rules.start).not.undefined;
@@ -1634,7 +1634,7 @@ describe(title, function () {
       });
     });
 
-    it('Should call static removeRule', function () {
+    it('Call static removeRule', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet');
       rg.addRule('pet', '[$bird | $mammal]');
@@ -1660,7 +1660,7 @@ describe(title, function () {
       expect(rg.rules.mammal).not.undefined;
     });
 
-    it('Should throw on missing rules', function () {
+    it('Throw on missing rules', function () {
       let rg = new RiGrammar();
       expect(() => rg.expand()).to.throw();
 
@@ -1671,7 +1671,7 @@ describe(title, function () {
       expect(() => rg.expand()).to.throw(); // no start rule
     });
 
-    it('Should call expandFrom', function () {
+    it('Call expandFrom', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet');
       rg.addRule('pet', '[$bird | $mammal]');
@@ -1684,7 +1684,7 @@ describe(title, function () {
       }
     });
 
-    it('Should throw on bad grammars', function () {
+    it('Throw on bad grammars', function () {
       expect(() => new RiGrammar({ '': 'pet' })).to.throw();
       expect(() => new RiGrammar({ $start: 'pet' })).to.throw();
       expect(() => new RiGrammar('"{start": "pet" }')).to.throw();
@@ -1699,7 +1699,7 @@ describe(title, function () {
       expect(() => new RiGrammar().removeRule('nonexistent')).not.to.throw();
     });
 
-    it('Should call toString', function () {
+    it('Call toString', function () {
       let rg = new RiGrammar({ start: 'pet' });
       expect(rg.toString()).eq('{\n  "start": "pet"\n}');
       rg = new RiGrammar({ start: '$pet', pet: 'dog' });
@@ -1728,7 +1728,7 @@ describe(title, function () {
       expect(rg.toString()).eq('{\n  "start": "$pet.articlize()",\n  "#pet": "[dog | cat]"\n}');
     });
 
-    it('Should call toString with arg', function () {
+    it('Call toString with arg', function () {
       const lb = { linebreak: '<br/>' };
 
       let rg = new RiGrammar({ start: 'pet' });
@@ -1755,7 +1755,7 @@ describe(title, function () {
         '{<br/>  "start": "$pet.articlize()",<br/>  "#pet": "dog | cat"<br/>}');
     });
 
-    it('Should call expand', function () {
+    it('Call expand', function () {
       let rg = new RiGrammar();
       rg.addRule('start', 'pet');
       expect(rg.expand(), 'pet');
@@ -1783,7 +1783,7 @@ describe(title, function () {
       expect(() => new RiGrammar().addRule('pet', 'dog').expand()).to.throw(); // no start ule
     });
 
-    it('Should override dynamic default', function () {
+    it('Override dynamic default', function () {
 
       // here is the normal (dynamic) behavior
       let rg = new RiGrammar();
@@ -1814,7 +1814,7 @@ describe(title, function () {
       }
     });
 
-    it('Should call expand.weights', function () {
+    it('Call expand.weights', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$rule1');
       rg.addRule('rule1', 'cat | dog | boy');
@@ -1831,7 +1831,7 @@ describe(title, function () {
       expect(found1 && found2 && found3); // found all
     });
 
-    it('Should call expandFrom.weights', function () {
+    it('Call expandFrom.weights', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet');
       rg.addRule('pet', '$bird (9) | $mammal');
@@ -1852,7 +1852,7 @@ describe(title, function () {
       expect(hawks > dogs * 2, 'got h=' + hawks + ', ' + dogs);
     });
 
-    it('Should call addRule', function () {
+    it('Call addRule', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet'); // default
       expect(typeof rg.rules.start).not.undefined;
@@ -1865,7 +1865,7 @@ describe(title, function () {
       expect(() => rg.addRule('start')).to.throw();
     });
 
-    it('Should call expandFrom.weights.static', function () {
+    it('Call expandFrom.weights.static', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet $pet');
       rg.addRule('#pet', '$bird (9) | $mammal');
@@ -1888,7 +1888,7 @@ describe(title, function () {
       expect(hawks > dogs), 'got h=' + hawks + ', d=' + dogs;
     });
 
-    it('Should handle transforms', function () {
+    it('Handle transforms', function () {
       let rg = new RiGrammar();
 
       rg.addRule('start', '$pet.toUpperCase()');
@@ -1924,7 +1924,7 @@ describe(title, function () {
       expect(rg.expand(), 'An ant');
     });
 
-    it('Should handle transforms on statics', function () {
+    it('Handle transforms on statics', function () {
       let rg = new RiGrammar();
       rg.addRule('start', '$pet.toUpperCase()');
       rg.addRule('#pet', 'dog');
@@ -1967,7 +1967,7 @@ describe(title, function () {
       }
     });
 
-    it('Should allow context in expand', function () {
+    it('Allow context in expand', function () {
       let ctx, rg;
       ctx = { randomPosition: () => 'job type' };
 
@@ -1998,7 +1998,7 @@ describe(title, function () {
       expect(rg.expand({ start: '$rule' })).eq('My job type.');
     });
 
-    it('Should resolve rules in context', function () {
+    it('Resolve rules in context', function () {
       let ctx, rg;
 
       ctx = { rule: '[job | mob]' }; // dynamic var in context
@@ -2013,26 +2013,26 @@ describe(title, function () {
     });
 
     if (LTR)
-      it('Should handle custom transforms on statics', function () {
+      it('Handle custom transforms on statics', function () {
         // TODO: statics in grammar context
         const context = { '#randomPosition': () => 'job type' };
         const rg = new RiGrammar({ start: 'My $.randomPosition().' });
         expect(rg.expand(context)).eq('My job type.');
       });
 
-    it('Should handle custom transforms', function () {
+    it('Handle custom transforms', function () {
       const context = { randomPosition: () => 'job type' };
       const rg = new RiGrammar({ start: 'My $.randomPosition().' }, context);
       expect(rg.expand()).eq('My job type.');
     });
 
-    it('Should handle phrases starting with custom transforms', function () {
+    it('Handle phrases starting with custom transforms', function () {
       const context = { randomPosition: () => 'job type' };
       const rg = new RiGrammar({ start: '$.randomPosition().' }, context);
       expect(rg.expand()).eq('job type.');
     });
 
-    it('Should handle custom transforms with target', function () {
+    it('Handle custom transforms with target', function () {
       const context = { randomPosition: (z) => z + ' job type' };
       let rg = new RiGrammar({ start: 'My [new].randomPosition().' }, context);
       expect(rg.expand()).eq('My new job type.');
@@ -2042,7 +2042,7 @@ describe(title, function () {
       expect(rg.expand()).eq('My new job type.');
     });
 
-    it('Should handle paired assignments via transforms', function () {
+    it('Handle paired assignments via transforms', function () {
       let rules = {
         start: '$name was our hero and $pronoun was fantastic.',
         name: '$boys {$pronoun=he} | $girls {$pronoun=she}',
@@ -2086,7 +2086,7 @@ describe(title, function () {
       ]);
     });
 
-    it('Should handle symbol transforms', function () {
+    it('Handle symbol transforms', function () {
       let rg;
 
       rg = new RiGrammar({
@@ -2109,7 +2109,7 @@ describe(title, function () {
       expect(rg.expand({ trace: 0 }), 'mice');
     });
 
-    it('Should handle symbol transforms on statics', function () {
+    it('Handle symbol transforms on statics', function () {
       let rg;
       rg = new RiGrammar({
         start: '$tmpl',
@@ -2135,7 +2135,7 @@ describe(title, function () {
       }
     });
 
-    it('Should handle special characters', function () {
+    it('Handle special characters', function () {
       let rg, res, s;
 
       s = '{ "start": "hello &#124; name" }';
@@ -2177,7 +2177,7 @@ describe(title, function () {
       }
     });
 
-    it('Should handle special characters with statics', function () {
+    it('Handle special characters with statics', function () {
       let rg, res, s;
 
       s = '{ "start": "hello &#124; name" }';
@@ -2219,10 +2219,10 @@ describe(title, function () {
       }
     });
 
-    it('Should call to/from JSON', function () {
+    it('Call to/from JSON', function () {
       let json, rg, rg2, generatedJSON;
 
-      // fromJSON should throw on non-json-string
+      // fromJSON Throw on non-json-string
       expect(function () {
         const gra = RiGrammar.fromJSON({ a: 'b' });
       }).to.throw();
@@ -2252,7 +2252,7 @@ describe(title, function () {
       expect(rg2.equals(rg));
     });
 
-    it('Should correctly pluralize phrases', function () {
+    it('Correctly pluralize phrases', function () {
       const json = {
         start: '[$state feeling].pluralize()',
         state: '[bad | bad]'
@@ -2262,7 +2262,7 @@ describe(title, function () {
       expect(res, 'bad feelings');
     });
 
-    it('Should correctly pluralize static phrases', function () {
+    it('Correctly pluralize static phrases', function () {
       const json = {
         start: '[$state feeling].pluralize()',
         '#state': '[bad | bad]'
@@ -2274,7 +2274,7 @@ describe(title, function () {
   });
 
   describe('Entities', function () {
-    it('Should decode escaped characters', function () {
+    it('Decode escaped characters', function () {
 
       expect(riscript.evaluate('The (word) has parens')).eq('The (word) has parens');
       expect(riscript.evaluate('The [word] has parens')).eq('The word has parens');
@@ -2285,17 +2285,17 @@ describe(title, function () {
       expect(riscript.evaluate('The & is an ampersand')).eq('The & is an ampersand');
     });
 
-    it('Should decode escaped characters in choices', function () {
+    it('Decode escaped characters in choices', function () {
       expect(riscript.evaluate('The [\\(word\\) | \\(word\\)] has parens')).eq('The (word) has parens');
 
       expect(riscript.evaluate('The [\\[word\\] | \\[word\\]] has brackets')).eq('The [word] has brackets');
     });
 
-    it('Should decode emojis', function () {
+    it('Decode emojis', function () {
       expect(riscript.evaluate('The 👍 is thumbs up')).eq('The 👍 is thumbs up');
     });
 
-    it('Should decode HTML entities', function () {
+    it('Decode HTML entities', function () {
       // TODO: bad 'unresolved symbol' warnings
       expect(riscript.evaluate('The &#010; line break entity')).eq('The \n line break entity');
       expect(riscript.evaluate('The &num; symbol')).eq('The # symbol');
@@ -2314,7 +2314,7 @@ describe(title, function () {
         expect(riscript.evaluate('The ' + e + ' symbol')).eq('The ) symbol'));
     });
 
-    it('Should allow basic punctuation', function () {
+    it('Allow basic punctuation', function () {
       // removed * while being used for weight, replace it if/as
       expect(riscript.evaluate("The -;:.!?'`", {})).eq("The -;:.!?'`");
       expect(riscript.evaluate('The -;:.!?"`', {})).eq('The -;:.!?"`');
@@ -2323,7 +2323,7 @@ describe(title, function () {
       expect(riscript.evaluate('*%©', 0)).eq('*%©');
     });
 
-    it('Should allow spaces for formatting', function () {
+    it('Allow spaces for formatting', function () {
       expect(riscript.evaluate('&nbsp;The dog&nbsp;', {})).eq(' The dog ');
       expect(riscript.evaluate('&nbsp; The dog&nbsp;', {})).eq('  The dog ');
       expect(riscript.evaluate('The &nbsp;dog', {})).eq('The  dog');
@@ -2331,18 +2331,18 @@ describe(title, function () {
       expect(riscript.evaluate('The &nbsp; dog', {})).eq('The   dog');
     });
 
-    it('Should show literal dollar signs', function () {
+    it('Show literal dollar signs', function () {
       let res;
       expect((res = riscript.evaluate('This is &#x00024;', {}))).eq('This is $');
       expect((res = riscript.evaluate('This is &#36;', {}))).eq('This is $');
     });
 
-    it('Should allow HTML entities in context', function () { // not sure about this
+    it('Allow HTML entities in context', function () { // not sure about this
       let res;
       expect((res = riscript.evaluate('This is $dollar.', { dollar: '&#36;' }))).eq('This is $.');
     });
 
-    it('Should recognize continuations', function () {
+    it('Recognize continuations', function () {
       expect(riscript.evaluate('~\n', {})).eq('');
       expect(riscript.evaluate('aa~\nbb', {})).eq('aabb');
       expect(riscript.evaluate('aa~\n~\n[bb].uc', {})).eq('aaBB');
@@ -2351,7 +2351,7 @@ describe(title, function () {
       expect(riscript.evaluate('aa ~\n bb', {})).eq('aa  bb');
     });
 
-    it('Should recognize continuations orig', function () {
+    it('Recognize continuations orig', function () {
       expect(riscript.evaluate('aa\
 bb', {})).eq('aabb');
       expect(riscript.evaluate('aa\
@@ -2364,7 +2364,7 @@ bb', {})).eq('aa bb');
  bb', {})).eq('aa  bb');
     });
 
-    it('Should ignore line comments ', function () {
+    it('Ignore line comments ', function () {
       expect(riscript.evaluate('// $foo=a')).eq('');
       expect(riscript.evaluate('// hello')).eq('');
       expect(riscript.evaluate('//hello')).eq('');
@@ -2378,7 +2378,7 @@ bb', {})).eq('aa bb');
       expect(riscript.evaluate('//hello\r\nhello\r\n//hello', 0)).eq('hello');
     });
 
-    it('Should ignore block comments ', function () {
+    it('Ignore block comments ', function () {
       expect(riscript.evaluate('/* hello */')).eq('');
       expect(riscript.evaluate('/* $foo=a */')).eq('');
       expect(riscript.evaluate('a /* $foo=a */b', 0)).eq('a b');

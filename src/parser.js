@@ -26,12 +26,12 @@ class RiScriptParser extends CstParser {
       atom: (choice | symbol | text | silent | entity | pgate | assign)
       wexpr: (expr | Weight)*
       symbol: Symbol transform*
-      choice: [ gate? accept (ELSE reject)? ] transform*
+      choice: [ gate? orExpr (ELSE orExpr)? ] transform*
       assign: Symbol EQ expr
       silent: { gate? Symbol (EQ expr)? }
-      or_expr: wexpr (OR wexpr)*
-      accept: or_expr
-      reject: or_expr
+      orExpr: wexpr (OR wexpr)*
+      // accept: orExpr
+      // reject: orExpr
       pgate: PGate transform*
       entity: Entity
       gate: Mingo
@@ -67,18 +67,17 @@ class RiScriptParser extends CstParser {
       $.MANY(() => $.CONSUME(Tokens.Transform));
     });
 
-   // choice: (LP (wexpr OR)* wexpr RP) transform*;
-   $.RULE("choice", () => {
-    $.CONSUME(Tokens.OC)
-    $.OPTION1(() => $.SUBRULE($.gate));
-    $.SUBRULE($.accept)
-    $.OPTION2(() => {
-      $.CONSUME(Tokens.ELSE);
-      $.SUBRULE($.reject)
+    // choice: (LP (wexpr OR)* wexpr RP) transform*;
+    $.RULE("choice", () => {
+      $.CONSUME(Tokens.OC)
+      $.OPTION1(() => $.SUBRULE($.gate));
+      $.SUBRULE($.orExpr)
+      $.OPTION2(() => {
+        $.SUBRULE2($.elseExpr)
+      });
+      $.CONSUME(Tokens.CC);
+      $.MANY(() => $.CONSUME(Tokens.Transform));
     });
-    $.CONSUME(Tokens.CC);
-    $.MANY(() => $.CONSUME(Tokens.Transform));
-  });
 
     $.RULE("assign", () => {
       $.CONSUME(Tokens.Symbol);
@@ -97,20 +96,25 @@ class RiScriptParser extends CstParser {
       $.CONSUME(Tokens.CS);
     });
 
-    $.RULE("or_expr", () => {
+    $.RULE("orExpr", () => {
       $.MANY_SEP({
         SEP: Tokens.OR,
         DEF: () => $.SUBRULE($.wexpr)
       });
     });
 
-    $.RULE("accept", () => {
-      $.SUBRULE($.or_expr);
+    $.RULE("elseExpr", () => {
+      $.CONSUME(Tokens.ELSE);
+      $.SUBRULE($.orExpr);
     });
 
-    $.RULE("reject", () => {
-      $.SUBRULE($.or_expr);
-    });
+    // $.RULE("accept", () => {
+    //   $.SUBRULE($.orExpr);
+    // });
+
+    // $.RULE("reject", () => {
+    //   $.SUBRULE($.orExpr);
+    // });
 
     $.RULE("pgate", () => {
       $.CONSUME(Tokens.PendingGate);

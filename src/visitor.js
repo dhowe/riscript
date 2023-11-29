@@ -41,7 +41,7 @@ class BaseVisitor {
     if (this.tracePath && !/(expr|atom|silent)/.test(name)) {
       this.path += name + '.';
     }
-    
+
     //if (this.trace) console.log('CALLING: ' + name + '()');
 
     return this[name](cstNode.children, param);
@@ -52,7 +52,7 @@ class BaseVisitor {
 
 class RiScriptVisitor extends BaseVisitor {
   constructor(riScript, context = {}) {
-    super(riScript); 
+    super(riScript);
     this.context = context;
 
     this.trace = 0;
@@ -95,7 +95,7 @@ class RiScriptVisitor extends BaseVisitor {
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
     const exprs = ctx.atom.map((c) => this.visit(c));
-    
+
     // handle special cases of the form: "not [quite|] far enough"
     for (let i = 1; i < exprs.length - 1; i++) {
       if (
@@ -107,6 +107,28 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
     return exprs.join('');
+  }
+
+  atom(ctx) {
+    let result;
+    const types = Object.keys(ctx);
+    if (types.length !== 1) throw Error('invalid atom: ' + types);
+    this.scripting.parser.atomTypes.forEach((type) => {
+      const context = ctx[type];
+      if (context) {
+        if (context.length !== 1) {
+          throw Error(type + ': bad length -> ' + ctx[type].length);
+        }
+        // console.log(type + ':', context[0]);
+        result = this.visit(context[0]);
+      }
+    });
+
+    // pending function, call it
+    if (typeof result === 'function') {
+      result = result.call();
+    }
+    return result;
   }
 
   wexpr(ctx) {
@@ -178,8 +200,8 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   assign(ctx, opts) {
-    const sym = ctx.Symbol[0].image;
 
+    const sym = ctx.Symbol[0].image;
     const ident = sym.replace(this.scripting.regex.AnySymbol, '');
     const isStatic = sym.startsWith(this.symbols.STATIC);
 
@@ -227,27 +249,6 @@ class RiScriptVisitor extends BaseVisitor {
     return '';
   }
 
-  atom(ctx) {
-    let result;
-    const types = Object.keys(ctx);
-    if (types.length !== 1) throw Error('invalid atom: ' + types);
-    this.scripting.parser.atomTypes.forEach((type) => {
-      const context = ctx[type];
-      if (context) {
-        if (context.length !== 1) {
-          throw Error(type + ': bad length -> ' + ctx[type].length);
-        }
-        // console.log(type + ':', context[0]);
-        result = this.visit(context[0]);
-      }
-    });
-
-    // pending function, call it
-    if (typeof result === 'function') {
-      result = result.call();
-    }
-    return result;
-  }
 
   text(ctx) {
     if (Object.keys(ctx).length !== 1) throw Error('[2] invalid text');
@@ -414,23 +415,22 @@ class RiScriptVisitor extends BaseVisitor {
         this.print('gate', ginfo);
       }
 
-      if (gateResult) {
-        if (gateResult.decision === 'defer') {
-          this.pendingGates[choiceKey] = {
-            gateText,
-            deferredContext: ctx,
-            operands: gateResult.operands
-          };
-          return `${$.PENDING_GATE}${choiceKey}`; // gate defers
-        }
+      if (gateResult && gateResult.decision === 'defer') {
+        this.pendingGates[choiceKey] = {
+          gateText,
+          deferredContext: ctx,
+          operands: gateResult.operands
+        };
+        return `${$.PENDING_GATE}${choiceKey}`; // gate defers
       }
     }
 
-    if (decision === 'reject' && !('reject' in ctx)) {
-      return ''; // rejected without reject expr, return ''
+    let orExpr = ctx?.orExpr[0];
+    if (decision === 'reject') {
+      if (!('elseExpr' in ctx)) return ''; // rejected without else
+      orExpr = ctx.elseExpr[0].children.orExpr[0];
     }
 
-    const orExpr = ctx[decision]?.[0]?.children?.or_expr?.[0]; // yuck
     const options = this.parseOptions(orExpr); // get options
     if (!options) throw Error('No options in choice: ' + original);
 
