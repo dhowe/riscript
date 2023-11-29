@@ -47,18 +47,18 @@ function getTokens(v2Compatible) {
     name: "Gate",
     pattern: bracketMatch,
     line_breaks: true,
-   });
+  });
 
   function bracketMatch(text, startOffset) {
     const openGate = Symbols.OPEN_GATE.charCodeAt(0);
     let endOffset = startOffset, dbug = false;
     let charCode = text.charCodeAt(endOffset);
     if (charCode !== openGate) return null; // 64 = '@'
-    
+
     if (dbug) console.log('bracketMatch', text, startOffset);
     endOffset++;
     charCode = text.charCodeAt(endOffset);
-    
+
     // spaces between the @ and the open brace 
     while (charCode === 32) {
       endOffset++;
@@ -66,7 +66,7 @@ function getTokens(v2Compatible) {
     }
     if (charCode !== 123) { // 123 = '{'
       if (dbug) console.log(`  "${text.substring(startOffset, endOffset)}" -> null1`);
-      return null; 
+      return null;
     }
     endOffset++;
     charCode = text.charCodeAt(endOffset);
@@ -78,7 +78,7 @@ function getTokens(v2Compatible) {
         if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null2`);
         return null;
       }
-      if (dbug) console.log('  depth', depth,text.substring(startOffset, endOffset));
+      if (dbug) console.log('  depth', depth, text.substring(startOffset, endOffset));
       endOffset++;
       charCode = text.charCodeAt(endOffset);
     }
@@ -90,40 +90,30 @@ function getTokens(v2Compatible) {
     } else {
       let matchedString = text.substring(startOffset, endOffset);
       // according to the RegExp.prototype.exec API the first item in the returned array must be the whole matched string.
-      if (dbug) console.log('  returned -> ',[matchedString]);
+      if (dbug) console.log('  returned -> ', [matchedString]);
       return [matchedString];
     }
   }
 
-  const PendingGate = createToken({
-    name: "PendingGate",
-    pattern: PENDING_GATE_PATTERN
-  });
-
-  // const EnterGate = createToken({
-  //   name: "EnterGate",
-  //   pattern: new RegExp(`${Escaped.OPEN_GATE}\\s*`),
-  //   push_mode: "gate_mode"
-  // });
-
-  const AMP = createToken({ name: "AMP", pattern: /&/ });
   const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
   const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
   const OC = createToken({ name: "OC", pattern: new RegExp(Escaped.OPEN_CHOICE + '\\s*') });
   const CC = createToken({ name: "CC", pattern: new RegExp(`\\s*${Escaped.CLOSE_CHOICE}`) });
-  const OR = createToken({ name: "OR", pattern: /\s*\|\s*/ });
-  const EQ = createToken({ name: "EQ", pattern: /\s*=\s*/ });
   const OS = createToken({ name: "OS", pattern: new RegExp(`${Escaped.OPEN_SILENT}\\s*`) });
   const CS = createToken({ name: "CS", pattern: new RegExp(`\\s*${Escaped.CLOSE_SILENT}`) });
   const ELSE = createToken({ name: "ELSE", pattern: /\s*\|\|\s*/ });
+  const OR = createToken({ name: "OR", pattern: /\s*\|\s*/ });
+  const EQ = createToken({ name: "EQ", pattern: /\s*=\s*/ });
+  const AMP = createToken({ name: "AMP", pattern: /&/ });
 
   const Transform = createToken({ name: "Transform", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
   const Symbol = createToken({ name: "Symbol", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*`) });
   const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
+  const PendingGate = createToken({ name: "PendingGate", pattern: PENDING_GATE_PATTERN });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
 
-  const tokens = [Gate, Entity, Weight, ELSE, OC, CC, OR, EQ, Symbol, DYN, STAT, AMP, Transform, OS, CS, PendingGate, Raw ];
+  const tokens = [Gate, Entity, Weight, ELSE, OC, CC, OR, EQ, Symbol, DYN, STAT, AMP, Transform, OS, CS, PendingGate, Raw];
 
   return { tokens, Constants: { Symbols, Escaped } };
 }

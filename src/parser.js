@@ -26,13 +26,12 @@ class RiScriptParser extends CstParser {
       atom: (choice | symbol | text | silent | entity | pgate | assign)
       wexpr: (expr | Weight)*
       symbol: Symbol transform*
-      choice: [ gate? orExpr (ELSE orExpr)? ] transform*
+      choice: [ gate? orExpr elseExpr? ] transform*
       assign: Symbol EQ expr
       silent: { gate? Symbol (EQ expr)? }
       orExpr: wexpr (OR wexpr)*
-      // accept: orExpr
-      // reject: orExpr
-      pgate: PGate transform*
+      elseExpr: ELSE orExpr
+      pgate: PendingGate
       entity: Entity
       gate: Mingo
       text: Raw | STAT | AMP 
@@ -108,17 +107,9 @@ class RiScriptParser extends CstParser {
       $.SUBRULE($.orExpr);
     });
 
-    // $.RULE("accept", () => {
-    //   $.SUBRULE($.orExpr);
-    // });
-
-    // $.RULE("reject", () => {
-    //   $.SUBRULE($.orExpr);
-    // });
-
     $.RULE("pgate", () => {
       $.CONSUME(Tokens.PendingGate);
-      $.MANY(() => $.CONSUME(Tokens.Transform));
+      //$.MANY(() => $.CONSUME(Tokens.Transform));
     });
 
     $.RULE("entity", () => {
