@@ -11,7 +11,7 @@ class RiScriptParser extends CstParser {
   }
 
   parse(opts) {
-    this.input = opts.tokens; // superclass member (do not change)
+    this.input = opts.tokens; // superclass member (dont change)
 
     let cst = this.script();
     if (this.errors.length > 0) throw Error

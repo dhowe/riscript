@@ -196,6 +196,17 @@ describe(title, function () {
       expect(riscript.evaluate('[ @{ a: /^p/g } $a]', { a: 'pogue' })).eq('pogue');
     });
 
+
+    it('Handle nested gates', function () {
+      let res;
+
+      res = riscript.evaluate('$x=2\n$y=3\n[ @{x:1} [a] || [@{y:3} b ]]', 0);
+      expect(res).eq('b');
+
+      res = riscript.evaluate('$x=2\n$y=4\n[ @{x:1} [a] || [@{y:3} b || c ]]', 0);
+      expect(res).eq('c');
+    });
+    
     it('Handle else gates', function () {
       let res;
 
