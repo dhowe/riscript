@@ -1,4 +1,4 @@
-<a href="https://github.com/dhowe/riscript/actions"><img src="https://github.com/dhowe/riscript/actions/workflows/node.js.yml/badge.svg" alt="ci tests"></a>  <a href="https://www.npmjs.com/package/riscript"> <img src="https://img.shields.io/npm/v/riscript.svg" alt="npm version"></a> <a href="https://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/badge/license-GPL-orange.svg" alt="license"></a>![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dhowe/riscript?label=size)
+<a href="https://github.com/dhowe/riscript/actions"><img src="https://github.com/dhowe/riscript/actions/workflows/node.js.yml/badge.svg" alt="ci tests"></a>  <a href="https://www.npmjs.com/package/riscript"> <img src="https://img.shields.io/npm/v/riscript.svg" alt="npm version"></a> <a href="https://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/badge/license-GPL-orange.svg" alt="license"></a> ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dhowe/riscript?label=code)
 
 ## RiScript: a scripting language for writers
 
