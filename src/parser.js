@@ -28,7 +28,7 @@ class RiScriptParser extends CstParser {
       symbol: Symbol transform*
       choice: [ gate? orExpr elseExpr? ] transform*
       assign: Symbol EQ expr
-      silent: { gate? Symbol (EQ expr)? }
+      silent: { gate? (symbol | assign) }
       orExpr: wexpr (OR wexpr)*
       elseExpr: ELSE orExpr
       pgate: PGate

@@ -199,6 +199,18 @@ describe(title, function () {
     it('Handle else gates', function () {
       let res;
 
+      res = riscript.evaluate('$x=2\n[@{x:2} [a] || [b]]', 0);
+      expect(res).eq('a');
+
+      res = riscript.evaluate('$x=2\n[@{x:2} [a|a] || [b|b]]', 0);
+      expect(res).eq('a');
+
+      res = riscript.evaluate('$x=1\n[@{x:2} [a|a] || [b|b]]', 0);
+      expect(res).eq('b');
+
+      res = riscript.evaluate('[@{} [a|a] || [b|b] ]', 0);
+      expect(res).eq('a');
+
       res = riscript.evaluate('$x=1\n[@{x:1}a||b]', 0);
       expect(res).eq('a');
 
@@ -223,7 +235,7 @@ describe(title, function () {
       res = riscript.evaluate('[@{}a|a||b]', 0);
       expect(res).eq('a');
 
-      res = riscript.evaluate('[a||b]', 0); // or error
+      res = riscript.evaluate('[a||b]', 0); // or error?
       expect(res).eq('a');
     });
 
@@ -231,6 +243,15 @@ describe(title, function () {
       let res;
 
       res = riscript.evaluate('[@{a:1}a||b]\n$a=1', 0);
+      expect(res).eq('a');
+
+      res = riscript.evaluate('[@{a:2}a||b]\n$a=1', 0);
+      expect(res).eq('b');
+
+      res = riscript.evaluate('[@{a:2}[a]||[b]]\n$a=1', 0);
+      expect(res).eq('b');
+
+      res = riscript.evaluate('[@{a:2}[a|a|a]||[b]]\n$a=2', 0);
       expect(res).eq('a');
 
       res = riscript.evaluate('[ @{a:2} [accept|accept] || [reject|reject] ]\n$a=1', 0);
