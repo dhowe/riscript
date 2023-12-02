@@ -141,6 +141,13 @@ describe(title, function() {
       expect(riscript.evaluate("[ @{ a: /^p/g } hello]", { a: "puffer" })).eq("hello");
       expect(riscript.evaluate("[ @{ a: /^p/g } $a]", { a: "pogue" })).eq("pogue");
     });
+    it("Handle nested gates", function() {
+      let res;
+      res = riscript.evaluate("$x=2\n$y=3\n[ @{x:1} [a] || [@{y:3} b ]]", 0);
+      expect(res).eq("b");
+      res = riscript.evaluate("$x=2\n$y=4\n[ @{x:1} [a] || [@{y:3} b || c ]]", 0);
+      expect(res).eq("c");
+    });
     it("Handle else gates", function() {
       let res;
       res = riscript.evaluate("$x=2\n[@{x:2} [a] || [b]]", 0);
@@ -756,13 +763,13 @@ describe(title, function() {
       let addRhyme = function(word) {
         return word + " rhymes with bog";
       };
-      expect(RiScript.transforms.rhymes).is.undefined;
-      RiScript.addTransform("rhymes", addRhyme);
-      expect(RiScript.transforms.rhymes).is.not.undefined;
+      expect(riscript.transforms.rhymes).is.undefined;
+      riscript.addTransform("rhymes", addRhyme);
+      expect(riscript.transforms.rhymes).is.not.undefined;
       let res = riscript.evaluate("The [dog | dog | dog].rhymes");
       expect(res).eq("The dog rhymes with bog");
-      RiScript.removeTransform("rhymes");
-      expect(RiScript.transforms.rhymes).is.undefined;
+      riscript.removeTransform("rhymes");
+      expect(riscript.transforms.rhymes).is.undefined;
       res = riscript.evaluate("The [dog | dog | dog].rhymes", 0, { silent: true });
       expect(res).eq("The dog.rhymes");
     });
@@ -814,7 +821,7 @@ describe(title, function() {
       const ctx = { Blah2: () => "Blah2" };
       expect(riscript.evaluate("That is [ant].Blah2().", ctx)).eq("That is Blah2.");
       const Blah3 = () => "Blah3";
-      RiScript.transforms.Blah3 = Blah3;
+      riscript.transforms.Blah3 = Blah3;
       expect(riscript.evaluate("That is [ant].Blah3().")).eq("That is Blah3.");
       expect(riscript.evaluate("That is [ant].Blah3.")).eq("That is Blah3.");
     });
@@ -1847,6 +1854,7 @@ index#${i}=[${syls[i]}]
       expect(riscript.evaluate("The \\[word\\] has brackets", 0)).eq("The [word] has brackets");
       expect(riscript.evaluate("The &lsqb;word&rsqb; has brackets", 0)).eq("The [word] has brackets");
       expect(riscript.evaluate("The & is an ampersand")).eq("The & is an ampersand");
+      expect(riscript.evaluate("The # is a hash")).eq("The # is a hash");
     });
     it("Decode escaped characters in choices", function() {
       expect(riscript.evaluate("The [\\(word\\) | \\(word\\)] has parens")).eq("The (word) has parens");

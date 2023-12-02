@@ -21,13 +21,15 @@ class RiGrammar {
   }
 
   addTransform() {
-    return RiScript.addTransform(...arguments);
+    return this.scripting.addTransform(...arguments);
   }
+
   removeTransform() {
-    return RiScript.removeTransform(...arguments);
+    return this.scripting.removeTransform(...arguments);
   }
+  
   getTransforms() {
-    return RiScript.transforms;
+    return this.scripting.transforms;
   }
 
   equals(rg) {

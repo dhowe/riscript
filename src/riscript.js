@@ -59,45 +59,23 @@ class RiScript {
   }
 
   constructor(opts = { /*RiTa:0, compatibility: 2*/ }) {
+
     this.visitor = 0; // created in evaluate() or passed in here
     this.v2Compatible = opts.compatibility === 2;
+
     const { Constants, tokens } = getTokens(this.v2Compatible);
-    const { Escaped, Symbols } = Constants;
-
-    this.Escaped = Escaped;
-    this.Symbols = Symbols;
-
-    const open = Escaped.OPEN_CHOICE;
-    const close = Escaped.CLOSE_CHOICE;
-    const anysym = Escaped.STATIC + Escaped.DYNAMIC;
-
-    this.regex = {
-      LineBreaks: /\r?\n/,
-      EndingBreak: /\r?\n$/,
-      NonGateAtSigns: /([^}])@(?!{)/,
-      AnySymbol: new RegExp(`[${anysym}]`),
-      ParenthesizedWeights: /\((\s*\d+\s*)\)/g,
-      MultiLineComments: /\/\*[^]*?(\r?\n)?\//g,
-      SingleLineComments: /\/\/[^\n]+(\r?\n|$)/g,
-      MarkdownLinks: /\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g,
-      RawAssign: new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`),
-      JSOLIdent: new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g'),
-      ChoiceWrap: new RegExp('^' + open + '[^' + open + close + ']*' + close + '$'),
-      ValidSymbol: new RegExp('(' + Escaped.DYNAMIC + '|' + Escaped.STATIC + '[A-Za-z_0-9])[A-Za-z_0-9]*'),
-      Entity: tokens./*modes.normal.*/filter(t => t.name === 'Entity')[0].PATTERN,
-      StaticSymbol: new RegExp(Escaped.STATIC + '[A-Za-z_0-9][A-Za-z_0-9]*'),
-      Special: new RegExp(`[${Escaped.SPECIAL.replace('&', '')}]`),
-      Continue: new RegExp(Escaped.CONTINUATION + '\\r?\\n', 'g'),
-      Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
-    }
+    ({ Escaped: this.Escaped, Symbols: this.Symbols } = Constants);
 
     this.textTypes = TextTypes;
-    this.lexer = new Lexer(tokens);
-    this.parser = new RiScriptParser(tokens, this.textTypes);
-    this.RiTa = (opts.RiTa && opts.RiTa.VERSION) ? opts.RiTa : {
+    this.RiTa = opts.RiTa || {
       VERSION: 0,
       randi: (k) => Math.floor(Math.random() * k),
     }
+
+    this._addTransforms();
+    this._addRegexes(tokens);
+    this.lexer = new Lexer(tokens);
+    this.parser = new RiScriptParser(tokens, TextTypes);
   }
 
   lex(opts) {
@@ -325,18 +303,69 @@ class RiScript {
     return result;
   }
 
+  addTransform(name, def) {
+    return this.transforms[name] = def;
+  }
+
+  getTransforms() {
+    return Object.keys(this.transforms);
+  }
+
+  removeTransform(name) {
+    delete this.transforms[name];
+  }
+
+  // ========================= helpers ===============================
+
+  _addRegexes(tokens) {
+
+    const Esc = this.Escaped;
+    const open = Esc.OPEN_CHOICE;
+    const close = Esc.CLOSE_CHOICE;
+    const anysym = Esc.STATIC + Esc.DYNAMIC;
+  
+    this.regex = {
+      LineBreaks: /\r?\n/,
+      EndingBreak: /\r?\n$/,
+      NonGateAtSigns: /([^}])@(?!{)/,
+      AnySymbol: new RegExp(`[${anysym}]`),
+      ParenthesizedWeights: /\((\s*\d+\s*)\)/g,
+      MultiLineComments: /\/\*[^]*?(\r?\n)?\//g,
+      SingleLineComments: /\/\/[^\n]+(\r?\n|$)/g,
+      MarkdownLinks: /\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g,
+      RawAssign: new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`),
+      JSOLIdent: new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g'),
+      ChoiceWrap: new RegExp('^' + open + '[^' + open + close + ']*' + close + '$'),
+      ValidSymbol: new RegExp('(' + Esc.DYNAMIC + '|' + Esc.STATIC + '[A-Za-z_0-9])[A-Za-z_0-9]*'),
+      Entity: tokens.filter(t => t.name === 'Entity')[0].PATTERN,
+      StaticSymbol: new RegExp(Esc.STATIC + '[A-Za-z_0-9][A-Za-z_0-9]*'),
+      Special: new RegExp(`[${Esc.SPECIAL.replace('&', '')}]`),
+      Continue: new RegExp(Esc.CONTINUATION + '\\r?\\n', 'g'),
+      Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
+    };
+  }
+
+  _addTransforms() {
+    this.transforms = {
+      quotify: RiScript.quotify,
+      pluralize: (w) => RiScript.pluralize(w),
+      capitalize: (w) => RiScript.capitalize(w),
+      articlize: (w) => RiScript.articlize(w),
+      uppercase: (w) => RiScript.uppercase(w),
+      norepeat: (w) => RiScript.identity(w),
+    };
+
+    // aliases
+    this.transforms.art = this.transforms.articlize;
+    this.transforms.nr = this.transforms.norepeat;
+    this.transforms.cap = this.transforms.capitalize;
+    this.transforms.uc = this.transforms.uppercase;
+    this.transforms.qq = this.transforms.quotify;
+    this.transforms.s = this.transforms.pluralize;
+    this.transforms.ucf = this.transforms.capitalize; // @dep
+  }
+
   // ========================= statics ===============================
-  static addTransform(name, def) {
-    return RiScript.transforms[name] = def;
-  }
-
-  static getTransforms() {
-    return Object.keys(RiScript.transforms);
-  }
-
-  static removeTransform(name) {
-    delete RiScript.transforms[name];
-  }
 
   // Default transform that adds an article
   static articlize(s) {
@@ -414,27 +443,6 @@ class RiScript {
   }
 }
 
-////////////////////// STATIC PROPS ///////////////////////
-
-RiScript.transforms = {
-  quotify: RiScript.quotify,
-  pluralize: RiScript.pluralize,
-  capitalize: RiScript.capitalize,
-  articlize: RiScript.articlize,
-  uppercase: RiScript.uppercase,
-
-  // sequences
-  norepeat: RiScript.identity,
-
-  // aliases
-  art: RiScript.articlize,
-  nr: RiScript.identity,
-  cap: RiScript.capitalize,
-  ucf: RiScript.capitalize, // deprecated?
-  uc: RiScript.uppercase,
-  qq: RiScript.quotify,
-  s: RiScript.pluralize,
-};
 
 ///////////////////////// FUNCTIONS /////////////////////////
 

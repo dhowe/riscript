@@ -649,6 +649,9 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   applyTransform(target, transform) {
+
+    // WORKING HERE: transforms not working with RiTa
+
     const image = transform.image;
     let result;
     const raw = target + image;
@@ -668,8 +671,8 @@ class RiScriptVisitor extends BaseVisitor {
     }
 
     // function in transforms
-    else if (typeof this.RiScript.transforms[tx] === 'function') {
-      result = this.RiScript.transforms[tx](target);
+    else if (typeof this.scripting.transforms[tx] === 'function') {
+      result = this.scripting.transforms[tx](target);
     }
     // member functions (usually on String)
     else if (typeof target[tx] === 'function') {
