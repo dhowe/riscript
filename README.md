@@ -1,8 +1,8 @@
-<a href="https://github.com/dhowe/riscript/actions"><img src="https://github.com/dhowe/riscript/actions/workflows/node.js.yml/badge.svg" alt="ci tests"></a>  <a href="https://www.npmjs.com/package/riscript"> <img src="https://img.shields.io/npm/v/riscript.svg" alt="npm version"></a> <a href="https://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/badge/license-GPL-orange.svg" alt="license"></a>
+<a href="https://github.com/dhowe/riscript/actions"><img src="https://github.com/dhowe/riscript/actions/workflows/node.js.yml/badge.svg" alt="ci tests"></a>  <a href="https://www.npmjs.com/package/riscript"> <img src="https://img.shields.io/npm/v/riscript.svg" alt="npm version"></a> <a href="https://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/badge/license-GPL-orange.svg" alt="license"></a> ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dhowe/riscript?label=code&color=yellow)
 
 ## RiScript: a scripting language for writers
 
-RiScript is a micro-language designed for writers working in computational media. It runs in a variety of environments, including the browser, Node, Observable, P5.js, Android and others. RiScript primitives (choices, symbols, gates, transforms, etc.) can be used as part of any RiScript [grammar](https://rednoise.org/rita/reference/RiScript/grammar/) or executed directly using [RiScript.evaluate()](https://rednoise.org/rita/reference/RiScript/grammar/). For more info, see [this interactive notebook](https://observablehq.com/@dhowe/riscript). RiScript is free/libre/open-source and integrates with [RiTa](https://rednoise.org/rita).
+RiScript is a micro-language designed for writers working in computational media. It runs in a variety of environments, including the browser, Node, Observable, P5.js, Android and others. RiScript primitives (choices, symbols, gates, transforms, etc.) can be used as part of any RiScript [grammar](https://rednoise.org/rita/reference/RiScript/grammar/) or executed directly using [evaluate()](https://rednoise.org/rita/reference/RiScript/grammar/). For more info, see this interactive [notebook](https://observablehq.com/@dhowe/riscript). RiScript is free/libre/open-source and integrates with [RiTa](https://rednoise.org/rita).
 
 ### Installation
 
@@ -51,6 +51,7 @@ Please make contributions via [fork-and-pull](https://reflectoring.io/github-for
 ## About
 
 * Author:   [Daniel C. Howe](http://rednoise.org/daniel)
+* Tutorial: [https://observablehq.com/@dhowe/riscript](https://observablehq.com/@dhowe/riscript)
 * Github Repo:       [https://github.com/dhowe/riscript](https://github.com/dhowe/riscript)
 * Issues:       [https://github.com/dhowe/riscript/issues](https://github.com/dhowe/riscript/issues)
 * Reference:    [https://rednoise.org/rita/reference](http://rednoise.org/rita/reference)
