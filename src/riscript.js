@@ -85,7 +85,7 @@ class RiScript {
       console.error('Input: ' + opts.input + '\n', lexResult.errors[0].message);
       throw Error('[LEXING] ' + lexResult.errors[0].message);
     }
-    if (opts.trace) this.printTokens(lexResult.tokens);
+    if (opts.trace) this._printTokens(lexResult.tokens);
     opts.tokens = lexResult.tokens;
     // return lexResult;
   }
@@ -98,12 +98,13 @@ class RiScript {
     return this.visitor.start(opts);
   }
 
-  lexParseVisit(opts = {}) {
-    this.lex(opts);
-    this.parse(opts);
-    return this.visit(opts);
-  }
-
+  /**
+   * Evaluates the input script via the RiScript parser
+   * @param {string} script - the script to evaluate
+   * @param {object} context - the context to evaluate in
+   * @param {object} opts - options for the evaluation
+   * @returns {string}
+   */
   evaluate(script, context, opts = {}) {
     if (typeof script !== 'string') {
       throw Error('RiScript.evaluate() expects a string, got ' + typeof script);
@@ -113,6 +114,42 @@ class RiScript {
     return this._evaluate(opts);
   }
 
+
+  lexParseVisit(opts = {}) {
+    this.lex(opts);
+    this.parse(opts);
+    return this.visit(opts);
+  }
+
+  /**
+   * Add a transform function to this instance
+   * @param {string} name - the name of the transform
+   * @param {function} def - the transform function
+   * @returns {RiScript} this instance
+   */
+  addTransform(name, def) {
+    this.transforms[name] = def;
+    return this;
+  }
+
+  /**
+   * Returns the names of all existing transforms
+   * @returns {string[]} the names of the transforms
+   */
+  getTransforms() {
+    return Object.keys(this.transforms);
+  }
+
+  /**
+   * Removes a transform function from this instance
+   * @param {string} name of transform to remove
+   */
+  removeTransform(name) {
+    delete this.transforms[name];
+  }
+
+  // //////////////////////// End API //////////////////////// 
+
   _evaluate(opts) {
     const { input } = opts;
 
@@ -120,7 +157,7 @@ class RiScript {
 
     let last, endingBreak = this.regex.EndingBreak.test(input); // keep
 
-    let expr = this.preParse(input, opts);
+    let expr = this._preParse(input, opts);
     if (!expr) return '';
 
     if (opts.trace) console.log(`\nInput:  '${RiScript._escapeText(input)}'`);
@@ -158,14 +195,14 @@ class RiScript {
       }
     }
 
-    return this.postParse(expr, opts) + (endingBreak ? '\n' : '');
+    return this._postParse(expr, opts) + (endingBreak ? '\n' : '');
   }
 
   _query(rawQuery, opts) {
     return new RiQuery(this, rawQuery, opts);
   }
 
-  printTokens(tokens) {
+  _printTokens(tokens) {
     let s = tokens.reduce((str, t) => {
       let { name } = t.tokenType;
       let tag = name;
@@ -179,7 +216,7 @@ class RiScript {
       this.visitor.lookupsToString());
   }
 
-  preParse(script, opts) {
+  _preParse(script, opts) {
     if (typeof script !== 'string') return '';
 
     const $ = this.Symbols;
@@ -230,7 +267,7 @@ class RiScript {
     return result;
   }
 
-  postParse(input, opts) {
+  _postParse(input, opts) {
     if (typeof input !== 'string') return '';
 
     // replace html entities
@@ -303,18 +340,6 @@ class RiScript {
     return result;
   }
 
-  addTransform(name, def) {
-    return this.transforms[name] = def;
-  }
-
-  getTransforms() {
-    return Object.keys(this.transforms);
-  }
-
-  removeTransform(name) {
-    delete this.transforms[name];
-  }
-
   // ========================= helpers ===============================
 
   _addRegexes(tokens) {
@@ -323,7 +348,7 @@ class RiScript {
     const open = Esc.OPEN_CHOICE;
     const close = Esc.CLOSE_CHOICE;
     const anysym = Esc.STATIC + Esc.DYNAMIC;
-  
+
     this.regex = {
       LineBreaks: /\r?\n/,
       EndingBreak: /\r?\n$/,

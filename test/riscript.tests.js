@@ -2427,26 +2427,26 @@ bb', {})).eq('aa bb');
 
     it('#preParseLines', function () {
       // handle new weights
-      expect(riscript.preParse('a (1) ')).eq('a ^1^ ');
-      expect(riscript.preParse('a (foo) ')).eq('a (foo) ');
+      expect(riscript._preParse('a (1) ')).eq('a ^1^ ');
+      expect(riscript._preParse('a (foo) ')).eq('a (foo) ');
 
-      expect(riscript.preParse('foo=a')).eq('foo=a');
-      expect(riscript.preParse('$foo=a')).eq('{$foo=a}');
-      expect(riscript.preParse('$foo=a\nb')).eq('{$foo=a}b');
-      expect(riscript.preParse('hello\n$foo=a')).eq('hello\n{$foo=a}');
+      expect(riscript._preParse('foo=a')).eq('foo=a');
+      expect(riscript._preParse('$foo=a')).eq('{$foo=a}');
+      expect(riscript._preParse('$foo=a\nb')).eq('{$foo=a}b');
+      expect(riscript._preParse('hello\n$foo=a')).eq('hello\n{$foo=a}');
 
-      expect(riscript.preParse('$foo=a[b\nc]d\ne')).eq('{$foo=a[b\nc]d}e');
-      expect(riscript.preParse('$foo=[cat\ndog]\n$foo')).eq('{$foo=[cat\ndog]}$foo');
-      expect(riscript.preParse('$foo=a\nb\n$foo')).eq('{$foo=a}b\n$foo');
-      expect(riscript.preParse('$foo=[\n]\n$foo')).eq('{$foo=[\n]}$foo');
-      expect(riscript.preParse('$foo=a[\n]b\n$foo')).eq('{$foo=a[\n]b}$foo');
-      expect(riscript.preParse('$foo=[cat\ndog].uc()\n$foo')).eq('{$foo=[cat\ndog].uc()}$foo');
+      expect(riscript._preParse('$foo=a[b\nc]d\ne')).eq('{$foo=a[b\nc]d}e');
+      expect(riscript._preParse('$foo=[cat\ndog]\n$foo')).eq('{$foo=[cat\ndog]}$foo');
+      expect(riscript._preParse('$foo=a\nb\n$foo')).eq('{$foo=a}b\n$foo');
+      expect(riscript._preParse('$foo=[\n]\n$foo')).eq('{$foo=[\n]}$foo');
+      expect(riscript._preParse('$foo=a[\n]b\n$foo')).eq('{$foo=a[\n]b}$foo');
+      expect(riscript._preParse('$foo=[cat\ndog].uc()\n$foo')).eq('{$foo=[cat\ndog].uc()}$foo');
 
-      expect(riscript.preParse('[ @{a: {}} hello]\n$a=2')).eq('[ @{a: {}} hello]\n{$a=2}');
+      expect(riscript._preParse('[ @{a: {}} hello]\n$a=2')).eq('[ @{a: {}} hello]\n{$a=2}');
 
-      expect(riscript.preParse('[ @{a: {}} hello]\n$a=2')).eq('[ @{a: {}} hello]\n{$a=2}');
+      expect(riscript._preParse('[ @{a: {}} hello]\n$a=2')).eq('[ @{a: {}} hello]\n{$a=2}');
 
-      let res = riscript.preParse('Some [RiTa](https://rednoise.org/rita?a=b&c=k) code');
+      let res = riscript._preParse('Some [RiTa](https://rednoise.org/rita?a=b&c=k) code');
       let expected = 'Some &lsqb;RiTa&rsqb;&lpar;https:&sol;&sol;rednoise.org&sol;rita?a=b&c=k&rpar; code';
       expect(res).eq(expected);
     });
