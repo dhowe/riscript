@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import { CstParser } from "chevrotain"
 
 class RiScriptParser extends CstParser {

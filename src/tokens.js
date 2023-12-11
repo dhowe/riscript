@@ -1,7 +1,5 @@
 import { createToken } from "chevrotain"
 
-const TextTypes = ['Raw', 'STAT', 'AMP'];
-
 function getTokens(v2Compatible) {
 
   let Symbols = {
@@ -45,8 +43,9 @@ function getTokens(v2Compatible) {
 
   const Gate = createToken({
     name: "Gate",
-    pattern: bracketMatch,
     line_breaks: true,
+    // @ts-ignore
+    pattern: bracketMatch
   });
 
   function bracketMatch(text, startOffset) {
@@ -121,5 +120,7 @@ function getTokens(v2Compatible) {
 function escapeRegex(s) {
   return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
+
+const TextTypes = ['Raw', 'STAT', 'AMP'];
 
 export { getTokens, TextTypes };

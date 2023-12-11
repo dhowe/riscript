@@ -994,6 +994,19 @@ describe(title, function () {
       expect(riscript.transforms.rhymes).is.undefined;
       res = riscript.evaluate('The [dog | dog | dog].rhymes', 0, { silent: true });
       expect(res).eq('The dog.rhymes');
+
+      let addRhyme2 = function (word, parent) {
+        return word + ' rhymes with bog'+parent.randi(1);
+      }
+      expect(riscript.transforms.rhymes2).is.undefined;
+      riscript.addTransform('rhymes2', addRhyme2);
+      expect(riscript.transforms.rhymes2).is.not.undefined;
+      res = riscript.evaluate('The [dog | dog | dog].rhymes2');
+      expect(res).eq('The dog rhymes with bog0');
+      riscript.removeTransform('rhymes2');
+      expect(riscript.transforms.rhymes2).is.undefined;
+      res = riscript.evaluate('The [dog | dog | dog].rhymes2', 0, { silent: true });
+      expect(res).eq('The dog.rhymes2');
     });
 
     it('Handle anonymous transforms', function () {
@@ -2030,11 +2043,12 @@ describe(title, function () {
     });
 
     it('Resolve rules in context', function () {
-      let ctx, rg;
+      let ctx, rg, res;
 
       ctx = { rule: '[job | mob]' }; // dynamic var in context
       rg = new RiGrammar({ start: '$rule $rule' }, ctx);
-      expect(/^[jm]ob [jm]ob$/.test(rg.expand())).eq(true);
+      res = rg.expand();
+      expect(/^[jm]ob [jm]ob$/.test(res)).eq(true);
 
       if (LTR) {
         ctx = { '#rule': '[job | mob]' }; // TODO: statics in grammar context
@@ -2422,7 +2436,7 @@ bb', {})).eq('aa bb');
 
   describe('Helpers', function () {
     it('#stringHash', function () {
-      expect(RiScript._stringHash('revenue')).eq('1099842588');
+      expect(RiScript.Util.stringHash('revenue')).eq('1099842588');
     });
 
     it('#preParseLines', function () {

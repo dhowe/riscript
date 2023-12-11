@@ -1,13 +1,15 @@
+import { Util } from './util.js';
+
+const { escapeText, stringHash } = Util;
 
 class BaseVisitor {
   constructor(riScript) {
-    this.input = 0;
-    this.path = '';
-    this.nowarn = false;
-    this.tracePath = true;
-    this.scripting = riScript;
-    this.warnOnInvalidGates = false;
-    this.RiScript = this.scripting.constructor; // class hack
+    /**@type {string}*/this.input = '';
+    /**@type {string}*/this.path = '';
+    /**@type {boolean}*/this.nowarn = false;
+    /**@type {boolean}*/this.tracePath = true;
+    /**@type {object}*/this.scripting = riScript;
+    /**@type {boolean}*/this.warnOnInvalidGates = false;
   }
 
   isCstNode(o) {
@@ -92,7 +94,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
 
     const count = Object.keys(ctx).reduce((acc, k) => ctx[k].length + acc, 0);
-    this.print('script', "'" + this.RiScript._escapeText(this.input)
+    this.print('script', "'" + escapeText(this.input)
       + "' :: " + count + ' atom(s)');
     if (!count) return '';
 
@@ -215,12 +217,12 @@ class RiScriptVisitor extends BaseVisitor {
         this.pendingSymbols.delete(ident); // no longer pending
         this.trace &&
           console.log('  [pending.delete]', sym,
-            this.pendingSymbols.length
+            this.pendingSymbols.size
               ? JSON.stringify(this.pendingSymbols)
               : ''
           );
       }
-      info = `${sym} = ${this.RiScript._escapeText(value)}` +
+      info = `${sym} = ${escapeText(value)}` +
         ` [#static] ${opts?.silent ? '{silent}' : ''}`;
     } else {
       const $ = this;
@@ -253,7 +255,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (Object.keys(ctx).length !== 1) throw Error('[2] invalid text');
     const type = this.scripting.textTypes.filter(t => ctx[t]);
     const image = ctx[type][0].image; // any of riscript.textTypes
-    this.print('text', this.RiScript._escapeText("'" + image + "'"));
+    this.print('text', escapeText("'" + image + "'"));
     return image;
   }
 
@@ -341,7 +343,7 @@ class RiScriptVisitor extends BaseVisitor {
     // resolved, so remove from pending
     if (this.pendingSymbols.has(ident)) {
       this.trace && console.log('  [$pending.delete]', (isStatic ? '#' : '$') + ident,
-        this.pendingSymbols.length ? JSON.stringify(this.pendingSymbols) : '');
+        this.pendingSymbols.size ? JSON.stringify(this.pendingSymbols) : '');
       this.pendingSymbols.delete(ident);
     }
     this.isNoRepeat = false; // reset
@@ -388,9 +390,9 @@ class RiScriptVisitor extends BaseVisitor {
   choice(ctx, opts) {
     const $ = this.symbols;
     const original = this.nodeText;
+    const choiceKey = stringHash(original + ' #' + this.choiceId(ctx));
+
     let gateText, gateResult, info = original;
-    const choiceKey = this.RiScript._stringHash
-      (original + ' #' + this.choiceId(ctx));
 
     if (!this.isNoRepeat && this.hasNoRepeat(ctx.Transform)) {
       throw Error('noRepeat() not allowed on choice '
@@ -650,29 +652,30 @@ class RiScriptVisitor extends BaseVisitor {
 
   applyTransform(target, transform) {
 
-    // WORKING HERE: transforms not working with RiTa
 
     const image = transform.image;
-    let result;
     const raw = target + image;
     const tx = image.substring(1).replace(/\(\)$/, '');
+    const RiTa = this.scripting.RiTa;
+
+    let result;
 
     // function in dynamics
     if (typeof this.dynamics[tx] === 'function') {
-      result = this.dynamics[tx](target);
+      result = this.dynamics[tx](target, RiTa);
     }
     // function in statics
     else if (typeof this.statics[tx] === 'function') {
-      result = this.statics[tx](target);
+      result = this.statics[tx](target, RiTa);
     }
     // function in context
     else if (typeof this.context[tx] === 'function') {
-      result = this.context[tx](target);
+      result = this.context[tx](target, RiTa);
     }
 
     // function in transforms
     else if (typeof this.scripting.transforms[tx] === 'function') {
-      result = this.scripting.transforms[tx](target);
+      result = this.scripting.transforms[tx](target, RiTa);
     }
     // member functions (usually on String)
     else if (typeof target[tx] === 'function') {
@@ -682,7 +685,7 @@ class RiScriptVisitor extends BaseVisitor {
       if (target.hasOwnProperty(tx)) {
         result = target[tx];
       } else {
-        if (!this.scripting.RiTa.SILENT && !this.silent) {
+        if (!RiTa.SILENT && !this.silent) {
           console.warn('[WARN] Unresolved transform: ' + raw);
         }
 
@@ -692,7 +695,9 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
 
-    if (this.trace) { console.log(`${this.tindent()}[transform] ${raw} -> '${result}'`); }
+    if (this.trace) {
+      console.log(`${this.tindent()}[transform] ${raw} -> '${result}'`);
+    }
 
     return result;
   }

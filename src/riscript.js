@@ -5,11 +5,12 @@ import { Lexer } from 'chevrotain';
 import { RiScriptParser } from './parser.js';
 import { RiScriptVisitor } from './visitor.js';
 import { getTokens, TextTypes } from './tokens.js';
+import { Util } from './util.js';
 
 const { decode } = he;
 const Vowels = /[aeiou]/;
-const RegexEscape = '_RE_';
 const HtmlEntities = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/gi;
+const { escapeText, charCount, slashEscapesToEntities, escapeMarkdownLink, escapeJSONRegex } = Util;
 
 class RiQuery extends Query {
   constructor(scripting, condition, options) {
@@ -22,13 +23,16 @@ class RiQuery extends Query {
   }
 
   test(obj) {
-    for (let i = 0, len = this.compiled.length; i < len; i++) {
-      if (!this.compiled[i](obj)) return false;
+    // @ts-ignore
+    let compiled = this.compiled;
+    for (let i = 0, len = compiled.length; i < len; i++) {
+      if (!compiled[i](obj)) return false;
     }
     return true;
   }
 
   operands() {
+    // @ts-ignore
     const stack = [this.condition];
     const keys = new Set();
     while (stack?.length > 0) {
@@ -49,32 +53,57 @@ class RiQuery extends Query {
 
 class RiScript {
 
+  /** @type {string} */
   static VERSION = '[VI]{{inject}}[/VI]';
 
+  /** @type {typeof RiQuery} */
   static Query = RiQuery;
+
+  /** @type {Object.<string, boolean>} */
   static RiTaWarnings = { plurals: false, phones: false, silent: false };
 
-  static evaluate(script, context, opts = {}) {
-    return new RiScript(opts).evaluate(script, context, opts);
+  /**
+   * Evaluates the input script via the RiScript parser
+   * @param {string} script - the script to evaluate
+   * @param {object} context - the context (or world-state) to evaluate in
+   * @param {object} [options] - options for the evaluation
+   * @param {boolean} [options.trace] - whether to trace the evaluation=
+   * @returns {string} - the evaluated script
+   */
+  static evaluate(script, context, options = {}) {
+    return new RiScript(options).evaluate(script, context, options);
   }
 
   constructor(opts = { /*RiTa:0, compatibility: 2*/ }) {
 
-    this.visitor = 0; // created in evaluate() or passed in here
+    /** @type {Object.<string, any>} */ this.Escaped = undefined
+    /** @type {Object.<string, string>} */ this.Symbols = undefined;
+
+    /** @type {RiScriptVisitor} */
+    this.visitor = undefined; // created in evaluate() or passed in here
+
     this.v2Compatible = opts.compatibility === 2;
 
     const { Constants, tokens } = getTokens(this.v2Compatible);
     ({ Escaped: this.Escaped, Symbols: this.Symbols } = Constants);
 
-    this.textTypes = TextTypes;
-    this.RiTa = opts.RiTa || {
+    /** @type {string[]} */ this.textTypes = TextTypes;
+
+    /** @type {Object<string, any>} */ this.RiTa = opts.RiTa || {
       VERSION: 0,
       randi: (k) => Math.floor(Math.random() * k),
     }
 
-    this._addTransforms();
-    this._addRegexes(tokens);
+    /** @type {Object.<string, Function>} */
+    this.transforms = this._createTransforms();
+
+    /** @type {Object.<string, RegExp>} */
+    this.regex = this._createRegexes(tokens);
+
+    /** @type {Lexer} */
     this.lexer = new Lexer(tokens);
+
+    /** @type {RiScriptParser} */
     this.parser = new RiScriptParser(tokens, TextTypes);
   }
 
@@ -95,13 +124,14 @@ class RiScript {
   }
 
   visit(opts) {
+    // @ts-ignore
     return this.visitor.start(opts);
   }
 
   /**
    * Evaluates the input script via the RiScript parser
    * @param {string} script - the script to evaluate
-   * @param {object} context - the context to evaluate in
+   * @param {object} context - the context (or world-state) to evaluate in
    * @param {object} opts - options for the evaluation
    * @returns {string}
    */
@@ -146,56 +176,70 @@ class RiScript {
    */
   removeTransform(name) {
     delete this.transforms[name];
+    return this;
   }
 
   // //////////////////////// End API //////////////////////// 
+  /**
+    * Private version of evaluate taking all arguments in an options object
+    * @param {object} [options] - options for the evaluation
+    * @param {string} [options.input] - the script to evaluate
+    * @param {object} [options.visitor] - the visitor to use for the evaluation
+    * @param {boolean} [options.trace] - whether to trace the evaluation
+    * @param {boolean} [options.onepass] - whether to only do one pass
+    * @param {boolean} [options.silent] - whether to suppress warnings
+    * @returns {string} - the evaluated script's output text
+    */
+  _evaluate(options) {
 
-  _evaluate(opts) {
-    const { input } = opts;
+    const { input, visitor, trace, onepass, silent } = options;
 
-    // opts.onepass = true; // TMP
+    if (!input) throw Error('no input');
+    if (!visitor) throw Error('no visitor');
+
+    // onepass = true; // TMP
 
     let last, endingBreak = this.regex.EndingBreak.test(input); // keep
 
-    let expr = this._preParse(input, opts);
+    let expr = this._preParse(input, options);
     if (!expr) return '';
 
-    if (opts.trace) console.log(`\nInput:  '${RiScript._escapeText(input)}'`);
-    if (opts.trace && input !== expr) {
-      console.log(`Parsed: '${RiScript._escapeText(expr)}'`);
+    if (trace) console.log(`\nInput:  '${escapeText(input)}'`);
+    if (trace && input !== expr) {
+      console.log(`Parsed: '${escapeText(expr)}'`);
     }
 
-    if (!opts.visitor) throw Error('no visitor');
-    this.visitor = opts.visitor;
-    delete opts.visitor; // remind me why
+    if (!options.visitor) throw Error('no visitor');
+    this.visitor = options.visitor;
+    delete options.visitor; // remind me why
 
     for (let i = 1; expr !== last && i <= 10; i++) {
       last = expr;
 
-      if (opts.trace) console.log('-'.repeat(20)
+      if (trace) console.log('-'.repeat(20)
         + ' Pass#' + i + ' ' + '-'.repeat(20));
 
-      opts.input = expr;
-      expr = this.lexParseVisit(opts); // do it
+      options.input = expr;
+      expr = this.lexParseVisit(options); // do it
 
-      if (opts.trace) {
-        console.log(`Result(${i}) -> "` + `${RiScript._escapeText(expr)}"`
+      if (trace) {
+        console.log(`Result(${i}) -> "` + `${escapeText(expr)}"`
           + ` ctx=${this.visitor.lookupsToString()}`);
       }
 
       // end if no more riscript
-      if (opts.onepass || !this.isParseable(expr)) break;
+      if (onepass || !this.isParseable(expr)) break;
     }
 
     // check for unresolved symbols ([$#]) after removing HTML entities
-    if (!opts.silent && !this.RiTa.SILENT) {
+    if (!silent && !this.RiTa.SILENT) {
       if (this.regex.ValidSymbol.test(expr.replace(HtmlEntities, ''))) {
         console.warn('[WARN] Unresolved symbol(s) in "'
           + expr.replace(/\n/g, '\\n') + '" ');
       }
     }
 
-    return this._postParse(expr, opts) + (endingBreak ? '\n' : '');
+    return this._postParse(expr, options) + (endingBreak ? '\n' : '');
   }
 
   _query(rawQuery, opts) {
@@ -206,7 +250,7 @@ class RiScript {
     let s = tokens.reduce((str, t) => {
       let { name } = t.tokenType;
       let tag = name;
-      if (tag === 'TEXT') tag = RiScript._escapeText(t.image, 1);
+      if (tag === 'TEXT') tag = escapeText(t.image, true);
       if (tag === 'Symbol') tag = 'sym(' + t.image + ')';
       if (tag === 'TX') tag = 'tx(' + t.image + ')';
       return str + tag + ', ';
@@ -232,7 +276,7 @@ class RiScript {
       input = replaced;
     }
 
-    let matches = input.match(this.regex.MarkdownLinks, ''); // md-links
+    let matches = input.match(this.regex.MarkdownLinks); // md-links
     matches && matches.forEach(m => input = input.replace(m, escapeMarkdownLink(m)));
     input = input.replace(this.regex.MultiLineComments, ''); // multi-line comments
     input = input.replace(this.regex.SingleLineComments, ''); // single-line comments
@@ -306,6 +350,7 @@ class RiScript {
    */
   parseJSOL(text) {
     const unescapeRegexProperty = (text) => {
+      const RegexEscape = Util.RegexEscape
       // TODO: why do we need this?
       let res = text;
       if (
@@ -342,14 +387,14 @@ class RiScript {
 
   // ========================= helpers ===============================
 
-  _addRegexes(tokens) {
+  _createRegexes(tokens) {
 
     const Esc = this.Escaped;
     const open = Esc.OPEN_CHOICE;
     const close = Esc.CLOSE_CHOICE;
     const anysym = Esc.STATIC + Esc.DYNAMIC;
 
-    this.regex = {
+    return {
       LineBreaks: /\r?\n/,
       EndingBreak: /\r?\n$/,
       NonGateAtSigns: /([^}])@(?!{)/,
@@ -370,35 +415,37 @@ class RiScript {
     };
   }
 
-  _addTransforms() {
-    this.transforms = {
-      quotify: RiScript.quotify,
-      pluralize: (w) => RiScript.pluralize(w),
-      capitalize: (w) => RiScript.capitalize(w),
-      articlize: (w) => RiScript.articlize(w),
-      uppercase: (w) => RiScript.uppercase(w),
-      norepeat: (w) => RiScript.identity(w),
+  _createTransforms() {
+    let transforms = {
+      quotify: (w, r) => RiScript.quotify(w),
+      pluralize: (w, r) => RiScript.pluralize(w, r),
+      capitalize: (w, r) => RiScript.capitalize(w),
+      articlize: (w, r) => RiScript.articlize(w, r),
+      uppercase: (w, r) => RiScript.uppercase(w),
+      norepeat: (w, r) => RiScript.identity(w),
     };
 
     // aliases
-    this.transforms.art = this.transforms.articlize;
-    this.transforms.nr = this.transforms.norepeat;
-    this.transforms.cap = this.transforms.capitalize;
-    this.transforms.uc = this.transforms.uppercase;
-    this.transforms.qq = this.transforms.quotify;
-    this.transforms.s = this.transforms.pluralize;
-    this.transforms.ucf = this.transforms.capitalize; // @dep
+    transforms.art = transforms.articlize;
+    transforms.nr = transforms.norepeat;
+    transforms.cap = transforms.capitalize;
+    transforms.uc = transforms.uppercase;
+    transforms.qq = transforms.quotify;
+    transforms.s = transforms.pluralize;
+    transforms.ucf = transforms.capitalize; // @dep
+
+    return transforms;
   }
 
   // ========================= statics ===============================
 
   // Default transform that adds an article
-  static articlize(s) {
+  static articlize(s, RiTa) {
     if (!s || !s.length) return '';
 
     let first = s.split(/\s+/)[0];
 
-    if (!this.RiTa?.phones) {
+    if (!RiTa?.phones) {
       if (!RiScript.RiTaWarnings.phones && !RiScript.RiTaWarnings.silent) {
         console.warn('[WARN] Install RiTa for proper phonemes');
         RiScript.RiTaWarnings.phones = true;
@@ -407,7 +454,7 @@ class RiScript {
       return (/^[aeiou].*/i.test(first) ? 'an ' : 'a ') + s;
     }
 
-    let phones = this.RiTa.phones(first, { silent: true });
+    let phones = RiTa.phones(first, { silent: true });
 
     // could still be original word if no phones found
     return (
@@ -431,88 +478,25 @@ class RiScript {
   }
 
   // Default transform that pluralizes a string (requires RiTa)
-  static pluralize(s) {
-    if (!this.RiTa?.pluralize) {
+  static pluralize(s, RiTa) {
+    if (!RiTa?.pluralize) {
       if (!RiScript.RiTaWarnings.plurals && !RiScript.RiTaWarnings.silent) {
         RiScript.RiTaWarnings.plurals = true;
         console.warn('[WARN] Install RiTa for proper pluralization');
       }
       return s.endsWith('s') ? s : s + 's';
     }
-    return this.RiTa.pluralize(s);
+    return RiTa.pluralize(s);
   }
 
   // Default no-op transform
   static identity(s) {
     return s;
   }
-
-  // static helpers
-
-  static _escapeText(s, quotify) {
-    if (typeof s !== 'string') return s;
-    let t = s.replace(/\r?\n/g, '\\n');
-    return quotify || !t.length ? "'" + t + "'" : t;
-  }
-
-  static _stringHash(s) { // for testing
-    let chr,
-      hash = 0;
-    for (let i = 0; i < s.length; i++) {
-      chr = s.charCodeAt(i);
-      hash = (hash << 5) - hash + chr;
-      hash |= 0; // Convert to 32bit integer
-    }
-    let strHash = hash.toString().padStart(9, '0');
-    return hash < 0 ? strHash.replace('-', '0') : strHash;
-  }
 }
 
-
-///////////////////////// FUNCTIONS /////////////////////////
-
-function escapeMarkdownLink(txt) {
-  let result = txt;
-  let lookups = { '[': '&lsqb;', ']': '&rsqb;', '(': '&lpar;', ')': '&rpar;', '/': '&sol;' };
-  Object.entries(lookups).forEach(([k, v]) => result = result.replace(new RegExp(`\\${k}`, 'g'), v));
-  return result;
-}
-
-function slashEscapesToEntities(s) {
-  s = replaceAll(s, '\\(', '&lpar;');
-  s = replaceAll(s, '\\)', '&rpar;');
-  s = replaceAll(s, '\\[', '&lsqb;');
-  s = replaceAll(s, '\\]', '&rsqb;');
-  s = replaceAll(s, '\\{', '&lcqb;');
-  s = replaceAll(s, '\\}', '&rcqb;');
-  s = replaceAll(s, '\\@', '&commat;');
-  s = replaceAll(s, '\\#', '&num;');
-  s = replaceAll(s, '\\|', ' &vert');
-  s = replaceAll(s, '\\=', ' &equals');
-  return s;
-}
-
-function escapeJSONRegex(text) {
-  return text.replace(
-    /\/([^/]+?)\/([igmsuy]*)/g,
-    `"${RegexEscape}$1${RegexEscape}$2${RegexEscape}"`
-  );
-}
-
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function replaceAll(str, match, replacement) {
-  return str.replace(new RegExp(escapeRegExp(match), 'g'), () => replacement);
-}
-
-function charCount(str, c) {
-  let count = 0;
-  for (let i = 0; i < str.length; i++) {
-    if (str[i] === c) count++;
-  }
-  return count;
-}
+// Class references
+RiScript.Visitor = RiScriptVisitor;
+RiScript.Util = Util;
 
 export { RiScript };
