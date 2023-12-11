@@ -13,6 +13,7 @@ const Vowels = /[aeiou]/;
 const HtmlEntities = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/gi;
 const { escapeText, charCount, slashEscapesToEntities, escapeMarkdownLink, escapeJSONRegex } = Util;
 
+/**@ignore */
 class RiQuery extends Query {
   constructor(scripting, condition, options) {
     if (typeof condition === 'string') {
@@ -181,7 +182,8 @@ class RiScript {
     return this;
   }
 
-  // //////////////////////// End API //////////////////////// 
+  ///////////////////////////////////// End API //////////////////////////////////////
+
   /**
     * Private version of evaluate taking all arguments in an options object
     * @param {object} [options] - options for the evaluation
@@ -244,10 +246,11 @@ class RiScript {
     return this._postParse(expr, options) + (endingBreak ? '\n' : '');
   }
 
+  /** @private */
   _query(rawQuery, opts) {
     return new RiQuery(this, rawQuery, opts);
   }
-
+  /** @private */
   _printTokens(tokens) {
     let s = tokens.reduce((str, t) => {
       let { name } = t.tokenType;
@@ -261,7 +264,7 @@ class RiScript {
     console.log('\nTokens: [ ' + s + ' ]  Context:',
       this.visitor.lookupsToString());
   }
-
+  /** @private */
   _preParse(script, opts) {
     if (typeof script !== 'string') return '';
 
@@ -312,7 +315,7 @@ class RiScript {
 
     return result;
   }
-
+  /** @private */
   _postParse(input, opts) {
     if (typeof input !== 'string') return '';
 
@@ -347,8 +350,9 @@ class RiScript {
     return result;
   }
 
-  /*
+  /**
    * Parses a mingo query into JSON format
+   * @private
    */
   parseJSOL(text) {
     const unescapeRegexProperty = (text) => {
@@ -378,6 +382,10 @@ class RiScript {
     return result;
   }
 
+  /**
+   * True if input contains parseable script
+   * @private
+   */
   isParseable(s) {
     // conservatively assume non-string/numbers are always parseable
     let result = true;
@@ -389,6 +397,7 @@ class RiScript {
 
   // ========================= helpers ===============================
 
+  /** @private */
   _createRegexes(tokens) {
 
     const Esc = this.Escaped;
@@ -416,7 +425,8 @@ class RiScript {
       Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
     };
   }
-
+  
+  /** @private */
   _createTransforms() {
     let transforms = {
       quotify: (w, r) => RiScript.quotify(w),

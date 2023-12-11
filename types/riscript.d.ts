@@ -144,7 +144,7 @@ declare class RiQuery extends Query {
     test(obj: any): boolean;
     operands(): any[];
 }
-import { RiGrammar } from './grammar.js';
+import { RiGrammar } from './rigrammar.js';
 import { Util } from './util.js';
 import { Query } from 'mingo';
 export {};
