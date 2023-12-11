@@ -1,8 +1,8 @@
 import { RiScript } from './riscript.js'
 
 /**
- * A probabilistic context-free grammar for text-generation, supporting RiScript
- *  including transforms, choices, sequences, and assignments.
+ * A probabilistic context-free grammar for text-generation, supporting all RiScript
+ *  features, including transforms, gates, choices, sequences and assignments.
  * @class RiGrammar
  */
 class RiGrammar {
@@ -176,10 +176,10 @@ class RiGrammar {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  /* 
-    Convert grammar to inline rules;
-    rules are dynamic, unless otherwise specified with leading #
-  */
+  /**
+   * Converts grammar to inline rules; rules are dynamic, unless otherwise specified with leading #
+   * @private
+   */
   _toScript(opts) {
 
     let script = '';
@@ -222,6 +222,10 @@ class RiGrammar {
     return script;
   }
 
+  /**
+   * Validates a grammar rule
+   * @private
+   */
   _validateRule(name, def) {
     if (typeof name !== 'string' || name.length === 0) {
       throw Error('expected [string] name');
@@ -246,6 +250,8 @@ class RiGrammar {
     }
   }
 }
+
+//////////////////////////////////////////////////////////////////////////////
 
 function parseJSON(json) {
   if (typeof json === 'string') {

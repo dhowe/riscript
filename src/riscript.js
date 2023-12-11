@@ -6,6 +6,7 @@ import { RiScriptParser } from './parser.js';
 import { RiScriptVisitor } from './visitor.js';
 import { getTokens, TextTypes } from './tokens.js';
 import { Util } from './util.js';
+import { RiGrammar } from './grammar.js';
 
 const { decode } = he;
 const Vowels = /[aeiou]/;
@@ -163,7 +164,7 @@ class RiScript {
   }
 
   /**
-   * Returns the names of all existing transforms
+   * Returns the names of all current transforms
    * @returns {string[]} the names of the transforms
    */
   getTransforms() {
@@ -173,6 +174,7 @@ class RiScript {
   /**
    * Removes a transform function from this instance
    * @param {string} name of transform to remove
+   * @returns {RiScript} this instance
    */
   removeTransform(name) {
     delete this.transforms[name];
@@ -497,6 +499,7 @@ class RiScript {
 
 // Class references
 RiScript.Visitor = RiScriptVisitor;
+RiScript.Grammar = RiGrammar;
 RiScript.Util = Util;
 
 export { RiScript };
