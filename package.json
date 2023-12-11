@@ -9,9 +9,9 @@
   "scripts": {
     "test": "NODE_ENV=dev mocha",
     "test:dist": "NODE_ENV=dev mocha test/dist",
-    "build": "rm -rf ./dist/ && npx tsup",
-    "pub": "cp types/riscript.d.ts dist && ./npnb/source/cli.js --no-release-draft --test-script test:dist patch",
-    "prepub": "npm version patch && npm run build && npm run types",
+    "build": "rm -rf ./dist/ && npx tsup && npm run types",
+    "pub": "./npnb/source/cli.js --no-release-draft --test-script test:dist patch",
+    "prepub": "npm version patch && npm run build",
     "types": "npx tsc",
     "posttypes": "cp types/riscript.d.ts types/rigrammar.d.ts dist/"
   },

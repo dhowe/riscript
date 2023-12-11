@@ -97,39 +97,28 @@ export class RiScript {
         onepass?: boolean;
         silent?: boolean;
     }): string;
-    _query(rawQuery: any, opts: any): RiQuery;
-    _printTokens(tokens: any): void;
-    _preParse(script: any, opts: any): string;
-    _postParse(input: any, opts: any): any;
-    parseJSOL(text: any): any;
-    isParseable(s: any): boolean;
-    _createRegexes(tokens: any): {
-        LineBreaks: RegExp;
-        EndingBreak: RegExp;
-        NonGateAtSigns: RegExp;
-        AnySymbol: RegExp;
-        ParenthesizedWeights: RegExp;
-        MultiLineComments: RegExp;
-        SingleLineComments: RegExp;
-        MarkdownLinks: RegExp;
-        RawAssign: RegExp;
-        JSOLIdent: RegExp;
-        ChoiceWrap: RegExp;
-        ValidSymbol: RegExp;
-        Entity: any;
-        StaticSymbol: RegExp;
-        Special: RegExp;
-        Continue: RegExp;
-        Whitespace: RegExp;
-    };
-    _createTransforms(): {
-        quotify: (w: any, r: any) => string;
-        pluralize: (w: any, r: any) => any;
-        capitalize: (w: any, r: any) => any;
-        articlize: (w: any, r: any) => string;
-        uppercase: (w: any, r: any) => any;
-        norepeat: (w: any, r: any) => any;
-    };
+    /** @private */
+    private _query;
+    /** @private */
+    private _printTokens;
+    /** @private */
+    private _preParse;
+    /** @private */
+    private _postParse;
+    /**
+     * Parses a mingo query into JSON format
+     * @private
+     */
+    private parseJSOL;
+    /**
+     * True if input contains parseable script
+     * @private
+     */
+    private isParseable;
+    /** @private */
+    private _createRegexes;
+    /** @private */
+    private _createTransforms;
 }
 export namespace RiScript {
     export { RiScriptVisitor as Visitor };
@@ -139,6 +128,7 @@ export namespace RiScript {
 import { RiScriptVisitor } from './visitor.js';
 import { Lexer } from 'chevrotain';
 import { RiScriptParser } from './parser.js';
+/**@ignore */
 declare class RiQuery extends Query {
     constructor(scripting: any, condition: any, options: any);
     test(obj: any): boolean;
