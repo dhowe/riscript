@@ -5,8 +5,8 @@ import { Lexer } from 'chevrotain';
 import { RiScriptParser } from './parser.js';
 import { RiScriptVisitor } from './visitor.js';
 import { getTokens, TextTypes } from './tokens.js';
+import { RiGrammar } from './rigrammar.js';
 import { Util } from './util.js';
-import { RiGrammar } from './grammar.js';
 
 const { decode } = he;
 const Vowels = /[aeiou]/;

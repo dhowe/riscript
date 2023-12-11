@@ -772,6 +772,18 @@ describe(title, function() {
       expect(riscript.transforms.rhymes).is.undefined;
       res = riscript.evaluate("The [dog | dog | dog].rhymes", 0, { silent: true });
       expect(res).eq("The dog.rhymes");
+      let addRhyme2 = function(word, parent) {
+        return word + " rhymes with bog" + parent.randi(1);
+      };
+      expect(riscript.transforms.rhymes2).is.undefined;
+      riscript.addTransform("rhymes2", addRhyme2);
+      expect(riscript.transforms.rhymes2).is.not.undefined;
+      res = riscript.evaluate("The [dog | dog | dog].rhymes2");
+      expect(res).eq("The dog rhymes with bog0");
+      riscript.removeTransform("rhymes2");
+      expect(riscript.transforms.rhymes2).is.undefined;
+      res = riscript.evaluate("The [dog | dog | dog].rhymes2", 0, { silent: true });
+      expect(res).eq("The dog.rhymes2");
     });
     it("Handle anonymous transforms", function() {
       const ctx = { capB: (s) => "B" };
@@ -1627,10 +1639,11 @@ index#${i}=[${syls[i]}]
       expect(rg.expand({ start: "$rule" })).eq("My job type.");
     });
     it("Resolve rules in context", function() {
-      let ctx, rg;
+      let ctx, rg, res;
       ctx = { rule: "[job | mob]" };
       rg = new RiGrammar({ start: "$rule $rule" }, ctx);
-      expect(/^[jm]ob [jm]ob$/.test(rg.expand())).eq(true);
+      res = rg.expand();
+      expect(/^[jm]ob [jm]ob$/.test(res)).eq(true);
       if (LTR) {
         ctx = { "#rule": "[job | mob]" };
         rg = new RiGrammar({ start: "$rule $rule" }, ctx);
@@ -1936,24 +1949,24 @@ index#${i}=[${syls[i]}]
   });
   describe("Helpers", function() {
     it("#stringHash", function() {
-      expect(RiScript._stringHash("revenue")).eq("1099842588");
+      expect(RiScript.Util.stringHash("revenue")).eq("1099842588");
     });
     it("#preParseLines", function() {
-      expect(riscript.preParse("a (1) ")).eq("a ^1^ ");
-      expect(riscript.preParse("a (foo) ")).eq("a (foo) ");
-      expect(riscript.preParse("foo=a")).eq("foo=a");
-      expect(riscript.preParse("$foo=a")).eq("{$foo=a}");
-      expect(riscript.preParse("$foo=a\nb")).eq("{$foo=a}b");
-      expect(riscript.preParse("hello\n$foo=a")).eq("hello\n{$foo=a}");
-      expect(riscript.preParse("$foo=a[b\nc]d\ne")).eq("{$foo=a[b\nc]d}e");
-      expect(riscript.preParse("$foo=[cat\ndog]\n$foo")).eq("{$foo=[cat\ndog]}$foo");
-      expect(riscript.preParse("$foo=a\nb\n$foo")).eq("{$foo=a}b\n$foo");
-      expect(riscript.preParse("$foo=[\n]\n$foo")).eq("{$foo=[\n]}$foo");
-      expect(riscript.preParse("$foo=a[\n]b\n$foo")).eq("{$foo=a[\n]b}$foo");
-      expect(riscript.preParse("$foo=[cat\ndog].uc()\n$foo")).eq("{$foo=[cat\ndog].uc()}$foo");
-      expect(riscript.preParse("[ @{a: {}} hello]\n$a=2")).eq("[ @{a: {}} hello]\n{$a=2}");
-      expect(riscript.preParse("[ @{a: {}} hello]\n$a=2")).eq("[ @{a: {}} hello]\n{$a=2}");
-      let res = riscript.preParse("Some [RiTa](https://rednoise.org/rita?a=b&c=k) code");
+      expect(riscript._preParse("a (1) ")).eq("a ^1^ ");
+      expect(riscript._preParse("a (foo) ")).eq("a (foo) ");
+      expect(riscript._preParse("foo=a")).eq("foo=a");
+      expect(riscript._preParse("$foo=a")).eq("{$foo=a}");
+      expect(riscript._preParse("$foo=a\nb")).eq("{$foo=a}b");
+      expect(riscript._preParse("hello\n$foo=a")).eq("hello\n{$foo=a}");
+      expect(riscript._preParse("$foo=a[b\nc]d\ne")).eq("{$foo=a[b\nc]d}e");
+      expect(riscript._preParse("$foo=[cat\ndog]\n$foo")).eq("{$foo=[cat\ndog]}$foo");
+      expect(riscript._preParse("$foo=a\nb\n$foo")).eq("{$foo=a}b\n$foo");
+      expect(riscript._preParse("$foo=[\n]\n$foo")).eq("{$foo=[\n]}$foo");
+      expect(riscript._preParse("$foo=a[\n]b\n$foo")).eq("{$foo=a[\n]b}$foo");
+      expect(riscript._preParse("$foo=[cat\ndog].uc()\n$foo")).eq("{$foo=[cat\ndog].uc()}$foo");
+      expect(riscript._preParse("[ @{a: {}} hello]\n$a=2")).eq("[ @{a: {}} hello]\n{$a=2}");
+      expect(riscript._preParse("[ @{a: {}} hello]\n$a=2")).eq("[ @{a: {}} hello]\n{$a=2}");
+      let res = riscript._preParse("Some [RiTa](https://rednoise.org/rita?a=b&c=k) code");
       let expected = "Some &lsqb;RiTa&rsqb;&lpar;https:&sol;&sol;rednoise.org&sol;rita?a=b&c=k&rpar; code";
       expect(res).eq(expected);
     });
