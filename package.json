@@ -9,9 +9,9 @@
   "scripts": {
     "test": "NODE_ENV=dev mocha",
     "test:dist": "NODE_ENV=dev mocha test/dist",
-    "build": "npx tsup && npm run types",
+    "build": "npx tsup",
     "pub": "./npnb/source/cli.js --no-release-draft --test-script test:dist patch",
-    "prepub": "npm version patch && npm run build",
+    "prepub": "npm version patch && npm run build && npm run types",
     "_pretypes": "node ./parser-type-gen.js",
     "types": "rm -rf ./types/riscript* && npx tsc",
     "_posttypes": "cp types/riscript.d.ts types/rigrammar.d.ts dist/"

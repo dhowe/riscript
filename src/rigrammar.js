@@ -50,18 +50,20 @@ class RiGrammar {
    * Adds a transform to the Grammar instance
    * @param {string} name - the name of the transform
    * @param {Function} def - a function that takes a string and returns a string
-   * @returns {RiScript} - the RiScript instance
+   * @returns {RiGrammar} - the RiGrammar instance
    */
   addTransform(name, def) {
-    return this.scripting.addTransform(name, def);
+    this.scripting.addTransform(name, def);
+    return this;
   }
   /**
    * Removes a transform from the Grammar instance
    * @param {string} name 
-   * @returns {RiScript} - the RiScript instance
+   * @returns {RiGrammar} - the RiGrammar instance
    */
   removeTransform(name) {
-    return this.scripting.removeTransform(name);
+    this.scripting.removeTransform(name);
+    return this;
   }
 
   /**
@@ -92,17 +94,17 @@ class RiGrammar {
    * @param {boolean} [options.silent=false] - whether to suppress console warnings
    * @returns {string} - the expanded text
    */
-  expand(opts = {}) {
-    if ('context' in opts) {
+  expand(options = {}) {
+    if ('context' in options) {
       throw Error('pass context to RiScript.grammar() or new RiGrammar() instead');
     }
 
-    let visitor = opts.visitor || new RiScript.Visitor(this.scripting);
+    let visitor = new RiScript.Visitor(this.scripting);
     visitor.context = this.context || {};
 
-    let options = { ...opts, visitor, input: this._toScript(opts) };
+    let clonedOpts = { ...options, visitor, input: this._toScript(options) };
 
-    return this.scripting._evaluate(options);
+    return this.scripting._evaluate(clonedOpts);
   }
 
   /**
@@ -143,18 +145,20 @@ class RiGrammar {
   }
 
   /**
-   * Returns a JSON representation of the grammar rules, accepting the same options as `JSON.stringify()`
+   * Returns a JSON representation of the grammar rules, accepting options from `JSON.stringify()`
+   * @param {any} [replacer] - a replacer function or array
+   * @param {string | number} [space] - the number of spaces to indent
    * @returns {string} - the JSON representation of the grammar
    */
-  toJSON() {
-    return JSON.stringify(this.rules, ...arguments);
+  toJSON(replacer, space) {
+    return JSON.stringify(this.rules, replacer, space);
   }
 
   /** 
    * Returns a string representation of the grammar, accecpting the same options as `JSON.stringify()`
    * @param {object} [options] - options for the string representation
-   * @param {string} [options.replacer] - a replacer function or array
-   * @param {string} [options.space] - the number of spaces to indent
+   * @param {any} [options.replacer] - a replacer function or array
+   * @param {string | number} [options.space] - the number of spaces to indent
    * @param {string} [options.linebreak] - the linebreak character to use
    */
   toString(options = {}) {
