@@ -53,6 +53,11 @@ class RiQuery extends Query {
   }
 }
 
+/**
+ * The RiScript interpreter, responsible for lexing, parsing and evaluating
+ *  RiScript and RiGrammar expressions
+ * @class
+ */
 class RiScript {
 
   /** @type {string} */
@@ -425,7 +430,7 @@ class RiScript {
       Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
     };
   }
-  
+
   /** @private */
   _createTransforms() {
     let transforms = {
