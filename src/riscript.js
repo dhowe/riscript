@@ -56,7 +56,6 @@ class RiQuery extends Query {
 /**
  * The RiScript interpreter, responsible for lexing, parsing and evaluating 
  * RiScript and RiGrammar expressions
- * @class
  */
 class RiScript {
 
@@ -70,25 +69,33 @@ class RiScript {
   static RiTaWarnings = { plurals: false, phones: false, silent: false };
 
   /** @type {any} */
-  static Visitor = undefined;
+  static Visitor = undefined; // class ref
   /** @type {any} */
-  static Grammar = undefined;
+  static Grammar = undefined; // class ref
   /** @type {any} */
-  static Util = undefined;
+  static Util = undefined; // class ref
 
   /**
    * Evaluates the input script via the RiScript parser
    * @param {string} script - the script to evaluate
-   * @param {object} context - the context (or world-state) to evaluate in
+   * @param {object} [context] - the context (or world-state) to evaluate in
    * @param {object} [options] - options for the evaluation
-   * @param {boolean} [options.trace] - whether to trace the evaluation=
+   * @param {object} [options.RiTa] - optionals RiTa object to use in transforms
+   * @param {number} [options.compatibility] - the RiTa compatibility level (pass 2 for v2)
+   * @param {boolean} [options.trace=false] - whether to trace the evaluation
    * @returns {string} - the evaluated script
    */
   static evaluate(script, context, options = {}) {
     return new RiScript(options).evaluate(script, context, options);
   }
 
-  constructor(opts = { /*RiTa:0, compatibility: 2*/ }) {
+  /**
+   * Creates a new RiScript instance
+   * @param {object} [options] - options for the object
+   * @param {object} [options.RiTa] - optionals RiTa object to use in transforms
+   * @param {number} [options.compatibility] - the RiTa compatibility level
+   */
+  constructor(options = {}) {
 
     /** @type {Object.<string, any>} */ this.Escaped = undefined
     /** @type {Object.<string, string>} */ this.Symbols = undefined;
@@ -96,14 +103,14 @@ class RiScript {
     // created in evaluate() or passed as arg here
     /** @type {RiScriptVisitor} */this.visitor = undefined;
 
-    /** @type {boolean} */ this.v2Compatible = (opts.compatibility === 2);
+    /** @type {boolean} */ this.v2Compatible = (options.compatibility === 2);
 
     const { Constants, tokens } = getTokens(this.v2Compatible);
     ({ Escaped: this.Escaped, Symbols: this.Symbols } = Constants);
 
     /** @type {string[]} */ this.textTypes = TextTypes;
 
-    /** @type {Object<string, any>} */ this.RiTa = opts.RiTa || {
+    /** @type {Object<string, any>} */ this.RiTa = options.RiTa || {
       VERSION: 0,
       randi: (k) => Math.floor(Math.random() * k),
     }
@@ -148,17 +155,17 @@ class RiScript {
   /**
    * Evaluates the input script via the RiScript parser
    * @param {string} script - the script to evaluate
-   * @param {object} context - the context (or world-state) to evaluate in
-   * @param {object} opts - options for the evaluation
+   * @param {object} [context] - the context (or world-state) to evaluate in
+   * @param {object} [options] - options for the evaluation
    * @returns {string}
    */
-  evaluate(script, context, opts = {}) {
+  evaluate(script, context, options = {}) {
     if (typeof script !== 'string') {
       throw Error('RiScript.evaluate() expects a string, got ' + typeof script);
     }
-    opts.input = script;
-    opts.visitor = new RiScriptVisitor(this, context);
-    return this._evaluate(opts);
+    options.input = script;
+    options.visitor = new RiScriptVisitor(this, context);
+    return this._evaluate(options);
   }
 
   /** @private */
@@ -374,7 +381,7 @@ class RiScript {
 
   /**
    * Parses a mingo query into JSON format
-   * @private
+   * @package
    */
   parseJSOL(text) {
     const unescapeRegexProperty = (text) => {
