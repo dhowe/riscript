@@ -1,3 +1,5 @@
+/** @module riscript */
+
 import he from 'he';
 import { Query } from 'mingo';
 import { Lexer } from 'chevrotain';
@@ -13,13 +15,12 @@ const Vowels = /[aeiou]/;
 const HtmlEntities = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/gi;
 const { escapeText, charCount, slashEscapesToEntities, escapeMarkdownLink, escapeJSONRegex } = Util;
 
-/**@ignore */
+/** @private */
 class RiQuery extends Query {
+
   constructor(scripting, condition, options) {
     if (typeof condition === 'string') {
-      let raw = condition; // eslint-disable-line
       condition = scripting.parseJSOL(condition);
-      // console.log('RAW: ', raw, 'parsed', condition);
     }
     super(condition, options);
   }
@@ -41,7 +42,6 @@ class RiQuery extends Query {
       const currentObj = stack.pop();
       Object.keys(currentObj).forEach((key) => {
         const value = currentObj[key];
-        // console.log(`key: ${ key }, value: ${ value } `);
         if (!key.startsWith('$')) keys.add(key);
         if (typeof value === 'object' && value !== null) {
           const eles = Array.isArray(value) ? value : [value];
@@ -54,8 +54,8 @@ class RiQuery extends Query {
 }
 
 /**
- * The RiScript interpreter, responsible for lexing, parsing and evaluating
- *  RiScript and RiGrammar expressions
+ * The RiScript interpreter, responsible for lexing, parsing and evaluating 
+ * RiScript and RiGrammar expressions
  * @class
  */
 class RiScript {
@@ -86,10 +86,10 @@ class RiScript {
     /** @type {Object.<string, any>} */ this.Escaped = undefined
     /** @type {Object.<string, string>} */ this.Symbols = undefined;
 
-    /** @type {RiScriptVisitor} */
-    this.visitor = undefined; // created in evaluate() or passed in here
+    // created in evaluate() or passed as arg here
+    /** @type {RiScriptVisitor} */this.visitor = undefined;
 
-    this.v2Compatible = opts.compatibility === 2;
+    /** @type {boolean} */ this.v2Compatible = (opts.compatibility === 2);
 
     const { Constants, tokens } = getTokens(this.v2Compatible);
     ({ Escaped: this.Escaped, Symbols: this.Symbols } = Constants);
@@ -114,6 +114,7 @@ class RiScript {
     this.parser = new RiScriptParser(tokens, TextTypes);
   }
 
+  /** @private */
   lex(opts) {
     if (!opts.input) throw Error('no input');
     const lexResult = this.lexer.tokenize(opts.input);
@@ -126,10 +127,12 @@ class RiScript {
     // return lexResult;
   }
 
+  /** @private */
   parse(opts) {
     opts.cst = this.parser.parse(opts);
   }
 
+  /** @private */
   visit(opts) {
     // @ts-ignore
     return this.visitor.start(opts);
@@ -151,7 +154,7 @@ class RiScript {
     return this._evaluate(opts);
   }
 
-
+  /** @private */
   lexParseVisit(opts = {}) {
     this.lex(opts);
     this.parse(opts);
@@ -190,15 +193,16 @@ class RiScript {
   ///////////////////////////////////// End API //////////////////////////////////////
 
   /**
-    * Private version of evaluate taking all arguments in an options object
-    * @param {object} [options] - options for the evaluation
-    * @param {string} [options.input] - the script to evaluate
-    * @param {object} [options.visitor] - the visitor to use for the evaluation
-    * @param {boolean} [options.trace] - whether to trace the evaluation
-    * @param {boolean} [options.onepass] - whether to only do one pass
-    * @param {boolean} [options.silent] - whether to suppress warnings
-    * @returns {string} - the evaluated script's output text
-    */
+   * Private version of evaluate taking all arguments in the options object
+   * @param {object} options - options for the evaluation
+   * @param {string} options.input - the script to evaluate
+   * @param {object} options.visitor - the visitor to use for the evaluation
+   * @param {boolean} [options.trace] - whether to trace the evaluation
+   * @param {boolean} [options.onepass] - whether to only do one pass
+   * @param {boolean} [options.silent] - whether to suppress warnings
+   * @returns {string} - the evaluated script's output text
+   * @package
+   */
   _evaluate(options) {
 
     const { input, visitor, trace, onepass, silent } = options;
@@ -252,10 +256,6 @@ class RiScript {
   }
 
   /** @private */
-  _query(rawQuery, opts) {
-    return new RiQuery(this, rawQuery, opts);
-  }
-  /** @private */
   _printTokens(tokens) {
     let s = tokens.reduce((str, t) => {
       let { name } = t.tokenType;
@@ -269,6 +269,7 @@ class RiScript {
     console.log('\nTokens: [ ' + s + ' ]  Context:',
       this.visitor.lookupsToString());
   }
+
   /** @private */
   _preParse(script, opts) {
     if (typeof script !== 'string') return '';
@@ -320,6 +321,15 @@ class RiScript {
 
     return result;
   }
+
+  /**
+   * Creates a new RiQuery object from the raw query string
+   * @package 
+   */
+  createQuery(rawQuery, opts) {
+    return new RiQuery(this, rawQuery, opts);
+  }
+
   /** @private */
   _postParse(input, opts) {
     if (typeof input !== 'string') return '';
@@ -456,7 +466,10 @@ class RiScript {
 
   // ========================= statics ===============================
 
-  // Default transform that adds an article
+  /**
+   * Default transform that adds an article
+   * @private
+   */
   static articlize(s, RiTa) {
     if (!s || !s.length) return '';
 
@@ -479,22 +492,34 @@ class RiScript {
     );
   }
 
-  // Default transform that capitalizes the first character
+  /**
+   * Default transform that uppercases the first character of the string
+   * @private
+   */
   static capitalize(s) {
     return s ? s[0].toUpperCase() + s.substring(1) : '';
   }
 
-  // Default transform that capitalizes the string
+  /**
+   * Default transform that capitalizes the string
+   * @private
+   */
   static uppercase(s) {
     return s ? s.toUpperCase() : '';
   }
 
-  // Default transform that wraps the string in (smart) quotes.
+  /**
+   * Default transform that wraps the string in (smart) quotes.
+   * @private
+   */
   static quotify(s) {
     return '&#8220;' + (s || '') + '&#8221;';
   }
 
-  // Default transform that pluralizes a string (requires RiTa)
+  /**
+   * Default transform that pluralizes a string (requires RiTa)
+   * @private
+   */
   static pluralize(s, RiTa) {
     if (!RiTa?.pluralize) {
       if (!RiScript.RiTaWarnings.plurals && !RiScript.RiTaWarnings.silent) {

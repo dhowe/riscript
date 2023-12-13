@@ -1,3 +1,5 @@
+/** @module riscript */
+
 import { RiScript } from './riscript.js'
 
 /**

@@ -1,3 +1,5 @@
+/** @module riscript */
+
 import { Util } from './util.js';
 
 const { escapeText, stringHash } = Util;
@@ -44,7 +46,7 @@ class BaseVisitor {
       this.path += name + '.';
     }
 
-    //if (this.trace) console.log('CALLING: ' + name + '()');
+    //if (this.trace) console.log('CALL: ' + name + '()');
 
     return this[name](cstNode.children, param);
   }
@@ -57,11 +59,13 @@ class RiScriptVisitor extends BaseVisitor {
     super(riScript);
     this.context = context;
 
+    this.order = 0;
     this.trace = 0;
     this.choices = {};
     this.isNoRepeat = false;
-    this.symbols = this.scripting.Symbols;
-    this.escaped = this.scripting.Escaped;
+
+    this.Symbols = this.scripting.Symbols;
+    this.Escaped = this.scripting.Escaped;
 
     // lookups
     this.statics = {};
@@ -137,16 +141,16 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   gate(ctx) {
-    // returns { decision: [accept | reject] } or { decision: 'defer', operands: [] }
+    // returns { decision: [accept|reject] } or { decision: 'defer', operands: [] }
 
     if (ctx.Gate.length !== 1) throw Error('Invalid gate: ' + ctx.Gate);
 
     let raw = ctx.Gate[0].image, mingoQuery;
-    if (raw.startsWith('@')) {//this.Symbols.OPEN_GATE)) {
+    if (raw.startsWith(this.Symbols.OPEN_GATE)) {
       raw = raw.substring(1);
     }
     try {
-      mingoQuery = this.scripting._query(raw);
+      mingoQuery = this.scripting.createQuery(raw);
     } catch (e) {
       if (!this.warnOnInvalidGates) {
         throw Error(`Invalid gate[2]: "@${raw}@"\n\nRootCause -> ${e}`);
@@ -204,7 +208,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     const sym = ctx.Symbol[0].image;
     const ident = sym.replace(this.scripting.regex.AnySymbol, '');
-    const isStatic = sym.startsWith(this.symbols.STATIC);
+    const isStatic = sym.startsWith(this.Symbols.STATIC);
 
     let value, info;
     if (isStatic) {
@@ -283,7 +287,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (!isStatic && this.scripting.regex.StaticSymbol.test(symbol)) {
       if (!this.scripting.regex.Entity.test(symbol)) {
         throw Error(`Attempt to refer to dynamic symbol '${ident}' as` +
-          ` ${this.symbols.STATIC}${ident}, did you mean $${ident}?`);
+          ` ${this.Symbols.STATIC}${ident}, did you mean $${ident}?`);
       }
     }
 
@@ -297,9 +301,9 @@ class RiScriptVisitor extends BaseVisitor {
       this.isNoRepeat = false;
       const msg = 'Attempt to call norepeat() on ' + (isStatic
         ? "static symbol '" + symbol + "'. Did you mean to use '" +
-        this.symbols.DYNAMIC + ident + "' ?"
+        this.Symbols.DYNAMIC + ident + "' ?"
         : "non-dynamic symbol '" + ident + "'. Did you mean to define '" +
-        this.symbols.DYNAMIC + ident + "' in riscript?");
+        this.Symbols.DYNAMIC + ident + "' in riscript?");
       throw Error(msg);
     }
 
@@ -356,7 +360,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     // new RegExp(`^${this.symbols.PENDING_GATE}`
     const original = this.nodeText;
-    const ident = original.replace(this.symbols.PENDING_GATE, '');
+    const ident = original.replace(this.Symbols.PENDING_GATE, '');
     const lookup = this.pendingGates[ident];
 
     if (!lookup) {
@@ -388,7 +392,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   choice(ctx, opts) {
-    const $ = this.symbols;
+    const $ = this.Symbols;
     const original = this.nodeText;
     const choiceKey = stringHash(original + ' #' + this.choiceId(ctx));
 
@@ -504,7 +508,7 @@ class RiScriptVisitor extends BaseVisitor {
         isUser = true; // found user symbol
       } else {
         // check for user-defined dynamic? context[$var]
-        result = this.context[this.symbols.DYNAMIC + ident];
+        result = this.context[this.Symbols.DYNAMIC + ident];
         if (typeof result !== 'undefined') {
           // no static
           // note: treat as normal dynamic, isUser = false
@@ -519,7 +523,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   inlineAssignment(ident, tfs, result) {
-    const $ = this.symbols;
+    const $ = this.Symbols;
     const lhs = $.STATIC + ident;
     const rhs = this.restoreTransforms(result, tfs);
     result = $.OPEN_CHOICE + (lhs + '=' + rhs) + $.CLOSE_CHOICE;
@@ -546,7 +550,7 @@ class RiScriptVisitor extends BaseVisitor {
           let mult = 1;
           try {
             mult = parseInt(
-              this.symbols.CLOSE_WEIGHT.length
+              this.Symbols.CLOSE_WEIGHT.length
                 ? weight[0].image.trim().slice(1, -1)
                 : weight[0].image.trim().slice(1)
             );
@@ -614,11 +618,11 @@ class RiScriptVisitor extends BaseVisitor {
   restoreTransforms(value, txs) {
     if (typeof value === 'string') {
       const patt = new RegExp(
-        '^' + this.escaped.OPEN_CHOICE + '.*' + this.escaped.CLOSE_CHOICE + '$'
+        '^' + this.Escaped.OPEN_CHOICE + '.*' + this.Escaped.CLOSE_CHOICE + '$'
       );
       if (!patt.test(value)) {
         // wrap in choice to preserve
-        value = this.symbols.OPEN_CHOICE + value + this.symbols.CLOSE_CHOICE;
+        value = this.Symbols.OPEN_CHOICE + value + this.Symbols.CLOSE_CHOICE;
       }
       if (txs) {
         txs.forEach((tx) => (value += tx.image)); // append transform strings

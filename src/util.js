@@ -1,3 +1,5 @@
+/** @module riscript */
+
 class Util {
   
   ///////////////////////// CONSTANTS /////////////////////////

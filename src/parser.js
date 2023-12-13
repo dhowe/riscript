@@ -1,3 +1,4 @@
+/** @module riscript */
 
 // @ts-nocheck
 import { CstParser } from "chevrotain"

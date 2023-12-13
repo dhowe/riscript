@@ -1,3 +1,8 @@
+/**
+ * The RiScript interpreter, responsible for lexing, parsing and evaluating
+ * RiScript and RiGrammar expressions
+ * @class
+ */
 export class RiScript {
     /** @type {string} */
     static VERSION: string;
@@ -18,11 +23,31 @@ export class RiScript {
     static evaluate(script: string, context: object, options?: {
         trace?: boolean;
     }): string;
-    static articlize(s: any, RiTa: any): string;
-    static capitalize(s: any): any;
-    static uppercase(s: any): any;
-    static quotify(s: any): string;
-    static pluralize(s: any, RiTa: any): any;
+    /**
+     * Default transform that adds an article
+     * @private
+     */
+    private static articlize;
+    /**
+     * Default transform that uppercases the first character of the string
+     * @private
+     */
+    private static capitalize;
+    /**
+     * Default transform that capitalizes the string
+     * @private
+     */
+    private static uppercase;
+    /**
+     * Default transform that wraps the string in (smart) quotes.
+     * @private
+     */
+    private static quotify;
+    /**
+     * Default transform that pluralizes a string (requires RiTa)
+     * @private
+     */
+    private static pluralize;
     static identity(s: any): any;
     constructor(opts?: {});
     /** @type {Object.<string, any>} */ Escaped: {
@@ -31,9 +56,8 @@ export class RiScript {
     /** @type {Object.<string, string>} */ Symbols: {
         [x: string]: string;
     };
-    /** @type {RiScriptVisitor} */
-    visitor: RiScriptVisitor;
-    v2Compatible: boolean;
+    /** @type {RiScriptVisitor} */ visitor: RiScriptVisitor;
+    /** @type {boolean} */ v2Compatible: boolean;
     /** @type {string[]} */ textTypes: string[];
     /** @type {Object<string, any>} */ RiTa: {
         [x: string]: any;
@@ -50,9 +74,12 @@ export class RiScript {
     lexer: Lexer;
     /** @type {RiScriptParser} */
     parser: RiScriptParser;
-    lex(opts: any): void;
-    parse(opts: any): void;
-    visit(opts: any): any;
+    /** @private */
+    private lex;
+    /** @private */
+    private parse;
+    /** @private */
+    private visit;
     /**
      * Evaluates the input script via the RiScript parser
      * @param {string} script - the script to evaluate
@@ -61,7 +88,8 @@ export class RiScript {
      * @returns {string}
      */
     evaluate(script: string, context: object, opts?: object): string;
-    lexParseVisit(opts?: {}): any;
+    /** @private */
+    private lexParseVisit;
     /**
      * Add a transform function to this instance
      * @param {string} name - the name of the transform
@@ -81,28 +109,32 @@ export class RiScript {
      */
     removeTransform(name: string): RiScript;
     /**
-      * Private version of evaluate taking all arguments in an options object
-      * @param {object} [options] - options for the evaluation
-      * @param {string} [options.input] - the script to evaluate
-      * @param {object} [options.visitor] - the visitor to use for the evaluation
-      * @param {boolean} [options.trace] - whether to trace the evaluation
-      * @param {boolean} [options.onepass] - whether to only do one pass
-      * @param {boolean} [options.silent] - whether to suppress warnings
-      * @returns {string} - the evaluated script's output text
-      */
-    _evaluate(options?: {
-        input?: string;
-        visitor?: object;
+     * Private version of evaluate taking all arguments in the options object
+     * @param {object} options - options for the evaluation
+     * @param {string} options.input - the script to evaluate
+     * @param {object} options.visitor - the visitor to use for the evaluation
+     * @param {boolean} [options.trace] - whether to trace the evaluation
+     * @param {boolean} [options.onepass] - whether to only do one pass
+     * @param {boolean} [options.silent] - whether to suppress warnings
+     * @returns {string} - the evaluated script's output text
+     * @package
+     */
+    _evaluate(options: {
+        input: string;
+        visitor: object;
         trace?: boolean;
         onepass?: boolean;
         silent?: boolean;
     }): string;
     /** @private */
-    private _query;
-    /** @private */
     private _printTokens;
     /** @private */
     private _preParse;
+    /**
+     * Creates a new RiQuery object from the raw query string
+     * @package
+     */
+    createQuery(rawQuery: any, opts: any): RiQuery;
     /** @private */
     private _postParse;
     /**
@@ -128,7 +160,7 @@ export namespace RiScript {
 import { RiScriptVisitor } from './visitor.js';
 import { Lexer } from 'chevrotain';
 import { RiScriptParser } from './parser.js';
-/**@ignore */
+/** @private */
 declare class RiQuery extends Query {
     constructor(scripting: any, condition: any, options: any);
     test(obj: any): boolean;

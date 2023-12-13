@@ -1,12 +1,12 @@
 {
-  "include": ["src/*.js"],
+  "include": ["src/index.js"],
   "compilerOptions": {
+    "outDir": "./types",
     "allowJs": true,
     "checkJs": true,
     "declaration": true,
-    "emitDeclarationOnly": true,
     "declarationMap": false,
-    "outDir": "./types",
+    "emitDeclarationOnly": true,
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "target": "es6",
