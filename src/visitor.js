@@ -4,6 +4,10 @@ import { Util } from './util.js';
 
 const { escapeText, stringHash } = Util;
 
+/**
+ * @class
+ * @memberof module:riscript
+ */
 class BaseVisitor {
   constructor(riScript) {
     /**@type {string}*/this.input = '';
@@ -54,6 +58,10 @@ class BaseVisitor {
   validateVisitor() { /* no-op */ }
 }
 
+/**
+ * @class
+ * @memberof module:riscript
+ */
 class RiScriptVisitor extends BaseVisitor {
   constructor(riScript, context = {}) {
     super(riScript);

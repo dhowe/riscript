@@ -1,8 +1,11 @@
-/** @module riscript */
-
 // @ts-nocheck
 import { CstParser } from "chevrotain"
 
+/**
+ * RiScriptParser
+ * @class
+ * @memberof module:riscript
+ */
 class RiScriptParser extends CstParser {
 
   constructor(allTokens, textTypes) {

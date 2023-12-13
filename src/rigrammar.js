@@ -1,4 +1,3 @@
-/** @module riscript */
 
 import { RiScript } from './riscript.js'
 
@@ -6,6 +5,7 @@ import { RiScript } from './riscript.js'
  * A probabilistic context-free grammar for text-generation, supporting all RiScript
  *  features, including transforms, gates, choices, sequences and assignments.
  * @class RiGrammar
+ * @memberof module:riscript
  */
 class RiGrammar {
 

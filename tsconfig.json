@@ -1,14 +1,15 @@
 {
-  "include": ["src/index.js"],
+  "include": ["dist/riscript.js"],
   "compilerOptions": {
-    "outDir": "./types",
+    "outFile": "dist/riscript.d.ts",
     "allowJs": true,
     "checkJs": true,
     "declaration": true,
     "declarationMap": false,
     "emitDeclarationOnly": true,
     "moduleResolution": "NodeNext",
+    "removeComments": true,
     "module": "NodeNext",
-    "target": "es6",
+    "target": "ESNext",
   }
 }

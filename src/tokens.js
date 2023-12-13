@@ -1,5 +1,6 @@
-/** @module riscript */
-
+/**
+ * @memberof module:riscript
+ */
 import { createToken } from "chevrotain"
 
 function getTokens(v2Compatible) {

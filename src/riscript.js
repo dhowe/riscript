@@ -69,6 +69,13 @@ class RiScript {
   /** @type {Object.<string, boolean>} */
   static RiTaWarnings = { plurals: false, phones: false, silent: false };
 
+  /** @type {any} */
+  static Visitor = undefined;
+  /** @type {any} */
+  static Grammar = undefined;
+  /** @type {any} */
+  static Util = undefined;
+
   /**
    * Evaluates the input script via the RiScript parser
    * @param {string} script - the script to evaluate
@@ -468,14 +475,17 @@ class RiScript {
 
   /**
    * Default transform that adds an article
+   * @param {string} s - the string to transform
+   * @param {object} [phonemeAnalyzer] - custom phoneme analyzer with phones() function
+   * @returns {string} the transformed string
    * @private
    */
-  static articlize(s, RiTa) {
+  static articlize(s, phonemeAnalyzer) {
     if (!s || !s.length) return '';
 
     let first = s.split(/\s+/)[0];
 
-    if (!RiTa?.phones) {
+    if (!phonemeAnalyzer?.phones) {
       if (!RiScript.RiTaWarnings.phones && !RiScript.RiTaWarnings.silent) {
         console.warn('[WARN] Install RiTa for proper phonemes');
         RiScript.RiTaWarnings.phones = true;
@@ -484,16 +494,16 @@ class RiScript {
       return (/^[aeiou].*/i.test(first) ? 'an ' : 'a ') + s;
     }
 
-    let phones = RiTa.phones(first, { silent: true });
+    let phones = phonemeAnalyzer.phones(first, { silent: true });
 
     // could still be original word if no phones found
-    return (
-      (phones && phones.length && Vowels.test(phones[0]) ? 'an ' : 'a ') + s
-    );
+    return ((phones?.length && Vowels.test(phones[0]) ? 'an ' : 'a ') + s);
   }
 
   /**
    * Default transform that uppercases the first character of the string
+   * @param {string} s - the string to transform
+   * @returns {string} the transformed string
    * @private
    */
   static capitalize(s) {
@@ -502,6 +512,8 @@ class RiScript {
 
   /**
    * Default transform that capitalizes the string
+   * @param {string} s - the string to transform
+   * @returns {string} the transformed string
    * @private
    */
   static uppercase(s) {
@@ -510,6 +522,8 @@ class RiScript {
 
   /**
    * Default transform that wraps the string in (smart) quotes.
+   * @param {string} s - the string to transform
+   * @returns {string} the transformed string
    * @private
    */
   static quotify(s) {
@@ -518,20 +532,28 @@ class RiScript {
 
   /**
    * Default transform that pluralizes a string (requires RiTa)
+   * @param {string} s - the string to transform
+   * @param {object} [pluralizer] - custom pluralizer with pluralize() function
+   * @returns {string} the transformed string
    * @private
    */
-  static pluralize(s, RiTa) {
-    if (!RiTa?.pluralize) {
+  static pluralize(s, pluralizer) {
+    if (!pluralizer?.pluralize) {
       if (!RiScript.RiTaWarnings.plurals && !RiScript.RiTaWarnings.silent) {
         RiScript.RiTaWarnings.plurals = true;
         console.warn('[WARN] Install RiTa for proper pluralization');
       }
       return s.endsWith('s') ? s : s + 's';
     }
-    return RiTa.pluralize(s);
+    return pluralizer.pluralize(s);
   }
 
-  // Default no-op transform
+  /**
+   * Default no-op transform
+   * @param {string} s - the string to transform
+   * @returns {string} the transformed string
+   * @private
+   */
   static identity(s) {
     return s;
   }

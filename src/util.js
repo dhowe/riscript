@@ -1,9 +1,16 @@
-/** @module riscript */
-
+/**
+ * @memberof module:riscript
+ */
 class Util {
   
   ///////////////////////// CONSTANTS /////////////////////////
 
+  
+  /**
+   * @static
+   * @memberof Util
+   * @package
+   */
   static RegexEscape = '_RE_';
 
   ///////////////////////// FUNCTIONS /////////////////////////
