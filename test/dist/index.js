@@ -1,2 +1,3 @@
-import { RiScript } from "../../dist/riscript.js";
-export { RiScript };
+import { RiScript, RiGrammar } from "../../dist/riscript.js";
+
+export { RiScript, RiGrammar };

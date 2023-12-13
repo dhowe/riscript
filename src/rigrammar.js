@@ -1,5 +1,6 @@
 
 import { RiScript } from './riscript.js'
+import { RiScriptVisitor } from './visitor.js' // 12/13/2023
 
 /**
  * A probabilistic context-free grammar for text-generation, supporting all RiScript
@@ -99,7 +100,7 @@ class RiGrammar {
       throw Error('pass context to RiScript.grammar() or new RiGrammar() instead');
     }
 
-    let visitor = new RiScript.Visitor(this.scripting);
+    let visitor = new RiScriptVisitor(this.scripting);
     visitor.context = this.context || {};
 
     let clonedOpts = { ...options, visitor, input: this._toScript(options) };

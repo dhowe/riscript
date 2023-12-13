@@ -9,10 +9,10 @@ describe(title, function() {
   const PL = { preserveLookups: 1 };
   const TRX = { trace: 1, traceTx: 1 };
   const TPL = { preserveLookups: 1, trace: 1 };
-  let riscript, RiScriptVisitor, IfRiTa;
+  let riscript, IfRiTa, RiScriptVisitor;
   before(function() {
-    riscript = new RiScript({ compatibility: 2 });
     RiScriptVisitor = RiScript.Visitor;
+    riscript = new RiScript({ compatibility: 2 });
     IfRiTa = typeof riscript.RiTa.VERSION === "string";
     RiScript.RiTaWarnings.silent = !IfRiTa;
   });

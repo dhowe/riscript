@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { RiScript } from './index.js';
+import { RiScript, RiGrammar } from './index.js';
 
 /*
   TODO:  - line-breaks in choices
@@ -22,11 +22,12 @@ describe(title, function () {
   const TRX = { trace: 1, traceTx: 1 };
   const TPL = { preserveLookups: 1, trace: 1 };
 
-  let riscript, RiScriptVisitor, RiGrammar, IfRiTa;
+  let riscript, IfRiTa, RiScriptVisitor, Util;
 
   before(function () {
     riscript = new RiScript();
-    RiGrammar = RiScript.Grammar;
+    // RiGrammar = RiScript.Grammar;
+    Util = RiScript.Util;
     RiScriptVisitor = RiScript.Visitor;
     IfRiTa = typeof riscript.RiTa.VERSION === 'string';
     RiScript.RiTaWarnings.silent = !IfRiTa;
@@ -2436,7 +2437,7 @@ bb', {})).eq('aa bb');
 
   describe('Helpers', function () {
     it('#stringHash', function () {
-      expect(RiScript.Util.stringHash('revenue')).eq('1099842588');
+      expect(Util.stringHash('revenue')).eq('1099842588');
     });
 
     it('#preParseLines', function () {

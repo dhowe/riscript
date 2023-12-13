@@ -68,12 +68,12 @@ class RiScript {
   /** @type {Object.<string, boolean>} */
   static RiTaWarnings = { plurals: false, phones: false, silent: false };
 
-  /** @type {any} */
-  static Visitor = undefined; // class ref
-  /** @type {any} */
-  static Grammar = undefined; // class ref
-  /** @type {any} */
-  static Util = undefined; // class ref
+  // /** @type {any} */
+  // static Visitor = undefined; // class ref
+  // /** @type {any} */
+  // static Grammar = undefined; // class ref
+  // /** @type {any} */
+  // static Util = undefined; // class ref
 
   /**
    * Evaluates the input script via the RiScript parser
@@ -566,9 +566,10 @@ class RiScript {
   }
 }
 
-// Class references
+// Class ref hack for testing
 RiScript.Visitor = RiScriptVisitor;
-RiScript.Grammar = RiGrammar;
 RiScript.Util = Util;
+// RiScript.Grammar = RiGrammar;
+
 
 export { RiScript };

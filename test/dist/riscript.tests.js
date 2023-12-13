@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { RiScript } from "./index.js";
+import { RiScript, RiGrammar } from "./index.js";
 const version = RiScript.VERSION;
 const title = `RiScript.v3 ${isNum(version) ? `v${version}` : "[DEV]"}`;
 describe(title, function() {
@@ -9,10 +9,10 @@ describe(title, function() {
   const PL = { preserveLookups: 1 };
   const TRX = { trace: 1, traceTx: 1 };
   const TPL = { preserveLookups: 1, trace: 1 };
-  let riscript, RiScriptVisitor, RiGrammar, IfRiTa;
+  let riscript, IfRiTa, RiScriptVisitor, Util;
   before(function() {
     riscript = new RiScript();
-    RiGrammar = RiScript.Grammar;
+    Util = RiScript.Util;
     RiScriptVisitor = RiScript.Visitor;
     IfRiTa = typeof riscript.RiTa.VERSION === "string";
     RiScript.RiTaWarnings.silent = !IfRiTa;
@@ -1949,7 +1949,7 @@ index#${i}=[${syls[i]}]
   });
   describe("Helpers", function() {
     it("#stringHash", function() {
-      expect(RiScript.Util.stringHash("revenue")).eq("1099842588");
+      expect(Util.stringHash("revenue")).eq("1099842588");
     });
     it("#preParseLines", function() {
       expect(riscript._preParse("a (1) ")).eq("a ^1^ ");

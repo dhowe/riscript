@@ -15,11 +15,11 @@ describe(title, function () {
   const TPL = { preserveLookups: 1, trace: 1 };
   /* eslint-enable no-unused-vars */
 
-  let riscript, RiScriptVisitor, IfRiTa;
+  let riscript, IfRiTa, RiScriptVisitor;
 
   before(function () {
-    riscript = new RiScript({ compatibility: 2 });
     RiScriptVisitor = RiScript.Visitor;
+    riscript = new RiScript({ compatibility: 2 });
     IfRiTa = typeof riscript.RiTa.VERSION === 'string';
     RiScript.RiTaWarnings.silent = !IfRiTa;
   });
