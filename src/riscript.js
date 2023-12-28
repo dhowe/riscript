@@ -7,7 +7,7 @@ import { Lexer } from 'chevrotain';
 import { RiScriptParser } from './parser.js';
 import { RiScriptVisitor } from './visitor.js';
 import { getTokens, TextTypes } from './tokens.js';
-import { RiGrammar } from './rigrammar.js';
+import { RiGrammar } from './grammar.js';
 import { Util } from './util.js';
 
 const { decode } = he;
@@ -68,12 +68,15 @@ class RiScript {
   /** @type {Object.<string, boolean>} */
   static RiTaWarnings = { plurals: false, phones: false, silent: false };
 
-  // /** @type {any} */
-  // static Visitor = undefined; // class ref
-  // /** @type {any} */
-  // static Grammar = undefined; // class ref
-  // /** @type {any} */
-  // static Util = undefined; // class ref
+  /**
+   * Create a RiTa grammar instance
+   * @param {object} [rules] - the rules of the grammar
+   * @param {object} [context] - the context of the grammar
+   * @returns {RiGrammar} - a new RiGrammar instance
+   */
+  static grammar(rules, context) {
+    return new RiGrammar(rules, context);
+  }
 
   /**
    * Evaluates the input script via the RiScript parser

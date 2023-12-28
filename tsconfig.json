@@ -3,7 +3,7 @@
   //"include": ["dist/riscript.js"],
   "compilerOptions": {
     //"outFile": "types/riscript.d.ts",
-    "outDir": "types",
+    "outDir": "types/generated",
     "allowJs": true,
     "checkJs": true,
     "declaration": true,

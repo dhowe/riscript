@@ -9,10 +9,10 @@
   "scripts": {
     "test": "NODE_ENV=dev mocha",
     "test:dist": "NODE_ENV=dev mocha test/dist",
-    "build": "npx tsup",
+    "build": "npx tsup && cp -r types/riscript.d.ts dist/",
     "pub": "./npnb/source/cli.js --no-release-draft --test-script test:dist patch",
     "prepub": "npm version patch && npm run build",
-    "types": "rm -rf types/ && npx tsc"
+    "types": "rm -rf types/generated && npx tsc"
   },
   "main": "./dist/riscript.js",
   "browser": "./dist/riscript.min.js",
