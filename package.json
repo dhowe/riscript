@@ -15,6 +15,7 @@
     "types": "rm -rf types/generated && npx tsc"
   },
   "main": "./dist/riscript.js",
+  "types": "./dist/riscript.d.ts",
   "browser": "./dist/riscript.min.js",
   "exports": {
     ".": {
