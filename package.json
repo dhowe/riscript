@@ -9,23 +9,22 @@
   "scripts": {
     "test": "NODE_ENV=dev mocha",
     "test:dist": "NODE_ENV=dev mocha test/dist",
-    "build": "npx tsup && cp -r types/riscript.d.ts dist/",
+    "build": "npx tsup && cp -r types/riscript.d.* dist/",
     "pub": "./npnb/source/cli.js --no-release-draft --test-script test:dist patch",
     "prepub": "npm version patch && npm run build",
     "types": "rm -rf types/generated && npx tsc"
   },
   "main": "./dist/riscript.js",
-  "types": "./dist/riscript.d.ts",
   "browser": "./dist/riscript.min.js",
   "exports": {
     ".": {
       "import": {
         "default": "./dist/riscript.js",
-        "types": "./dist/riscript.d.ts",
+        "types": "./dist/riscript.d.ts"
       },
       "require": {
         "default": "./dist/riscript.cjs",
-        "types": "./dist/riscript.d.cts",
+        "types": "./dist/riscript.d.cts"
       }
     }
   },
