@@ -15,17 +15,13 @@
     "types": "rm -rf types/generated && npx tsc"
   },
   "main": "./dist/riscript.js",
+  "types": "./dist/riscript.d.ts",
   "browser": "./dist/riscript.min.js",
   "exports": {
     ".": {
-      "import": {
-        "default": "./dist/riscript.js",
-        "types": "./dist/riscript.d.ts"
-      },
-      "require": {
-        "default": "./dist/riscript.cjs",
-        "types": "./dist/riscript.d.cts"
-      }
+      "import": "./dist/riscript.js",
+      "require": "./dist/riscript.cjs",
+      "types": "./dist/riscript.d.ts"
     }
   },
   "files": [
