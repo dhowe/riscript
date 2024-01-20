@@ -20,7 +20,7 @@ class RiGrammar {
 
     /** @type {Object<string, string>} */ this.rules = {};
     /** @type {Object<string, any>} */ this.context = context;
-    /** @type {RiScript} */ this.scripting = new RiScript(options);
+    /** @type {RiScript} */ this.scripting = options?.RiTa?.riscript ?? new RiScript(options);
 
 
     if (typeof rules === 'string') {
