@@ -14,12 +14,14 @@ class RiGrammar {
    * Creates an instance of RiGrammar.
    * @param {Object<string, string>|string} [rules] - an object (or JSON string) containing the rules
    * @param {Object<string, any>} [context] - the context (or world-state)
+   * @param {Object<string, any>} [options] - options for the grammar
    */
-  constructor(rules = {}, context = {}) {
+  constructor(rules = {}, context = {}, options = {}) {
 
     /** @type {Object<string, string>} */ this.rules = {};
-    /** @type {RiScript} */ this.scripting = new RiScript();
     /** @type {Object<string, any>} */ this.context = context;
+    /** @type {RiScript} */ this.scripting = new RiScript(options);
+
 
     if (typeof rules === 'string') {
       rules = parseJSON(rules);
@@ -57,6 +59,7 @@ class RiGrammar {
     this.scripting.addTransform(name, def);
     return this;
   }
+  
   /**
    * Removes a transform from the Grammar instance
    * @param {string} name 
