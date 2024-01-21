@@ -165,7 +165,7 @@ class RiScript {
    */
   evaluate(script, context, options) {
     if (typeof script !== 'string') {
-      throw Error('RiScript.evaluate() expects a string, got ' + typeof script);
+      throw Error('evaluate() expects a string, got ' + typeof script);
     }
     if (typeof options !== 'object') {
       options = {};

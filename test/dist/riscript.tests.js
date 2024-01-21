@@ -701,7 +701,7 @@ describe(title, function() {
   describe("Symbols", function() {
     it("Handle generated symbols", function() {
       let sc = "$a=antelope\n$b=otter\n$.an() $[a|b]";
-      const res = riscript.evaluate(sc, { an: () => "An" }, T);
+      const res = riscript.evaluate(sc, { an: () => "An" });
       expect(res).to.be.oneOf([
         "An antelope",
         "An otter"
@@ -713,7 +713,7 @@ describe(title, function() {
         an: () => "An",
         a: () => "Ant",
         b: () => "Elk"
-      }, T);
+      });
       expect(res).to.be.oneOf([
         "An Ant",
         "An Elk"
@@ -722,7 +722,7 @@ describe(title, function() {
     it("Handle simple object in context", function() {
       let context, res;
       context = { a: { name: "Lucy" } };
-      res = riscript.evaluate("$a.name", context, T);
+      res = riscript.evaluate("$a.name", context, 0);
       expect(res).to.be.oneOf(["Lucy"]);
       return;
       context = { a: { name: "Lucy" }, b: { name: "Sam" } };
@@ -743,7 +743,6 @@ describe(title, function() {
       expect(res).to.be.oneOf(["Lucy", "Sam"]);
       context = { a: { name: "Lucy" }, b: { name: "Sam" } };
       res = riscript.evaluate("$person=$[a|b]\n$person.name", context, T);
-      console.log(res);
       expect(res).to.be.oneOf(["Lucy", "Sam"]);
     });
     it("Handle deferred", function() {
