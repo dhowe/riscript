@@ -339,7 +339,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     if (isStatic) {
       // store !untransformed! result in static context
-      this.statics[ident] = result; // ADDED 8/18/23 - FIXED 10/8/23
+      this.statics[ident] = result; // ADDED 8/18/23,FIXED 10/8/23
     }
 
     if (ctx.Transform) {
@@ -348,6 +348,11 @@ class RiScriptVisitor extends BaseVisitor {
       // info += " -> " + ctx.Transform.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
       // console.log("INFO: " + info);
       if (this.isNoRepeat) info += ' (norepeat)';
+    }
+    else if (result.length === 0) { 
+      // this is a raw $, without transform, keep it DCH: 1/21/24
+      result = symbol;
+      info = '** $ **';
     }
 
     this.print('symbol', info);
@@ -524,6 +529,11 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
 
+    if (typeof result === 'object') {
+      // check for function
+      console.log("HIT", JSON.stringify(result));
+    }
+
     // do we have more script to deal with ?
     const resolved = !this.scripting.isParseable(result);
 
@@ -663,7 +673,6 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   applyTransform(target, transform) {
-
 
     const image = transform.image;
     const raw = target + image;

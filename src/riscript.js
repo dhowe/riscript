@@ -284,8 +284,7 @@ class RiScript {
       return str + tag + ', ';
     }, '')
       .slice(0, -2);
-    console.log('\nTokens: [ ' + s + ' ]  Context:',
-      this.visitor.lookupsToString());
+    //console.log('\nTokens: [ ' + s + ' ]  Context:', this.visitor.lookupsToString());
   }
 
   /** @private */
