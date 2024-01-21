@@ -163,9 +163,12 @@ class RiScript {
    * @param {object} [options] - options for the evaluation
    * @returns {string}
    */
-  evaluate(script, context, options = {}) {
+  evaluate(script, context, options) {
     if (typeof script !== 'string') {
       throw Error('RiScript.evaluate() expects a string, got ' + typeof script);
+    }
+    if (typeof options !== 'object') {
+      options = {};
     }
     options.input = script;
     options.visitor = new RiScriptVisitor(this, context);

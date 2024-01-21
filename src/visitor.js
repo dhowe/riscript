@@ -529,9 +529,11 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
 
+    // WORKING HERE
     if (typeof result === 'object') {
       // check for function
-      console.log("HIT", JSON.stringify(result));
+      
+      //console.log("HIT", JSON.stringify(result));
     }
 
     // do we have more script to deal with ?
