@@ -928,10 +928,15 @@ describe(title, function () {
 
     it('Handle simple object in context', function () {
       let context, res;
-      context = { a: { name: 'Lucy' }};
-      res = riscript.evaluate("$a.name", context, 0);
+      /*
+            context = { a: { name: 'Lucy' }};
+            res = riscript.evaluate("$a.name", context, 0);
+            expect(res).to.be.oneOf(['Lucy']);
+       */
+      context = { a: { name: 'Lucy' } };
+      res = riscript.evaluate("$b=$a\n$b.name", context, T);
       expect(res).to.be.oneOf(['Lucy']);
-return;
+      return;
       context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
       res = riscript.evaluate("$[a | b]", context, T);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
@@ -1499,7 +1504,6 @@ bb', {})).eq('aa bb');
       expect(res).eq(expected);
     });
 
-
     it('#parseJSOLregex', function () {
       // SIMPLE REGEX
       let res = riscript.parseJSOL('{a: /^p/}');
@@ -1536,6 +1540,12 @@ bb', {})).eq('aa bb');
       // OR QUERY
       expect(JSON.stringify(riscript.parseJSOL('{$or: [ {a: {$gt: 30}}, {a: {$lt: 20}}]}')))
         .eq(JSON.stringify({ $or: [{ a: { $gt: 30 } }, { a: { $lt: 20 } }] }));
+    });
+
+    LTR && it('#objToRiScript', function () { // very bad idea
+      expect(riscript.objToRiScript({ a: 3 })).eq('$a=3');
+      let nested = { a: 3, char: { name: "lucy", age: 32 } };
+      expect(riscript.objToRiScript(nested)).eq('$a=3\n$char.name=lucy\n$char.age=32');
     });
 
     it('#isParseable', function () {

@@ -386,6 +386,23 @@ class RiScript {
   }
 
   /**
+   * Parses a js object into a riscript string
+   * @package
+   */
+  objToRiScript(o) { // not used  
+    let json = JSON.stringify(o);
+    let symRE = /"([A-Za-z_0-9][A-Za-z_0-9]*)"/g;
+    let rs = json.replace(symRE, '$$$1')
+      .replace(/^{/g, "")
+      .replace(/}$/g, "")
+      .replace(/"/g, "")
+      .replace(/: */g, '=')
+      .replace(/,/g, '\n');
+    //console.log('objToRiScript', o, rs);
+    return rs;
+  }
+
+  /**
    * Parses a mingo query into JSON format
    * @package
    */

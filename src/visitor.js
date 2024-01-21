@@ -23,7 +23,7 @@ class BaseVisitor {
       || ('name' in o && 'location' in o && 'children' in o)));
   }
 
-  visit(cstNode, param) {
+  visit(cstNode, options) {
     if (Array.isArray(cstNode)) {
       cstNode = cstNode[0];
     }
@@ -52,7 +52,7 @@ class BaseVisitor {
 
     //if (this.trace) console.log('CALL: ' + name + '()');
 
-    return this[name](cstNode.children, param);
+    return this[name](cstNode.children, options);
   }
 
   validateVisitor() { /* no-op */ }
@@ -101,14 +101,16 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   expr(ctx) {
-    // this.print('expr', ctx);
+    //this.print('expr', ctx);
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
 
-    const count = Object.keys(ctx).reduce((acc, k) => ctx[k].length + acc, 0);
-    this.print('script', "'" + escapeText(this.input)
-      + "' :: " + count + ' atom(s)');
-    if (!count) return '';
+    if (this.order === 0) { // first time only
+      const count = Object.keys(ctx).reduce((acc, k) => ctx[k].length + acc, 0);
+      this.print('script', "'" + escapeText(this.input)
+        + "' :: " + count + ' atom(s) ctx=' + this.lookupsToString());
+      if (!count) return '';
+    }
 
     const exprs = ctx.atom.map((c) => this.visit(c)); // collect each atom
 
@@ -214,6 +216,7 @@ class RiScriptVisitor extends BaseVisitor {
 
   assign(ctx, opts) {
 
+    const fromSilent = opts?.silent;
     const sym = ctx.Symbol[0].image;
     const ident = sym.replace(this.scripting.regex.AnySymbol, '');
     const isStatic = sym.startsWith(this.Symbols.STATIC);
@@ -227,21 +230,17 @@ class RiScriptVisitor extends BaseVisitor {
       } else {
         this.statics[ident] = value; // store in lookup table
         this.pendingSymbols.delete(ident); // no longer pending
-        this.trace &&
-          console.log('  [pending.delete]', sym,
-            this.pendingSymbols.size
-              ? JSON.stringify(this.pendingSymbols)
-              : ''
-          );
+        this.trace && console.log('  [pending.delete]', sym,
+          this.pendingSymbols.size ? JSON.stringify(this.pendingSymbols) : '');
       }
       info = `${sym} = ${escapeText(value)}` +
-        ` [#static] ${opts?.silent ? '{silent}' : ''}`;
+        ` [#static] ${fromSilent ? '{silent}' : ''}`;
     } else {
       const $ = this;
 
       // dynamic: store as func to be resolved later, perhaps many times
-      value = () => $.visit(ctx.expr);
-      info = `${sym} = <f*:pending> ` + (opts?.silent ? '{silent}' : '');
+      value = () => $.visit(ctx.expr, { assign: true });
+      info = `${sym} = <f*:pending> ` + (fromSilent ? '{silent}' : '');
 
       // NOTE: this function may contain a choice, which needs to be handled
       // when called from a symbol with a norepeat transform (??) TODO: test
@@ -278,6 +277,8 @@ class RiScriptVisitor extends BaseVisitor {
   symbol(ctx, opts) {
     if (ctx.Symbol.length !== 1) throw Error('[1] invalid symbol');
 
+    const fromSilent = opts?.silent;
+    const fromAssign = opts?.assign;
     const original = this.nodeText;
     const symbol = ctx.Symbol[0].image;
     const ident = symbol.replace(this.scripting.regex.AnySymbol, '');
@@ -285,9 +286,12 @@ class RiScriptVisitor extends BaseVisitor {
     this.isNoRepeat = this.hasNoRepeat(ctx.Transform);
 
     if (this.pendingSymbols.has(ident)) {
-      this.print('symbol', `${symbol} [is-pending]`);
+      this.print('symbol', `${symbol} [is-pending] ${fromAssign ? '{assign}' : ''}`);
       return original;
     }
+    // else {
+    //   this.print('symbol', `XXX ${symbol}`);
+    // }
 
     // lookup: result is either a value, a function, or undef
     let { result, isStatic, isUser, resolved } = this.checkContext(ident);
@@ -299,10 +303,15 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
 
-    if (typeof result === 'function') {
+    if (typeof result === 'function') { // result was a function
       // while {} ?
       result = result.call(); // call it
       resolved = !this.scripting.isParseable(result);
+    }
+    /*else*/ if (typeof result === 'object') {
+      this.context[ident] = result;
+      result = original;
+      console.log("  HIT on $" + ident, JSON.stringify(result), JSON.stringify(this.context));
     }
 
     if (this.isNoRepeat && (isStatic || isUser)) {
@@ -318,11 +327,11 @@ class RiScriptVisitor extends BaseVisitor {
     if (typeof result === 'undefined') {
       // nothing found, defer
       this.print('symbol', symbol + " -> '" + original + "' ctx=" +
-        this.lookupsToString(), '[deferred]', opts?.silent ? '{silent}' : '');
+        this.lookupsToString(), '[deferred]', fromSilent ? '{silent}' : '');
       return original;
     }
 
-    let info = original + " -> '" + result + "'" + (opts?.silent ? ' {silent}' : '');
+    let info = original + " -> " + formatAny(result) + (fromSilent ? ' {silent}' : '') + (fromAssign ? ' {assign}' : '');
 
     // defer if we still have unresolved riscript
     if (typeof result === 'string' && !resolved) {
@@ -343,19 +352,19 @@ class RiScriptVisitor extends BaseVisitor {
     }
 
     if (ctx.Transform) {
+      info += " txs=[" + transformNames(ctx.Transform) + ']';// + '\'' + result + "'";
+      this.print('symbol', info);
       result = this.applyTransforms(result, ctx.Transform);
-      info += " -> '" + result + "'";
-      // info += " -> " + ctx.Transform.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
-      // console.log("INFO: " + info);
       if (this.isNoRepeat) info += ' (norepeat)';
     }
-    else if (result.length === 0) { 
-      // this is a raw $, without transform, keep it DCH: 1/21/24
-      result = symbol;
-      info = '** $ **';
+    else {
+      if (result.length === 0) {
+        // this is a raw $, without transform, keep it DCH: 1/21/24
+        result = symbol;
+        info = '** $ **';
+      }
+      if (!opts?.silent) this.print('symbol', info);
     }
-
-    this.print('symbol', info);
 
     // resolved, so remove from pending
     if (this.pendingSymbols.has(ident)) {
@@ -529,13 +538,6 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
 
-    // WORKING HERE
-    if (typeof result === 'object') {
-      // check for function
-      
-      //console.log("HIT", JSON.stringify(result));
-    }
-
     // do we have more script to deal with ?
     const resolved = !this.scripting.isParseable(result);
 
@@ -627,7 +629,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   applyTransforms(value, txs) {
-    if (this.traceTx) { console.log('applyTransforms', this.formatTxs(...arguments)); }
+    if (this.traceTx) console.log('applyTransforms', this.formatTxs(...arguments));
     for (let i = 0; i < txs.length; i++) {
       value = this.applyTransform(value, txs[i]);
     }
@@ -677,7 +679,7 @@ class RiScriptVisitor extends BaseVisitor {
   applyTransform(target, transform) {
 
     const image = transform.image;
-    const raw = target + image;
+    const raw = formatAny(target) + image;
     const tx = image.substring(1).replace(/\(\)$/, '');
     const RiTa = this.scripting.RiTa;
 
@@ -695,7 +697,6 @@ class RiScriptVisitor extends BaseVisitor {
     else if (typeof this.context[tx] === 'function') {
       result = this.context[tx](target, RiTa);
     }
-
     // function in transforms
     else if (typeof this.scripting.transforms[tx] === 'function') {
       result = this.scripting.transforms[tx](target, RiTa);
@@ -728,15 +729,13 @@ class RiScriptVisitor extends BaseVisitor {
   lookupsToString() {
     const dyns = {};
     const stats = {};
-    Object.entries(this.dynamics || {}).forEach(
-      ([k, v]) => (dyns[`$${k} `] = v)
-    );
-    Object.entries(this.statics || {}).forEach(
-      ([k, v]) => (stats[`#${k} `] = v)
-    );
-    return JSON.stringify({ ...this.context, ...stats, ...dyns }, (k, v) =>
-      typeof v === 'function' ? '<f*:pending>' : v
-    ).replace(/"/g, '');
+    Object.entries(this.dynamics || {})
+      .forEach(([k, v]) => (dyns[`$${k} `] = v));
+    Object.entries(this.statics || {})
+      .forEach(([k, v]) => (stats[`#${k} `] = v));
+    return JSON.stringify({ ...this.context, ...stats, ...dyns },
+      (k, v) => typeof v === 'function' ? '<f*:pending>' : v)
+      .replace(/"/g, '');
   }
 
   formatTxs(value, txs) {
@@ -758,6 +757,19 @@ class RiScriptVisitor extends BaseVisitor {
   tindent() {
     return ' '.repeat((this.order + '').length + 1);
   }
+}
+
+function formatAny(o) {
+  if (typeof o === 'string') {
+    return `'${o}'`;
+  }
+  if (typeof o === 'number') {
+    return o;
+  }
+  if (typeof o === 'function') {
+    throw Error('unexpected function');
+  }
+  return JSON.stringify(o).replace(/"/g, '');
 }
 
 function transformNames(txs) {
