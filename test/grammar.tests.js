@@ -64,7 +64,7 @@ describe(title, function () {
       expect(res).matches(/an ox(en)?/);
     });
 
-    it('Handle simple character choice in context', function () { // WORKING HERE ON branch=lastgood
+    it('Handle simple character choice in context', function () {
       let context, script, res;
 
       // simple case
@@ -75,6 +75,13 @@ describe(title, function () {
       };
       res = RiGrammar.expand(script, context);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
+    });
+ 
+    LTR && it('Handle generated symbols1', function () { // WORKING HERE  ON branch=lastgood
+      let ctx, res;
+      ctx = { a: { name: 'Lucy' } };
+      res = riscript.evaluate('#person=$a\n$person.name $person.name', ctx, T);
+      expect(res).eq('Lucy Lucy');
     });
 
     LTR && it('Handle complex character choice in context', function () { // WORKING HERE ON branch=lastgood
@@ -88,7 +95,7 @@ describe(title, function () {
       };
       res = RiGrammar.expand(script, context);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
-      
+
 
       // more complex
 
