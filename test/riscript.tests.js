@@ -164,6 +164,12 @@ describe(title, function () {
       expect(() => riscript.evaluate('$a=ok\n[ @{a: ok} hello]', 0)).to.throw();
     });
 
+    it('Handle time-based gates', function () {
+      let ctx = { getHours: () => new Date().getHours() };
+      let res = riscript.evaluate('$hours=$.getHours()\n[ @{ hours: {$lt: 12} } morning || evening]', ctx);
+      expect(res).eq(new Date().getHours() < 12 ? 'morning' : 'evening');
+    });
+
     it('Handle exists gates', function () {
       expect(riscript.evaluate('[ @{ a: { $exists: true }} hello]')).eq('');
       expect(riscript.evaluate('[ @{ a: { $exists: true }} hello][ @{ a: { $exists: true }} hello]')).eq('');
@@ -928,12 +934,13 @@ describe(title, function () {
 
     it('Handle simple object in context', function () {
       let context, res;
-      context = { a: { name: 'Lucy' }};
+
+      context = { a: { name: 'Lucy' } };
       res = riscript.evaluate("$a.name", context, 0);
       expect(res).to.be.oneOf(['Lucy']);
-return;
+      
       context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
-      res = riscript.evaluate("$[a | b]", context, T);
+      res = riscript.evaluate("$[a | b].name", context);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
 
@@ -941,9 +948,9 @@ return;
       let context, res;
 
       context = { a: 'Lucy', b: 'Sam' };
-      res = riscript.evaluate('$[a|b]', context, T);
+      res = riscript.evaluate('$[a|b]', context);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
-      return;
+return;
 
       context = { a: 'Lucy', b: 'Sam' };
       res = riscript.evaluate('$person=$[a|b]\n$person', context);

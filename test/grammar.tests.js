@@ -76,7 +76,31 @@ describe(title, function () {
       res = RiGrammar.expand(script, context);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
- 
+
+    it('Handle time-based gated example', function () {
+      let context = { hours: new Date().getHours() };
+      let grammar = {
+        start: '$greeting, he said.',
+        greeting: '[ @{ hours: {$lt: 12}} $morning || $evening]',
+        morning: 'Good morning',
+        evening: 'Good evening'
+      };
+      let res = RiGrammar.expand(grammar, context);
+      expect(res).to.be.oneOf(['Good morning, he said.', 'Good evening, he said.']);
+    });
+
+    it('Handle time-based transform example', function () {
+      let context = { getGreeting: () => new Date().getHours() < 12 ? '$morning' : '$evening' };
+      let grammar = {
+        start: '$greeting, he said.',
+        greeting: '$.getGreeting()',
+        morning: 'Good morning',
+        evening: 'Good evening'
+      };
+      let res = RiGrammar.expand(grammar, context);
+      expect(res).to.be.oneOf(['Good morning, he said.', 'Good evening, he said.']);
+    });
+
     LTR && it('Handle generated symbols1', function () { // WORKING HERE  ON branch=lastgood
       let ctx, res;
       ctx = { a: { name: 'Lucy' } };
@@ -95,9 +119,6 @@ describe(title, function () {
       };
       res = RiGrammar.expand(script, context);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
-
-
-      // more complex
 
       // more complex
       context = {
