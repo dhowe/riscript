@@ -816,23 +816,24 @@ describe(title, function () {
       expect(res === 'man:man' || res === 'boy:boy').true;
     });
 
-    it('Resolve predefined statics', function () {
+    it('Resolve predefined statics', function () { // NOT SUPPORTED
       let res, visitor;
 
       visitor = new RiScriptVisitor(riscript);
       visitor.statics = { b: 'a [b | c | d] e' };
-      res = riscript._evaluate({ input: '#b', visitor });
+      res = riscript._evaluate({ input: '$b', visitor });
       expect(/a [bdc] e/.test(res)).true;
 
       visitor = new RiScriptVisitor(riscript);
       visitor.statics = { bar: '[man | boy]' };
-      res = riscript._evaluate({ input: '#bar:#bar', visitor, trace: 0 });
+      res = riscript._evaluate({ input: '#a=$bar\n$a:$a', visitor, trace: 0 });
       expect(res === 'man:man' || res === 'boy:boy').true;
 
       visitor = new RiScriptVisitor(riscript);
       visitor.statics = { bar: '[$man | $boy]' };
       visitor.context = { man: '[MAN|man]', boy: '[BOY|boy]' };
-      res = riscript._evaluate({ input: '#bar:#bar', visitor, trace: 0 });
+      res = riscript._evaluate({ input: '#a=$bar\n$a:$a', visitor, trace: 0 });
+      console.log(res);
       expect(res === 'MAN:MAN' ||
         res === 'BOY:BOY' ||
         res === 'man:man' ||

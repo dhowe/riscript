@@ -243,14 +243,15 @@ class RiScriptVisitor extends BaseVisitor {
       // TODO: this section is problematic
       if (this.scripting.isParseable(value)) {
         this.statics[ident] = value; // TODO: stored in lookup table - but is this ever referenced ?
-        if (isSilent) {
+        console.log(`add -> this.statics[${ident}] = ${formatAny(value)}`); 
+        /*if (isSilent) {
           console.log('  <assign-static-silent-inlineAssignment> "' + original + '"');
         }
         value = this.inlineAssignment(ident, ctx.Transform, value, isSilent);
         if (isSilent) {
           console.log('  GOT "' + value + '"');
           //value = '{'++'}';
-        }
+        }*/
       } else {
         this.statics[ident] = value; // store in lookup table
         this.pendingSymbols.delete(ident); // no longer pending
@@ -384,7 +385,7 @@ class RiScriptVisitor extends BaseVisitor {
       if (isUser && typeof result !== 'string' && !ctx.Transform) {
         console.warn('[DEFER] Untransformed symbol ' + original + ' returned ' + (typeof result)
           + ', not string: ' + JSON.stringify(result));
-        return original;
+        //return original;
       }
       if (typeof result === 'string' && result.length === 0 && symbol.length === 1) {
         // this is a raw $, without transform, keep it DCH: 1/21/24
@@ -574,12 +575,12 @@ class RiScriptVisitor extends BaseVisitor {
     const rhs = this.restoreTransforms(result, tfs);
     const OPEN = isSilent ? $.OPEN_SILENT : $.OPEN_CHOICE;
     const CLOSE = isSilent ? $.CLOSE_SILENT : $.CLOSE_CHOICE;
-    if (isSilent) {
-      result = OPEN + lhs + CLOSE;
-    }
-    else {
+    // if (isSilent) {
+    //   result = OPEN + lhs + CLOSE;
+    // }
+    // else {
       result = OPEN + (lhs + '=' + rhs) + CLOSE;
-    }
+    //}
     return result;
   }
 
