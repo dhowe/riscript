@@ -64,7 +64,7 @@ describe(title, function () {
       expect(res).matches(/an ox(en)?/);
     });
 
-    LTR && it('Handle character choice in context', function () {
+    it('Handle simple character choice in context', function () { // WORKING HERE ON branch=lastgood
       let context, script, res;
 
       // simple case
@@ -73,8 +73,24 @@ describe(title, function () {
         start: "$person.name",
         "person": "$[a | b]"
       };
-      res = RiGrammar.expand(script, context, T);
+      res = RiGrammar.expand(script, context);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
+    });
+
+    LTR && it('Handle complex character choice in context', function () { // WORKING HERE ON branch=lastgood
+      let context, script, res;
+
+      // simple case
+      context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
+      script = {
+        start: "$person.name",
+        "person": "$[a | b]"
+      };
+      res = RiGrammar.expand(script, context);
+      expect(res).to.be.oneOf(['Lucy', 'Sam']);
+      
+
+      // more complex
 
       // more complex
       context = {
@@ -94,7 +110,7 @@ describe(title, function () {
         start: "Meet $person.name. $person.pronoun().cap drives a $person.car().",
         "#person": "$[sam | lucy]"
       };
-      res = RiGrammar.expand(script, context);
+      res = RiGrammar.expand(script, context, T);
       expect(res).to.be.oneOf([
         'Meet Lucy. She drives a Subaru.',
         'Meet Sam. He drives a Lexus.',

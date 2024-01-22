@@ -105,10 +105,12 @@ class RiScriptVisitor extends BaseVisitor {
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
 
-    const count = Object.keys(ctx).reduce((acc, k) => ctx[k].length + acc, 0);
-    this.print('script', "'" + escapeText(this.input)
-      + "' :: " + count + ' atom(s)');
-    if (!count) return '';
+    if (this.order === 1) {
+      const count = Object.keys(ctx).reduce((acc, k) => ctx[k].length + acc, 0);
+      this.print('script', "'" + escapeText(this.input)
+        + "' :: " + count + ' atom(s)');
+      if (!count) return '';
+    }
 
     const exprs = ctx.atom.map((c) => this.visit(c)); // collect each atom
 
@@ -349,7 +351,7 @@ class RiScriptVisitor extends BaseVisitor {
       // console.log("INFO: " + info);
       if (this.isNoRepeat) info += ' (norepeat)';
     }
-    else if (result.length === 0) { 
+    else if (result.length === 0) {
       // this is a raw $, without transform, keep it DCH: 1/21/24
       result = symbol;
       info = '** $ **';
@@ -532,7 +534,7 @@ class RiScriptVisitor extends BaseVisitor {
     // WORKING HERE
     if (typeof result === 'object') {
       // check for function
-      
+
       //console.log("HIT", JSON.stringify(result));
     }
 
@@ -637,10 +639,9 @@ class RiScriptVisitor extends BaseVisitor {
   // value is not yet resolved, so store with transform for later
   restoreTransforms(value, txs) {
     if (typeof value === 'string') {
-      const patt = new RegExp(
-        '^' + this.Escaped.OPEN_CHOICE + '.*' + this.Escaped.CLOSE_CHOICE + '$'
-      );
-      if (!patt.test(value)) {
+      const choiceRE = new RegExp('^' + this.Escaped.OPEN_CHOICE + '.*' + this.Escaped.CLOSE_CHOICE + '$');
+      const symbolRE = new RegExp(`(${this.Escaped.DYNAMIC}|${this.Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*`);
+      if (!choiceRE.test(value) && !symbolRE.test(value)) {
         // wrap in choice to preserve
         value = this.Symbols.OPEN_CHOICE + value + this.Symbols.CLOSE_CHOICE;
       }
