@@ -1,5 +1,6 @@
 /** @module riscript */
 
+import { type } from 'os';
 import { Util } from './util.js';
 
 const { escapeText, stringHash } = Util;
@@ -53,6 +54,13 @@ class BaseVisitor {
     //if (this.trace) console.log('CALL: ' + name + '()');
 
     return this[name](cstNode.children, param);
+    // if (!Array.isArray(results)) results = [results];
+    // // results.forEach(r => {
+    // //   if (typeof r !== 'string') throw Error('Non-string result: ' + JSON.stringify(r))
+    // // });
+    // // console.log('RESULT.' + name + ': ', results);
+    // // if (results.length === 1) return results[0];
+    // return results.join('');
   }
 
   validateVisitor() { /* no-op */ }
@@ -105,10 +113,12 @@ class RiScriptVisitor extends BaseVisitor {
     const types = Object.keys(ctx);
     if (types.length !== 1) throw Error('invalid expr: ' + types.length);
 
-    const count = Object.keys(ctx).reduce((acc, k) => ctx[k].length + acc, 0);
-    this.print('script', "'" + escapeText(this.input)
-      + "' :: " + count + ' atom(s)');
-    if (!count) return '';
+    if (this.order === 0) { // only the first time
+      const count = Object.keys(ctx).reduce((acc, k) => ctx[k].length + acc, 0);
+      this.print('script', "'" + escapeText(this.input)
+        + "' :: " + count + ' atom(s) ctx=' + this.lookupsToString());
+      if (!count) return '';
+    }
 
     const exprs = ctx.atom.map((c) => this.visit(c)); // collect each atom
 
@@ -122,6 +132,8 @@ class RiScriptVisitor extends BaseVisitor {
         exprs[i + 1] = exprs[i + 1].substring(1);
       }
     }
+
+    // TODO: this is breaking cases where an object is returned
     return exprs.join('');
   }
 
@@ -196,13 +208,14 @@ class RiScriptVisitor extends BaseVisitor {
       }
     });
 
-    if (
-      Object.keys(resolvedOps).length + unresolvedOps.length !==
-      operands.length
-    ) { throw Error('invalid operands'); }
+    if (Object.keys(resolvedOps).length + unresolvedOps.length !== operands.length) {
+      throw Error('invalid operands');
+    }
 
     // if we have unresolved operands, return them (and defer)
-    if (unresolvedOps.length) { return { decision: 'defer', operands: unresolvedOps }; }
+    if (unresolvedOps.length) {
+      return { decision: 'defer', operands: unresolvedOps };
+    }
 
     let result = mingoQuery.test(resolvedOps); // do test
     if (!result && this.castValues(resolvedOps)) {
@@ -300,9 +313,14 @@ class RiScriptVisitor extends BaseVisitor {
     }
 
     if (typeof result === 'function') {
-      // while {} ?
-      result = result.call(); // call it
-      resolved = !this.scripting.isParseable(result);
+      let maxRecursionDepth = 99;
+      for (let i = 0; i < maxRecursionDepth; i++) {
+        result = result.call(); // call it
+        if (typeof result !== 'function') {
+          resolved = !this.scripting.isParseable(result);
+          break;
+        }
+      }
     }
 
     if (this.isNoRepeat && (isStatic || isUser)) {
@@ -322,7 +340,7 @@ class RiScriptVisitor extends BaseVisitor {
       return original;
     }
 
-    let info = original + " -> '" + result + "'" + (opts?.silent ? ' {silent}' : '');
+    let info = original + " -> " + formatAny(result) + (opts?.silent ? ' {silent}' : '');
 
     // defer if we still have unresolved riscript
     if (typeof result === 'string' && !resolved) {
@@ -343,19 +361,25 @@ class RiScriptVisitor extends BaseVisitor {
     }
 
     if (ctx.Transform) {
+      info += " txs=[" + transformNames(ctx.Transform) + ']';// + '\'' + result + "'";
+      this.print('symbol', info);
       result = this.applyTransforms(result, ctx.Transform);
-      info += " -> '" + result + "'";
-      // info += " -> " + ctx.Transform.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
-      // console.log("INFO: " + info);
       if (this.isNoRepeat) info += ' (norepeat)';
     }
-    else if (result.length === 0) { 
-      // this is a raw $, without transform, keep it DCH: 1/21/24
-      result = symbol;
-      info = '** $ **';
+    else {
+      // edge cases: raw $, untransformed non-string symbol
+      if (isUser && typeof result !== 'string' && !ctx.Transform) {
+        console.warn('[WARN]: untransformed symbol ' + original + ' returned ' + (typeof result)
+          + ', not string: ' + JSON.stringify(result));
+        return original;
+      }
+      if (typeof result === 'string' && result.length === 0 && symbol.length === 1) {
+        // this is a raw $, without transform, keep it DCH: 1/21/24
+        result = symbol;
+        info = '** $ **';
+      }
+      this.print('symbol', info);
     }
-
-    this.print('symbol', info);
 
     // resolved, so remove from pending
     if (this.pendingSymbols.has(ident)) {
@@ -409,7 +433,8 @@ class RiScriptVisitor extends BaseVisitor {
     const original = this.nodeText;
     const choiceKey = stringHash(original + ' #' + this.choiceId(ctx));
 
-    let gateText, gateResult, info = original;
+    let gateText, gateResult;
+    let info = original;
 
     if (!this.isNoRepeat && this.hasNoRepeat(ctx.Transform)) {
       throw Error('noRepeat() not allowed on choice '
@@ -423,9 +448,9 @@ class RiScriptVisitor extends BaseVisitor {
     if (opts?.forceReject) {
       decision = 'reject';
     } else {
-      if (ctx?.gate?.[0]?.children?.Gate) {
-        // do we have a gate
-        gateText = ctx.gate[0].children.Gate[0].image;
+      let gateCtx = ctx?.gate?.[0]?.children?.Gate;  // ugly
+      if (gateCtx) { // do we have a gate ?
+        gateText = gateCtx.image;
         gateResult = this.visit(ctx.gate);
         decision = gateResult.decision;
         let ginfo = `${gateText} -> ${(decision !== 'defer' ? decision.toUpperCase()
@@ -529,13 +554,6 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
 
-    // WORKING HERE
-    if (typeof result === 'object') {
-      // check for function
-      
-      //console.log("HIT", JSON.stringify(result));
-    }
-
     // do we have more script to deal with ?
     const resolved = !this.scripting.isParseable(result);
 
@@ -611,14 +629,15 @@ class RiScriptVisitor extends BaseVisitor {
 
     const index = this.scripting.RiTa.randi(valid.length);
 
-    let value = ''; const selected = valid[index];
+    let value = '';
+    const selected = valid[index];
 
     if (typeof selected === 'string') {
       this.print('choice.text', "''");
     } else {
       // if (typeof selected === 'object') {
       this.path = 'choice.' + this.path;
-      value = this.visit(selected); // cstNode
+      value = this.visit(selected); // should be cstNode
     }
 
     if (typeof value === 'string') value = value.trim();
@@ -677,7 +696,8 @@ class RiScriptVisitor extends BaseVisitor {
   applyTransform(target, transform) {
 
     const image = transform.image;
-    const raw = target + image;
+    const original = target + image;
+    const raw = formatAny(target) + image;
     const tx = image.substring(1).replace(/\(\)$/, '');
     const RiTa = this.scripting.RiTa;
 
@@ -703,19 +723,22 @@ class RiScriptVisitor extends BaseVisitor {
     // member functions (usually on String)
     else if (typeof target[tx] === 'function') {
       result = target[tx]();
-    } else {
-      // check for property
-      if (target.hasOwnProperty(tx)) {
-        result = target[tx];
-      } else {
-        if (!RiTa.SILENT && !this.silent) {
-          console.warn('[WARN] Unresolved transform: ' + raw);
-        }
+    }
+    // check for object property
+    else if (typeof target !== 'string' && tx in target) {
+      result = target[tx];
+    }
 
-        /* Replace transform parens so as not to trigger
-           RiScript.isParseable (for example, in v2) 0 */
-        result = raw.replace(/\(\)$/, '&lpar;&rpar;');
+    // got nothing
+    if (typeof result === 'undefined') {
+
+      if (!RiTa.SILENT && !this.silent) {
+        console.warn('[WARN] Unresolved transform: ' + raw);
       }
+
+      /* Replace transform parens so as not to trigger
+          RiScript.isParseable (for example, in v2) 0 */
+      result = original.replace(/\(\)$/, '&lpar;&rpar;');
     }
 
     if (this.trace) {
@@ -758,6 +781,19 @@ class RiScriptVisitor extends BaseVisitor {
   tindent() {
     return ' '.repeat((this.order + '').length + 1);
   }
+}
+
+function formatAny(o) {
+  if (typeof o === 'string') {
+    return `'${o}'`;
+  }
+  if (typeof o === 'number') {
+    return o;
+  }
+  if (typeof o === 'function') {
+    throw Error('unexpected function');
+  }
+  return JSON.stringify(o).replace(/"/g, '');
 }
 
 function transformNames(txs) {

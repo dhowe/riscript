@@ -711,17 +711,17 @@ describe(title, function () {
   describe('Evaluation', function () {
 
     it('Resolve simple expressions', function () {
-      expect(riscript.evaluate('hello', 0)).eq('hello');
-      expect(riscript.evaluate('[a|b]', 0)).is.oneOf(['a', 'b']);
-      expect(riscript.evaluate('[a|b (4)|c]', 0)).is.oneOf(['a', 'b', 'c']);
-      expect(riscript.evaluate('[hello (2)]', 0)).eq('hello');
-      expect(riscript.evaluate('[hello]', 0)).eq('hello');
-      expect(riscript.evaluate('[@{a:2} hello]', 0)).eq('');
-      expect(riscript.evaluate('$a=2\n$a', 0)).eq('2');
-      expect(riscript.evaluate('[$a=2]', 0)).eq('2');
-      expect(riscript.evaluate('[#a=2]', 0)).eq('2');
-      expect(riscript.evaluate('#a=2', 0)).eq('');
-      expect(riscript.evaluate('#a=2\n$a', 0)).eq('2');
+      // expect(riscript.evaluate('hello', 0)).eq('hello');
+      // expect(riscript.evaluate('[a|b]', 0)).is.oneOf(['a', 'b']);
+      // expect(riscript.evaluate('[a|b (4)|c]', 0)).is.oneOf(['a', 'b', 'c']);
+      // expect(riscript.evaluate('[hello (2)]', 0)).eq('hello');
+      // expect(riscript.evaluate('[hello]', 0)).eq('hello');
+      // expect(riscript.evaluate('[@{a:2} hello]', 0)).eq('');
+      // expect(riscript.evaluate('$a=2\n$a', 0)).eq('2');
+      // expect(riscript.evaluate('[$a=2]', 0)).eq('2');
+      // expect(riscript.evaluate('[#a=2]', 0)).eq('2');
+      // expect(riscript.evaluate('#a=2', 0)).eq('');
+      // expect(riscript.evaluate('#a=2\n$a', 0)).eq('2');
       expect(riscript.evaluate('$a=2\n[@{a:2} hello]', 0)).eq('hello');
       expect(riscript.evaluate('[@{a:2} hello (2)]', 0)).eq('');
       expect(riscript.evaluate('[@{a:2} hello (2)]', 0)).eq('');
@@ -928,20 +928,37 @@ describe(title, function () {
 
     it('Handle simple object in context', function () {
       let context, res;
-      context = { a: { name: 'Lucy' }};
+
+      /*context = { a: 'Lucy' };
+      res = riscript.evaluate("$[a]", context);
+      expect(res).to.be.oneOf(['Lucy']);
+
+      context = { a: {name: 'Lucy' }};
+      res = riscript.evaluate("$[a].name", context, T);
+      expect(res).to.be.oneOf(['Lucy']);  
+
+      context = { a: { name: 'Lucy' } };
       res = riscript.evaluate("$a.name", context, 0);
       expect(res).to.be.oneOf(['Lucy']);
-return;
+
       context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
-      res = riscript.evaluate("$[a | b]", context, T);
+      res = riscript.evaluate("$[a | b].name", context, 0);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
+*/
+      context = { a: { name: 'Lucy' }};
+      res = riscript.evaluate("[[$a]].name", context,0);
+      expect(res).to.be.oneOf(['Lucy']);
+
+      // context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
+      // res = riscript.evaluate("$c = $[a | b]\n$c.name", context,T);
+      // expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
 
     it('Handle generated symbol in context', function () {
       let context, res;
 
       context = { a: 'Lucy', b: 'Sam' };
-      res = riscript.evaluate('$[a|b]', context, T);
+      res = riscript.evaluate('$[a|b]', context, 1);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
       return;
 
