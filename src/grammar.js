@@ -98,7 +98,12 @@ class RiGrammar {
    * @param {boolean} [options.silent=false] - whether to suppress console warnings
    * @returns {string} - the expanded text
    */
-  expand(options = {}) {
+  expand(options={}) {
+
+    if (typeof options !== 'object') {
+      throw Error('RiGrammar.expand() expects object or null, got ' + typeof options);
+    }
+    
     if ('context' in options) {
       throw Error('pass context to RiScript.grammar() or new RiGrammar() instead');
     }

@@ -902,6 +902,30 @@ describe(title, function () {
 
   describe('Symbols', function () {
 
+    it('Handle generated symbols1', function () { // WORKING HERE
+      let ctx, res;
+      ctx = { a: { name: 'Lucy' }};
+      res = riscript.evaluate('#person=$a\n$person.name $person.name', ctx, T);
+      expect(res).eq('Lucy Lucy');
+    });
+
+    it('Handle generated symbols2', function () {
+      let ctx, res;
+      // ctx = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
+      // res = riscript.evaluate('#person=$[a | b]\nMeet $person.name', ctx);
+      // expect(res).to.be.oneOf([
+      //   'Meet Sam',
+      //   'Meet Lucy',
+      // ]);
+
+      ctx = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
+      res = riscript.evaluate('#person=$[a | b]\nMeet $person.name $person.name', ctx, T);
+      expect(res).to.be.oneOf([
+        'Meet Sam Sam',
+        'Meet Lucy Lucy',
+      ]);
+    });
+
     it('Handle generated symbols', function () {
       let sc = '$a=antelope\n$b=otter\n$.an() $[a|b]'
       const res = riscript.evaluate(sc, { an: () => 'An' });
@@ -929,13 +953,13 @@ describe(title, function () {
     it('Handle simple object in context', function () {
       let context, res;
 
-      /*context = { a: 'Lucy' };
+      context = { a: 'Lucy' };
       res = riscript.evaluate("$[a]", context);
       expect(res).to.be.oneOf(['Lucy']);
 
-      context = { a: {name: 'Lucy' }};
-      res = riscript.evaluate("$[a].name", context, T);
-      expect(res).to.be.oneOf(['Lucy']);  
+      context = { a: { name: 'Lucy' } };
+      res = riscript.evaluate("$[a].name", context);
+      expect(res).to.be.oneOf(['Lucy']);
 
       context = { a: { name: 'Lucy' } };
       res = riscript.evaluate("$a.name", context, 0);
@@ -944,14 +968,42 @@ describe(title, function () {
       context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
       res = riscript.evaluate("$[a | b].name", context, 0);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
-*/
-      context = { a: { name: 'Lucy' }};
-      res = riscript.evaluate("[[$a]].name", context,0);
+
+      context = { a: { name: 'Lucy' } };
+      res = riscript.evaluate("[$a].name", context);
       expect(res).to.be.oneOf(['Lucy']);
 
-      // context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
-      // res = riscript.evaluate("$c = $[a | b]\n$c.name", context,T);
-      // expect(res).to.be.oneOf(['Lucy', 'Sam']);
+      context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
+      res = riscript.evaluate("$c = $[a | b]\n$c.name", context, T);
+      expect(res).to.be.oneOf(['Lucy', 'Sam']);
+    });
+
+    it('Resolve static scripting from context', function () {
+      let ctx, res;
+
+      ctx = { 'rule': '[job | mob]' };
+      res = riscript.evaluate('#a=$rule\n$a $a', ctx);
+      expect(res).to.be.oneOf(['job job', 'mob mob']);
+
+      ctx = { start: '$rule $rule' }; // TODO: statics in grammar context
+      res = riscript.evaluate('#rule=[job | mob]\n$start', ctx);
+      expect(res).to.be.oneOf(['job job', 'mob mob']);
+
+      ctx = { start: '$rule' }; // TODO: statics in grammar context
+      res = riscript.evaluate('#rule=$a\n#a=[job | mob]\n$start $start', ctx);
+      expect(res).to.be.oneOf(['job job', 'mob mob']);
+    });
+
+    it('Resolve inline static symbols', function () {
+      let res;
+      res = riscript.evaluate('#rule=[job | mob]\n$rule $rule');
+      expect(res).to.be.oneOf(['job job', 'mob mob']);
+
+      res = riscript.evaluate('#rule=[job | mob]\n$a=$rule $rule\n$a');
+      expect(res).to.be.oneOf(['job job', 'mob mob']);
+
+      res = riscript.evaluate('#rule=[job | mob]\n$start=$rule $rule\n$start');
+      expect(res).to.be.oneOf(['job job', 'mob mob']);
     });
 
     it('Handle generated symbol in context', function () {
@@ -960,7 +1012,6 @@ describe(title, function () {
       context = { a: 'Lucy', b: 'Sam' };
       res = riscript.evaluate('$[a|b]', context, 1);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
-      return;
 
       context = { a: 'Lucy', b: 'Sam' };
       res = riscript.evaluate('$person=$[a|b]\n$person', context);

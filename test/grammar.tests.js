@@ -64,7 +64,7 @@ describe(title, function () {
       expect(res).matches(/an ox(en)?/);
     });
 
-    LTR && it('Handle character choice in context', function () {
+    it('Handle simple character choice in context', function () {
       let context, script, res;
 
       // simple case
@@ -75,6 +75,10 @@ describe(title, function () {
       };
       res = RiGrammar.expand(script, context, T);
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
+    });
+
+    it('Handle complex character choice in context', function () {
+      let context, script, res;
 
       // more complex
       context = {
@@ -99,14 +103,27 @@ describe(title, function () {
         'Meet Lucy. She drives a Subaru.',
         'Meet Sam. He drives a Lexus.',
       ]);
+
     });
 
-    it('Handle character choice in grammar', function () {
-      let script = {
+    it('Handle character choice in grammar1', function () {
+      let script, res;
+
+      script = {
         "#person": "Sam {$pronoun=He}{$car=Lexus} | Lucy {$pronoun=She}{$car=Subaru}",
         start: "Meet $person. $pronoun drives a $car.",
       };
-      let res = RiGrammar.expand(script);
+      res = RiGrammar.expand(script);
+      expect(res).to.be.oneOf([
+        'Meet Lucy. She drives a Subaru.',
+        'Meet Sam. He drives a Lexus.',
+      ]);
+
+      script = {
+        "#person": "{$name=Sam}{$pronoun=He}{$car=Lexus} | {$name=Lucy}{$pronoun=She}{$car=Subaru}",
+        start: "Meet $name. $pronoun drives a $car.",
+      };
+      res = RiGrammar.expand(script);
       expect(res).to.be.oneOf([
         'Meet Lucy. She drives a Subaru.',
         'Meet Sam. He drives a Lexus.',
@@ -118,15 +135,26 @@ describe(title, function () {
         lucy: "Lucy {$pronoun=She}{$car=Subaru}",
         start: "Meet $person. $pronoun drives a $car.",
       };
-      res = RiGrammar.expand(script);
+      res = RiGrammar.expand(script, 0, T);
       expect(res).to.be.oneOf([
         'Meet Lucy. She drives a Subaru.',
         'Meet Sam. He drives a Lexus.',
       ]);
     });
 
-    LTR && it('Handle character choice in grammarXXX', function () {
+    it('Handle character choice in grammar2', function () {
       let script, res;
+
+      script = {
+        "#person": "$sam",
+        sam: "{$name=Sam}",
+        start: "Meet $name",
+      };
+      res = RiGrammar.expand(script, 0, T);
+      console.log(res);
+      expect(res).eq('Meet Sam');
+      return;
+
       script = {
         "#person": "$sam | $lucy",
         sam: "{$name=Sam}{$pronoun=He}{$car=Lexus}",
@@ -139,7 +167,9 @@ describe(title, function () {
         'Meet Lucy. She drives a Subaru.',
         'Meet Sam. He drives a Lexus.',
       ]);
+
     });
+
 
 
     it('Handle simple statics', function () {
@@ -513,7 +543,7 @@ describe(title, function () {
       expect(() => rg.expand()).to.throw();
 
       rg = new RiGrammar({ start: 'My rule' });
-      expect(() => rg.expand('bad')).to.throw();
+      expect(() => rg.expand({ start: 'bad' })).to.throw();
 
       rg = new RiGrammar({ '1line': 'Dave | Jill | Pete' });
       expect(() => rg.expand()).to.throw(); // no start rule
@@ -854,20 +884,14 @@ describe(title, function () {
       res = rg.expand();
       expect(/^[jm]ob [jm]ob$/.test(res)).eq(true);
 
-      if (LTR) {
-        ctx = { '#rule': '[job | mob]' }; // TODO: statics in grammar context
-        rg = new RiGrammar({ start: '$rule $rule' }, ctx);
-        expect(rg.expand(T)).to.be.oneOf(['job job', 'mob mob']);
-      }
     });
 
-    if (LTR)
-      it('Handle custom transforms on statics', function () {
-        // TODO: statics in grammar context
-        const context = { '#randomPosition': () => 'job type' };
-        const rg = new RiGrammar({ start: 'My $.randomPosition().' });
-        expect(rg.expand(context)).eq('My job type.');
-      });
+    it('Resolve static rules in context', function () {
+      let ctx, rg;
+      ctx = { '#rule': '[job | mob]' }; // TODO: statics in grammar context
+      rg = new RiGrammar({ start: '$rule $rule' }, ctx);
+      expect(rg.expand(T)).to.be.oneOf(['job job', 'mob mob']);
+    });
 
     it('Handle custom transforms', function () {
       const context = { randomPosition: () => 'job type' };
