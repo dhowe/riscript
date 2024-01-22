@@ -464,12 +464,12 @@ class RiScript {
   /** @private */
   _createTransforms() {
     let transforms = {
-      quotify: (w, r) => RiScript.quotify(w),
-      pluralize: (w, r) => RiScript.pluralize(w, r),
-      capitalize: (w, r) => RiScript.capitalize(w),
-      articlize: (w, r) => RiScript.articlize(w, r),
-      uppercase: (w, r) => RiScript.uppercase(w),
-      norepeat: (w, r) => RiScript.identity(w),
+      quotify: (w) => RiScript.quotify(w),
+      pluralize: (w) => RiScript.pluralize(w, this.RiTa),
+      articlize: (w) => RiScript.articlize(w, this.RiTa),
+      capitalize: (w) => RiScript.capitalize(w),
+      uppercase: (w) => RiScript.uppercase(w),
+      norepeat: (w) => RiScript.identity(w),
     };
 
     // aliases
@@ -487,7 +487,25 @@ class RiScript {
   // ========================= statics ===============================
 
   /**
-   * Default transform that adds an article
+   * Default transform that pluralizes a string (uses RiTa if available for phonemes)
+   * @param {string} s - the string to transform
+   * @param {object} [pluralizer] - custom pluralizer with pluralize() function
+   * @returns {string} the transformed string
+   * @private
+   */
+  static pluralize(s, pluralizer) {
+    if (!pluralizer?.pluralize) {
+      if (!RiScript.RiTaWarnings.plurals && !RiScript.RiTaWarnings.silent) {
+        RiScript.RiTaWarnings.plurals = true;
+        console.warn('[WARN] Install RiTa for proper pluralization');
+      }
+      return s.endsWith('s') ? s : s + 's';
+    }
+    return pluralizer.pluralize(s);
+  }
+
+  /**
+   * Default transform that adds an article (uses RiTa if available for phonemes)
    * @param {string} s - the string to transform
    * @param {object} [phonemeAnalyzer] - custom phoneme analyzer with phones() function
    * @returns {string} the transformed string
@@ -541,24 +559,6 @@ class RiScript {
    */
   static quotify(s) {
     return '&#8220;' + (s || '') + '&#8221;';
-  }
-
-  /**
-   * Default transform that pluralizes a string (requires RiTa)
-   * @param {string} s - the string to transform
-   * @param {object} [pluralizer] - custom pluralizer with pluralize() function
-   * @returns {string} the transformed string
-   * @private
-   */
-  static pluralize(s, pluralizer) {
-    if (!pluralizer?.pluralize) {
-      if (!RiScript.RiTaWarnings.plurals && !RiScript.RiTaWarnings.silent) {
-        RiScript.RiTaWarnings.plurals = true;
-        console.warn('[WARN] Install RiTa for proper pluralization');
-      }
-      return s.endsWith('s') ? s : s + 's';
-    }
-    return pluralizer.pluralize(s);
   }
 
   /**

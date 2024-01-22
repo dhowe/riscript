@@ -944,6 +944,16 @@ describe(title, function () {
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
 
+    
+    it('Pass scripting as this', function () {
+      let addRhyme = function (word) {
+        console.log('addRhyme', word, this, arguments);
+        return word + ' rhymes with bog';
+      }
+      let res = riscript.evaluate('[hello].rhyme', { rhyme: addRhyme });
+    });
+
+
     it('Handle generated symbol in context', function () {
       let context, res;
 
@@ -1061,8 +1071,8 @@ return;
       res = riscript.evaluate('The [dog | dog | dog].rhymes', 0, { silent: true });
       expect(res).eq('The dog.rhymes');
 
-      let addRhyme2 = function (word, parent) {
-        return word + ' rhymes with bog' + parent.randi(1);
+      let addRhyme2 = function (word) {
+        return word + ' rhymes with bog' + this.RiTa.randi(1);
       }
       expect(riscript.transforms.rhymes2).is.undefined;
       riscript.addTransform('rhymes2', addRhyme2);

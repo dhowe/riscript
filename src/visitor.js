@@ -686,24 +686,23 @@ class RiScriptVisitor extends BaseVisitor {
 
     // function in dynamics
     if (typeof this.dynamics[tx] === 'function') {
-      result = this.dynamics[tx](target, RiTa);
+      result = this.dynamics[tx].call(this.scripting, target);
     }
     // function in statics
     else if (typeof this.statics[tx] === 'function') {
-      result = this.statics[tx](target, RiTa);
+      result = this.statics[tx].call(this.scripting, target);
     }
     // function in context
     else if (typeof this.context[tx] === 'function') {
-      result = this.context[tx](target, RiTa);
+      result = this.context[tx].call(this.scripting, target);
     }
-
     // function in transforms
     else if (typeof this.scripting.transforms[tx] === 'function') {
-      result = this.scripting.transforms[tx](target, RiTa);
+      result = this.scripting.transforms[tx].call(this.scripting, target);
     }
     // member functions (usually on String)
     else if (typeof target[tx] === 'function') {
-      result = target[tx]();
+      result = target[tx]();// .call() ?
     } else {
       // check for property
       if (target.hasOwnProperty(tx)) {
@@ -727,8 +726,7 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   lookupsToString() {
-    const dyns = {};
-    const stats = {};
+    const dyns = {}, stats = {};
     Object.entries(this.dynamics || {}).forEach(
       ([k, v]) => (dyns[`$${k} `] = v)
     );
