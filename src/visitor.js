@@ -11,7 +11,6 @@ const { escapeText, stringHash, formatAny, transformNames } = Util;
 class BaseVisitor {
   constructor(riScript) {
     /**@type {string}*/this.input = '';
-    ///**@type {string}*/this.path = '';
     /**@type {boolean}*/this.nowarn = false;
     /**@type {boolean}*/this.tracePath = true;
     /**@type {object}*/this.scripting = riScript;
@@ -78,7 +77,6 @@ class RiScriptVisitor extends BaseVisitor {
     this.statics = {}; // store static symbols as values, set once and re-used
     this.dynamics = {}; // store dynamic symbols as functions to be re-evaluated each time
     this.pendingGates = {}; // store gates for which operands are not resolved
-    //this.pendingSymbols = new Set(); // when a symbol resolves with more riscript, store it here {static: store in this.statics?, dynamic: no-need}
 
     this.validateVisitor(); // keep
   }
@@ -144,10 +142,6 @@ class RiScriptVisitor extends BaseVisitor {
     return result;
   }
 
-  // wexpr(ctx) {
-  //   this.print('wexpr');
-  // }
-
   silent(ctx) {
     this.print('silent', this.nodeText);
     this.indent++;
@@ -157,7 +151,7 @@ class RiScriptVisitor extends BaseVisitor {
       this.symbol(ctx, { silent: true });
     }
     this.indent--;
-    this.print('silent/', 'statics=' + formatAny(this.statics));
+    this.print('/silent', 'statics=' + formatAny(this.statics));
 
     return '';
   }
@@ -182,23 +176,11 @@ class RiScriptVisitor extends BaseVisitor {
         info = `${sym} = ${formatAny(value)} {#resolved}`;
       }
       else {
-
+        // TODO: move indent++/-- to visit() ?
         this.indent++;
         value = this.visit(ctx.expr); // visit the right-hand side
         this.indent--;
 
-        /*if (this.scripting.isParseable(value)) {
-          // this.statics[ident] = value; // store in lookup table ??
-          //value = this.inlineAssignment(ident, ctx.Transform, value);
-        } else {
-          //this.statics[ident] = value; // store in lookup table
-          // let deleted = this.pendingSymbols.delete(ident); // no longer pending
-          // info += (deleted ? ` :: pending.delete(${ident})` : ` ***FAILED-to-delete ${sym}!`);
-          //this.trace && console.log('  [pending.delete]', sym,
-          //this.pendingSymbols.size ? JSON.stringify(this.pendingSymbols) : '');
-        }
-  
-        */
         this.statics[ident] = value;  // store in lookup table, resolved or not
 
         if (typeof value === 'string' && this.scripting.isParseable(value)) {
@@ -215,7 +197,6 @@ class RiScriptVisitor extends BaseVisitor {
       this.indent++;
       value = () => $.visit(ctx.expr); // the right-hand side
       this.indent--;
-
 
       // NOTE: this function may contain a choice, which needs to be handled
       // when called from a symbol with a norepeat transform (??) TODO: test
@@ -237,31 +218,9 @@ class RiScriptVisitor extends BaseVisitor {
     this.isNoRepeat = this.hasNoRepeat(ctx.Transform);
 
     this.print('symbol', `${original} ${isSilent ? ' {silent}' : ''}`);
-    //    this.indent++;
-
-    /*
-      If have a #static that already exists in this.statics, we check if it parseable.
-      If so, we inline it for later, otherwise we return the value directly.
-    */
-
-    // if (this.pendingSymbols.has(ident)) {
-    //   this.print('/symbol', `${original} [is-pending]`);
-    //   return original;
-    // }
 
     // lookup: result is either a value, a function, or undef
     let { result, isStatic, isUser, resolved } = this.checkContext(ident);
-
-    // if (isStatic) {
-    //   if (resolved) {
-    //     value = result;
-    //   }
-    //     if (this.scripting.isParseable(value)) {
-    //       value = this.inlineAssignment(ident, ctx.Transform, value);
-    //     }
-    //     return value; 
-    //   }
-    // }
 
     if (!isStatic && this.scripting.regex.StaticSymbol.test(sym)) {
       if (!this.scripting.regex.Entity.test(sym)) {
@@ -298,13 +257,10 @@ class RiScriptVisitor extends BaseVisitor {
     if (typeof result === 'string' && !resolved) {
 
       if (isStatic) {
-
-        //this.pendingSymbols.add(ident);
         result = this.inlineStaticAssign(ident, ctx.Transform, result);
         this.print('/symbol', `${original} -> ${result}`);// :: pending.add(${ident})`);
 
       } else {
-
         if (ctx.Transform) result = this.restoreTransforms(result, ctx.Transform);
         this.print('/symbol', info);
       }
@@ -320,8 +276,6 @@ class RiScriptVisitor extends BaseVisitor {
     if (ctx.Transform) {
       result = this.applyTransforms(result, ctx.Transform);
       info += "-> '" + result + "'";
-      // info += " -> " + ctx.Transform.map(tf => ` ${tf.image} -> `) + '\'' + result + "'";
-      // console.log("INFO: " + info);
       if (this.isNoRepeat) info += ' (norepeat)';
     }
     else if (result.length === 0) {
@@ -331,13 +285,6 @@ class RiScriptVisitor extends BaseVisitor {
     }
 
     this.print('/symbol', info);
-
-    // resolved, so remove from pending
-    // if (this.pendingSymbols.has(ident)) {
-    //   this.trace && console.log('  [$pending.delete]', (isStatic ? '#' : '$') + ident,
-    //     this.pendingSymbols.size ? JSON.stringify(this.pendingSymbols) : '');
-    //   this.pendingSymbols.delete(ident);
-    // }
     this.isNoRepeat = false; // reset
 
     return result;
@@ -413,15 +360,12 @@ class RiScriptVisitor extends BaseVisitor {
         value = value.trim();
       }
       else if (typeof value !== 'number') { // some type of complex object
-//console.log("HIThere1: " + value);
         if (ctx.Transform) value = this.applyTransforms(value, ctx.Transform);
-//console.log("HIThere-value: " + value);
         hasTransforms = false; // applied the transform so don't do it again later;
       }
 
       // if we still have script, defer until its resolved
       if (this.scripting.isParseable(value)) {
-//console.log("HIThere2: " + value);
         if (ctx.Transform) value = this.restoreTransforms(value, ctx.Transform);
         restored = true;
         break;
@@ -497,11 +441,12 @@ class RiScriptVisitor extends BaseVisitor {
     operands.forEach((sym) => {
       let { result, resolved, isStatic, isUser } = this.checkContext(sym);
 
-      if (typeof result === 'function') {
-        // while {} ?
+      for (let i = 0; typeof result === 'function'; i++) {
         result = result.call(); // call it
         resolved = !this.scripting.isParseable(result);
+        if (i === this.maxRecursionDepth) throw Error('Max recursion depth reached');
       }
+  
       if (typeof result === 'undefined' || !resolved) {
         unresolvedOps.push(sym);
       } else {
@@ -538,7 +483,6 @@ class RiScriptVisitor extends BaseVisitor {
   pgate(ctx) {
     this.print('pgate', this.nodeText);
 
-    // new RegExp(`^${this.symbols.PENDING_GATE}`
     const original = this.nodeText;
     const ident = original.replace(this.Symbols.PENDING_GATE, '');
     const lookup = this.pendingGates[ident];
@@ -629,8 +573,8 @@ class RiScriptVisitor extends BaseVisitor {
     const $ = this.Symbols;
     const lhs = $.STATIC + ident;
     const rhs = result;
-    //this.restoreTransforms(result, tfs);
-    result = this.restoreTransforms($.OPEN_CHOICE + (lhs + '=' + rhs) + $.CLOSE_CHOICE, tfs);
+    let stmt = $.OPEN_CHOICE + (lhs + '=' + rhs) + $.CLOSE_CHOICE;
+    result = this.restoreTransforms(stmt, tfs);
     return result;
   }
 
@@ -669,49 +613,6 @@ class RiScriptVisitor extends BaseVisitor {
     }
     return options;
   }
-
-  chooseUnique(options, choiceKey) {
-    // not used
-
-    const isUnique = false;
-    while (options.length && !isUnique) {
-      const { index, value } = this.choose(options);
-      if (value !== this.choices[choiceKey]) return value;
-      // console.log(`Skipping ${index}: '${value}'`);
-      options.splice(index, 1);
-    }
-    throw Error('No remaining options');
-  }
-  /*
-choose(options, excludes = []) {
-  if (!options || !options.length) {
-    throw Error('Invalid choice: no options');
-  }
-
-  const valid = options.filter((x) => !excludes.includes(x));
-  if (!valid.length) {
-    throw Error('Invalid choice: no valid options');
-  }
-
-  const index = this.scripting.RiTa.randi(valid.length);
-
-  let value = valid[index];
-
-  let value = ''; 
-  const selected = valid[index];
-  if (typeof selected === 'string') {
-    this.print('choice.text', "''");
-  } 
-  else {
-    this.path = 'choice.' + this.path;  // ?
-    this.indent++;
-    value = this.visit(selected); // cstNode
-    this.indent--;
-  }
-  if (typeof value === 'string') value = value.trim();
-
-  return value;
-}    */
 
   applyTransforms(value, txs) {
     this.indent++;
@@ -825,30 +726,12 @@ choose(options, excludes = []) {
 
   print(s, ...args) {
     if (this.trace) {
-      // if (this.path && s !== 'script') {
-      //   s = this.path.replace(/\.$/, '');
-      // }
-      // if (!s.endsWith('gate.text')) { // ignore these
-      //   let inspc = '  '.repeat(this.indent);
-      //   console.log(++this.order, `${inspc}[${s}]`, ...args);
-      // }
-
       let indentStr = '  '.repeat(this.indent);
-      //if (s.endsWith('-resolve')) this.indent--;
-
       let msg = `${indentStr}<${s}>${s.startsWith('/') ? '' : ' '}`;
       if (++this.order < 10) msg = ' ' + msg;
       console.log(this.order, msg, ...args);
-      //this.path = '';
     }
-  }
-
-  tindent() {
-    return ' '.repeat((this.order + '').length + 1);
   }
 }
 
 export { RiScriptVisitor };
-
-// console.log('&#33; -> '+decode('&#33;'));
-// console.log('&amp; -> '+decode('&amp;'));
