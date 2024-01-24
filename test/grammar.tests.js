@@ -18,6 +18,45 @@ describe(title, function () {
     RiScript.RiTaWarnings.silent = !IfRiTa;
   });
 
+  describe('Characters', function () {
+    it('Handles character choice in context', function () { 
+      let context, script, res;
+
+      // simple case
+      context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
+      script = {
+        start: "$person.name",
+        "person": "$[a | b]"
+      };
+      res = RiGrammar.expand(script, context);
+      expect(res).to.be.oneOf(['Lucy', 'Sam']);
+
+      // more complex
+      context = {
+        lucy: {
+          name: 'Lucy',
+          pronoun: 'she',
+          car: 'Lexus'
+        },
+        sam: {
+          name: 'Sam',
+          pronoun: 'he',
+          car: 'Subaru'
+        },
+        //getChar: (name) => characters.filter(c => c.name === name)
+      };
+      script = {
+        start: "Meet $person.name. $person.pronoun().cap drives a $person.car().",
+        "#person": "$[sam | lucy]"
+      };
+      res = RiGrammar.expand(script, context);
+      expect(res).to.be.oneOf([
+        'Meet Lucy. She drives a Lexus.',
+        'Meet Sam. He drives a Subaru.',
+      ]);
+    });
+  });
+
   describe('Grammars', function () {
     const rules = {
       start: '$kaminoku <br> $shimonoku',
@@ -55,7 +94,7 @@ describe(title, function () {
       v: 'sing | cry | rise | bloom | dance | fall'
     };
 
-    it('Handle simple grammars', function () {
+    it('Handles simple grammars', function () {
       const script = {
         noun: '[ox | oxen]',
         start: '$noun.art()'
@@ -64,7 +103,7 @@ describe(title, function () {
       expect(res).matches(/an ox(en)?/);
     });
 
-    LTR && it('Handle character choice in context', function () {
+    it('Handles simple character choice in context', function () {
       let context, script, res;
 
       // simple case
@@ -73,35 +112,36 @@ describe(title, function () {
         start: "$person.name",
         "person": "$[a | b]"
       };
-      res = RiGrammar.expand(script, context, T);
-      expect(res).to.be.oneOf(['Lucy', 'Sam']);
-
-      // more complex
-      context = {
-        lucy: {
-          name: 'Lucy',
-          pronoun: 'she',
-          car: 'Lexus'
-        },
-        sam: {
-          name: 'Sam',
-          pronoun: 'he',
-          car: 'Subaru'
-        },
-        //getChar: (name) => characters.filter(c => c.name === name)
-      };
-      script = {
-        start: "Meet $person.name. $person.pronoun().cap drives a $person.car().",
-        "#person": "$[sam | lucy]"
-      };
       res = RiGrammar.expand(script, context);
-      expect(res).to.be.oneOf([
-        'Meet Lucy. She drives a Subaru.',
-        'Meet Sam. He drives a Lexus.',
-      ]);
+      expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
 
-    it('Handle character choice in grammar', function () {
+    it('Handles time-based gated example', function () {
+      let context = { hours: new Date().getHours() };
+      let grammar = {
+        start: '$greeting, he said.',
+        greeting: '[ @{ hours: {$lt: 12}} $morning || $evening]',
+        morning: 'Good morning',
+        evening: 'Good evening'
+      };
+      let res = RiGrammar.expand(grammar, context);
+      expect(res).to.be.oneOf(['Good morning, he said.', 'Good evening, he said.']);
+    });
+
+    it('Handles time-based transform example', function () {
+      let context = { getGreeting: () => new Date().getHours() < 12 ? '$morning' : '$evening' };
+      let grammar = {
+        start: '$greeting, he said.',
+        greeting: '$.getGreeting()',
+        morning: 'Good morning',
+        evening: 'Good evening'
+      };
+      let res = RiGrammar.expand(grammar, context);
+      expect(res).to.be.oneOf(['Good morning, he said.', 'Good evening, he said.']);
+    });
+
+
+    it('Handles character choice in grammar', function () {
       let script = {
         "#person": "Sam {$pronoun=He}{$car=Lexus} | Lucy {$pronoun=She}{$car=Subaru}",
         start: "Meet $person. $pronoun drives a $car.",
@@ -125,7 +165,7 @@ describe(title, function () {
       ]);
     });
 
-    LTR && it('Handle character choice in grammarXXX', function () {
+    LTR && it('Handles character choice in grammarXXX', function () {
       let script, res;
       script = {
         "#person": "$sam | $lucy",
@@ -142,7 +182,7 @@ describe(title, function () {
     });
 
 
-    it('Handle simple statics', function () {
+    it('Handles simple statics', function () {
       const script = {
         '#noun': '[a | b]',
         start: '$noun\n$noun'
@@ -152,7 +192,7 @@ describe(title, function () {
       expect(res).matches(/(a\na)|(b\nb)/);
     });
 
-    it('Handle simple wrapped statics ', function () {
+    it('Handles simple wrapped statics ', function () {
       const script = {
         '#noun': '[a | b]',
         start: '$noun $noun'
@@ -161,7 +201,7 @@ describe(title, function () {
       expect(res).matches(/(a a)|(b b)/);
     });
 
-    it('Handle longer grammars', function () {
+    it('Handles longer grammars', function () {
       const res = RiGrammar.expand(rules);
       const lines = res.split(/\s*<br>\s*/g);
       // console.log(lines);
@@ -183,7 +223,7 @@ describe(title, function () {
         ));
     });
 
-    it('Handle gates in grammars', function () {
+    it('Handles gates in grammars', function () {
       const script = {
         '#noun': '[man | woman]',
         start: '#noun[@{noun: "man"} :boy]'
@@ -193,7 +233,7 @@ describe(title, function () {
       expect(res === 'man:boy' || res === 'woman').eq(true);
     });
 
-    it('Resolve inline grammars', function () {
+    it('Resolves inline grammars', function () {
       const script = [
         '$start = $nounp $verbp.',
         '$nounp = $determiner $noun',
@@ -240,7 +280,7 @@ describe(title, function () {
       }
     });
 
-    it('Handle norepeat in grammars', function () {
+    it('Handles norepeat in grammars', function () {
       let res;
       const script = {
         noun: '[man | woman]',
@@ -373,7 +413,7 @@ describe(title, function () {
       }
     });
 
-    it('Handle phrase transforms', function () {
+    it('Handles phrase transforms', function () {
       const g = {
         start: '[$x=$y b].ucf()',
         y: '[a | a]'
@@ -736,7 +776,7 @@ describe(title, function () {
       expect(hawks > dogs), 'got h=' + hawks + ', d=' + dogs;
     });
 
-    it('Handle transforms', function () {
+    it('Handles transforms', function () {
       let rg = new RiGrammar();
 
       rg.addRule('start', '$pet.toUpperCase()');
@@ -772,7 +812,7 @@ describe(title, function () {
       expect(rg.expand(), 'An ant');
     });
 
-    it('Handle transforms on statics', function () {
+    it('Handles transforms on statics', function () {
       let rg = new RiGrammar();
       rg.addRule('start', '$pet.toUpperCase()');
       rg.addRule('#pet', 'dog');
@@ -846,7 +886,7 @@ describe(title, function () {
       expect(rg.expand({ start: '$rule' })).eq('My job type.');
     });
 
-    it('Resolve rules in context', function () {
+    it('Resolves rules in context', function () {
       let ctx, rg, res;
 
       ctx = { rule: '[job | mob]' }; // dynamic var in context
@@ -862,26 +902,26 @@ describe(title, function () {
     });
 
     if (LTR)
-      it('Handle custom transforms on statics', function () {
+      it('Handles custom transforms on statics', function () {
         // TODO: statics in grammar context
         const context = { '#randomPosition': () => 'job type' };
         const rg = new RiGrammar({ start: 'My $.randomPosition().' });
         expect(rg.expand(context)).eq('My job type.');
       });
 
-    it('Handle custom transforms', function () {
+    it('Handles custom transforms', function () {
       const context = { randomPosition: () => 'job type' };
       const rg = new RiGrammar({ start: 'My $.randomPosition().' }, context);
       expect(rg.expand()).eq('My job type.');
     });
 
-    it('Handle phrases starting with custom transforms', function () {
+    it('Handles phrases starting with custom transforms', function () {
       const context = { randomPosition: () => 'job type' };
       const rg = new RiGrammar({ start: '$.randomPosition().' }, context);
       expect(rg.expand()).eq('job type.');
     });
 
-    it('Handle custom transforms with target', function () {
+    it('Handles custom transforms with target', function () {
       const context = { randomPosition: (z) => z + ' job type' };
       let rg = new RiGrammar({ start: 'My [new].randomPosition().' }, context);
       expect(rg.expand()).eq('My new job type.');
@@ -891,7 +931,7 @@ describe(title, function () {
       expect(rg.expand()).eq('My new job type.');
     });
 
-    it('Handle paired assignments via transforms', function () {
+    it('Handles paired assignments via transforms', function () {
       let rules = {
         start: '$name was our hero and $pronoun was fantastic.',
         name: '$boys {$pronoun=he} | $girls {$pronoun=she}',
@@ -935,7 +975,7 @@ describe(title, function () {
       ]);
     });
 
-    it('Handle symbol transforms', function () {
+    it('Handles symbol transforms', function () {
       let rg;
 
       rg = new RiGrammar({
@@ -958,7 +998,7 @@ describe(title, function () {
       expect(rg.expand({ trace: 0 }), 'mice');
     });
 
-    it('Handle symbol transforms on statics', function () {
+    it('Handles symbol transforms on statics', function () {
       let rg;
       rg = new RiGrammar({
         start: '$tmpl',
@@ -984,7 +1024,7 @@ describe(title, function () {
       }
     });
 
-    it('Handle special characters', function () {
+    it('Handles special characters', function () {
       let rg, res, s;
 
       s = '{ "start": "hello &#124; name" }';
@@ -1026,7 +1066,7 @@ describe(title, function () {
       }
     });
 
-    it('Handle special characters with statics', function () {
+    it('Handles special characters with statics', function () {
       let rg, res, s;
 
       s = '{ "start": "hello &#124; name" }';

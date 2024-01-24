@@ -2,10 +2,10 @@
  * @memberof module:riscript
  */
 class Util {
-  
+
   ///////////////////////// CONSTANTS /////////////////////////
 
-  
+
   /**
    * @static
    * @memberof Util
@@ -15,8 +15,21 @@ class Util {
 
   ///////////////////////// FUNCTIONS /////////////////////////
 
+  static formatAny(o) {
+    if (typeof o === 'string') return `'${o}'`;
+    else if (typeof o === 'number') return o;
+    if (typeof o === 'function') throw Error('unexpected function');
+    return JSON.stringify(o).replace(/"/g, '');
+  }
+
+  static transformNames(txs) {
+    return txs && txs.length
+      ? txs.map((tx) => tx.image.replace(/(^\.|\(\)$)/g, ''), [])
+      : [];
+  }
+
   static escapeText(s, quotify) {
-    if (typeof s !== 'string') return s;
+    if (typeof s !== 'string') return Util.formatAny(s);
     let t = s.replace(/\r?\n/g, '\\n');
     return quotify || !t.length ? "'" + t + "'" : t;
   }
