@@ -20,8 +20,7 @@ class RiGrammar {
 
     /** @type {Object<string, string>} */ this.rules = {};
     /** @type {Object<string, any>} */ this.context = context;
-    /** @type {RiScript} */ this.scripting = options?.RiTa?.riscript ?? new RiScript(options);
-
+    /** @type {RiScript} */ this.scripting = options.RiTa?.riscript ?? new RiScript(options);
 
     if (typeof rules === 'string') {
       rules = parseJSON(rules);
@@ -59,7 +58,7 @@ class RiGrammar {
     this.scripting.addTransform(name, def);
     return this;
   }
-  
+
   /**
    * Removes a transform from the Grammar instance
    * @param {string} name 
@@ -192,8 +191,7 @@ class RiGrammar {
    */
   _toScript(opts) {
 
-    let script = '';
-    let start = opts.start || 'start';
+    let script = '', start = opts.start || 'start';
 
     let { Symbols } = this.scripting;
 
@@ -248,15 +246,9 @@ class RiGrammar {
 
     if (name.startsWith(Symbols.DYNAMIC)) {
       name = name.substring(Symbols.DYNAMIC.length);
-      throw Error(
-        'Grammar rules are dynamic by default;' +
-        " if you need a static rule, use '" +
-        Symbols.STATIC +
-        name +
-        "', otherwise just use '" +
-        name +
-        "'."
-      );
+      throw Error('Grammar rules are dynamic by default;' +
+        " if you need a static rule, use '" + Symbols.STATIC +
+        name + "', otherwise just use '" + name + "'.");
     }
   }
 }
@@ -268,13 +260,12 @@ function parseJSON(json) {
     try {
       return JSON.parse(json);
     } catch (e) {
-      throw Error(
-        'RiGrammar appears to be invalid JSON,' +
-        ' please check it at http://jsonlint.com/\n' +
-        json
-      );
+      throw Error('RiGrammar appears to be invalid JSON,' +
+        ' please check it at http://jsonlint.com/\n' + json);
     }
   }
 }
+
+RiGrammar.RiScript = RiScript; // backref for version
 
 export { RiGrammar };
