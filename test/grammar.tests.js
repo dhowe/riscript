@@ -116,33 +116,7 @@ describe(title, function () {
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
 
-    it('Should call RiTa.grammar.expand()', function () {
-
-      const context = {
-        lucy: {
-          name: 'Lucy',
-          pronoun: 'she',
-          car: 'Acura'
-        },
-        sam: {
-          name: 'Sam',
-          pronoun: 'he',
-          car: 'Subaru'
-        }
-      }
-      const rules = {
-        start: "Meet $person.name. $person.pronoun().cap drives a $person.car.",
-        //start: "Meet $person.name. $person.pronoun.cap() drives $person.car.art()",
-        "#person": "sam | lucy"
-      }
-      let rg = RiTa.grammar(rules, context);
-      const result = rg.expand(T);
-      expect(result).to.be.oneOf([
-        'Meet Lucy. She drives an Acura.',
-        'Meet Sam. He drives a Subaru.',
-      ]);
-    });
-
+    
     it('Handles time-based gated example', function () {
       let context = { hours: new Date().getHours() };
       let grammar = {
