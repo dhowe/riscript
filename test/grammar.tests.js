@@ -116,7 +116,37 @@ describe(title, function () {
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
 
-    
+    LTR && it('Should reference context from transforms', function () {
+      const context = {
+        characters: [{
+          name: 'Lucy',
+          pronoun: 'she',
+          car: 'Acura'
+        },
+        {
+          name: 'Sam',
+          pronoun: 'he',
+          car: 'Subaru'
+        }],
+        chooseChar: function () {
+          console.log('chooseChar:', typeof this);
+          let chars = this.visitor.context.characters;
+          return chars[Math.floor(Math.random() * chars.length)];
+        }
+      }
+      const rules = {
+        start: "{$person=$chooseChar()} $sentence",
+        sentence: "$Meet $person.name. $person.pronoun.cap() drives $person.car",
+        "#person": "$sam | $lucy"
+      }
+      let result = RiGrammar.expand(rules, context);
+      expect(result).to.be.oneOf([
+        'Meet Lucy. She drives a Acura.',
+        'Meet Sam. He drives a Subaru.',
+      ]);
+    });
+
+
     it('Handles time-based gated example', function () {
       let context = { hours: new Date().getHours() };
       let grammar = {
