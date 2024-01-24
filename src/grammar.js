@@ -10,6 +10,8 @@ import { RiScriptVisitor } from './visitor.js' // 12/13/2023
  */
 class RiGrammar {
 
+  static RiScript = null; // assigned in riscript.js
+
   /**
    * Creates an instance of RiGrammar.
    * @param {Object<string, string>|string} [rules] - an object (or JSON string) containing the rules
@@ -265,7 +267,5 @@ function parseJSON(json) {
     }
   }
 }
-
-RiGrammar.RiScript = RiScript; // backref for version
 
 export { RiGrammar };

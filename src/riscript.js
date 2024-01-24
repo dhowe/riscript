@@ -574,21 +574,10 @@ class RiScript {
   }
 }
 
-// let _randi = (a,b) => {
-//   let crand = Math.random();
-//   if (typeof a === ' ') return crand;
-//   if (Array.isArray(arguments[0])) {
-//     let arr = arguments[0];
-//     return arr[Math.floor(crand * arr.length)];
-//   }
-//   return arguments.length === 1 ? crand * arguments[0] :
-//     crand * (arguments[1] - arguments[0]) + arguments[0];
-// }
+RiGrammar.RiScript = RiGrammar; // backref
 
-// Class ref hack for testing
+// Class ref hacks for testing
 RiScript.Visitor = RiScriptVisitor;
 RiScript.Util = Util;
-// RiScript.Grammar = RiGrammar;
-
 
 export { RiScript };
