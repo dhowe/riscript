@@ -24,7 +24,7 @@ export class RiGrammar {
       silent?: boolean;
   }): string;
   static fromJSON(json: string, context?: object): RiGrammar;
-  constructor(rules?: { [x: string]: string } | string, context?: { [x: string]: any });
+  constructor(rules?: { [x: string]: string } | string, context?: { [x: string]: any }, options?: { [x: string]: any });
   addTransform(name: string, def: any): RiGrammar;
   removeTransform(name: string): RiGrammar;
   getTransforms(): string[];
