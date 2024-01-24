@@ -574,8 +574,6 @@ class RiScript {
   }
 }
 
-RiGrammar.RiScript = RiGrammar; // backref
-
 // Class ref hacks for testing
 RiScript.Visitor = RiScriptVisitor;
 RiScript.Util = Util;
