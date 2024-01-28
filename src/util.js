@@ -53,7 +53,7 @@ class Util {
     return result;
   }
 
-  static slashEscapesToEntities(s) {
+  static slashEscToEntities(s) {
     s = Util.replaceAll(s, '\\(', '&lpar;');
     s = Util.replaceAll(s, '\\)', '&rpar;');
     s = Util.replaceAll(s, '\\[', '&lsqb;');
@@ -82,13 +82,6 @@ class Util {
     return str.replace(new RegExp(Util.escapeRegExp(match), 'g'), () => replacement);
   }
 
-  static charCount(str, c) {
-    let count = 0;
-    for (let i = 0; i < str.length; i++) {
-      if (str[i] === c) count++;
-    }
-    return count;
-  }
 }
 
 export { Util };

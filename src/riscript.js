@@ -13,15 +13,25 @@ import { Util } from './util.js';
 const { decode } = he;
 const Vowels = /[aeiou]/;
 const HtmlEntities = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/gi;
-const { escapeText, charCount, slashEscapesToEntities, escapeMarkdownLink, escapeJSONRegex } = Util;
+const { escapeText, slashEscToEntities, escapeMarkdownLink, escapeJSONRegex } = Util;
 
 /** @private */
 class RiQuery extends Query {
 
   constructor(scripting, condition, options) {
     if (typeof condition === 'string') {
-      condition = scripting.parseJSOL(condition);
+      condition = condition.replace(/\$/g, '').replace(/@/g, '$');
     }
+    else {
+      try {
+        condition = JSON.stringify(condition);
+      }
+      catch (e) {
+        throw Error(condition.toString().includes('@')
+          ? 'Replace @ with $ when passing a JS object to RiQuery\nRoot: ' + e : e);
+      }
+    }
+    condition = scripting.parseJSOL(condition);
     super(condition, options);
   }
 
@@ -110,7 +120,10 @@ class RiScript {
     /** @type {boolean} */ this.v2Compatible = (options.compatibility === 2);
 
     const { Constants, tokens } = getTokens(this.v2Compatible);
+
     ({ Escaped: this.Escaped, Symbols: this.Symbols } = Constants);
+
+    this.pendingGateRe = new RegExp(`${this.Escaped.PENDING_GATE}([0-9]{9,11})`, 'g');
 
     /** @type {string[]} */ this.textTypes = TextTypes;
 
@@ -303,24 +316,20 @@ class RiScript {
       input = input.replace(this.regex.ParenthesizedWeights, '^$1^');
     }
 
-    let replaced = input.replace(this.regex.NonGateAtSigns, '$1&#64;'); // non-gate @-signs
-    if (replaced !== input) {
-      // console.log('Removed non-gate @-sign: ','\n', input,'\n', replaced);
-      input = replaced;
-    }
-
     let matches = input.match(this.regex.MarkdownLinks); // md-links
     matches && matches.forEach(m => input = input.replace(m, escapeMarkdownLink(m)));
     input = input.replace(this.regex.MultiLineComments, ''); // multi-line comments
     input = input.replace(this.regex.SingleLineComments, ''); // single-line comments
     input = input.replace(this.regex.Continue, ''); // line continuations
-    input = slashEscapesToEntities(input); // double-backslashed escapes
+    input = slashEscToEntities(input); // double-backslashed escapes
 
     let result = '';
     let lines = input.split(this.regex.LineBreaks);
     for (let i = 0; i < lines.length; i++) {
+
       // special-case: handle assignments alone on a line
       if (this.regex.RawAssign.test(lines[i])) {
+
         // a very convoluted way of preserving line-breaks inside groups
         let eqIdx = lines[i].indexOf('=');
         if (eqIdx < 0) throw Error('invalid state: no assigment: ' + lines[i]);
@@ -335,7 +344,9 @@ class RiScript {
           closes += charCount(line, $.CLOSE_CHOICE);
         }
         result += $.OPEN_SILENT + (lhs + '=' + rhs) + $.CLOSE_SILENT;
+
       } else {
+
         result += lines[i];
         if (i < lines.length - 1) result += '\n';
       }
@@ -356,22 +367,30 @@ class RiScript {
   _postParse(input, opts) {
     if (typeof input !== 'string') return '';
 
+    //console.log('_postParse "' + input + '"', opts);
+
     // replace html entities
     let decoded = decode(input);
 
     // clean up whitespace, linebreaks
-    let result = decoded.replace(this.regex.Whitespace, ' ').replace(this.regex.EndingBreak, '');
+    let result = decoded
+      .replace(this.regex.Whitespace, ' ')
+      .replace(this.regex.EndingBreak, '');
 
     // handle unresolved gates
-    let gates = [...result.matchAll(this.Symbols.PENDING_GATE_RE)];
-    if (opts.trace && gates.length) console.log();
+    let gates = [...result.matchAll(this.pendingGateRe)];
+    //console.log(result, result.length, this.pendingGateRe.toString(), [...result.matchAll(this.pendingGateRe)]);
+    if (opts.trace && gates.length) {
+      console.log('-'.repeat(20) + ' pGates ' + '-'.repeat(20));
+    }
+    this.visitor.order = 0;
     gates.forEach((g) => {
       if (!g || !g[0] || !g[1]) throw Error('bad gate: ' + g);
       let deferredGate = this.visitor.pendingGates[g[1]];
+      if (!deferredGate) throw Error('no deferredGate: ' + g[1]);
       let { deferredContext, operands, gateText } = deferredGate;
       if (!operands.length) throw Error('no operands');
       let reject = this.visitor.choice(deferredContext, { forceReject: true });
-
       result = result.replace(g[0], reject);
       if (opts.trace) console.log('Unresolved gate: \'' + gateText + '\' {reject}');
     });
@@ -413,9 +432,10 @@ class RiScript {
 
     // console.log("escaped: '"+escaped+"'");
 
-    let result = JSON.parse(escaped),
-      urp = unescapeRegexProperty;
+    let result = JSON.parse(escaped), urp = unescapeRegexProperty;
+
     Object.keys(result).forEach((k) => (result[k] = urp(result[k])));
+
     return result;
   }
 
@@ -425,10 +445,15 @@ class RiScript {
    */
   isParseable(s) {
     // conservatively assume non-string/numbers are always parseable
+    // otherwise, if a string or num, test for special chars
     let result = true;
-    let isStrOrNum = /(string|number)/.test(typeof s);
-    // if a string or num, test for special chars
-    if (isStrOrNum) result = this.regex.Special.test(s.toString());
+    if (typeof s === 'number') {
+      s = s.toString();
+    }
+    if (typeof s === 'string') {
+      result = this.regex.Special.test(s) || s.includes(this.Symbols.PENDING_GATE)
+       // || this.pendingGateRe.test(s);
+    }
     return result;
   }
 
@@ -572,6 +597,14 @@ class RiScript {
   static identity(s) {
     return s;
   }
+}
+
+function charCount(str, c) {
+  let count = 0;
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === c) count++;
+  }
+  return count;
 }
 
 // Class ref hacks for testing

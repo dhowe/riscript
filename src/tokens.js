@@ -41,8 +41,7 @@ function getTokens(v2Compatible) {
   const ENTITY_PATTERN = /&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});/i;
   const PENDING_GATE_PATTERN = new RegExp(`${Escaped.PENDING_GATE}([0-9]{9,11})`)
 
-  Escaped.SPECIAL = Object.values(Escaped).join('').replace(/[<>]/g, ''); // allow <> for html 
-  Symbols.PENDING_GATE_RE = new RegExp(PENDING_GATE_PATTERN.source, 'g'); // for unresolved gates
+  Escaped.SPECIAL = Object.values(Escaped).join('').replace(/[<>@]/g, ''); // allow <> for html, @ for md-links
 
   const Gate = createToken({
     name: "Gate",
@@ -52,14 +51,14 @@ function getTokens(v2Compatible) {
   });
 
   function bracketMatch(text, startOffset) {
-    const openGate = Symbols.OPEN_GATE.charCodeAt(0);
-    let endOffset = startOffset, dbug = false;
-    let charCode = text.charCodeAt(endOffset);
-    if (charCode !== openGate) return null; // 64 = '@'
 
-    if (dbug) console.log('bracketMatch', text, startOffset);
-    endOffset++;
-    charCode = text.charCodeAt(endOffset);
+    if (!/^@/.test(text.substring(startOffset))) return null;
+
+    let endOffset = startOffset + 1;
+
+    let dbug = 0;
+    if (dbug) console.log('bracketMatch', text);
+    let charCode = text.charCodeAt(endOffset);
 
     // spaces between the @ and the open brace 
     while (charCode === 32) {
@@ -76,10 +75,10 @@ function getTokens(v2Compatible) {
     while (depth > 0) {
       if (charCode === 123) depth++; // 123 = '{'
       else if (charCode === 125) depth--; // 123 = '}'
-      else if (charCode === openGate) {
-        if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null2`);
-        return null;
-      }
+      // else if (charCode === openGate) {
+      //   if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null2`);
+      //   return null;
+      // }
       if (dbug) console.log('  depth', depth, text.substring(startOffset, endOffset));
       endOffset++;
       charCode = text.charCodeAt(endOffset);

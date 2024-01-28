@@ -438,7 +438,7 @@ class RiScriptVisitor extends BaseVisitor {
     const resolvedOps = {};
     const unresolvedOps = [];
     const operands = mingoQuery.operands();
-    operands.forEach((sym) => {
+    operands.forEach((sym) => { 
       let { result, resolved, isStatic, isUser } = this.checkContext(sym);
 
       for (let i = 0; typeof result === 'function'; i++) {
