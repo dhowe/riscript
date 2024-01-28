@@ -18,44 +18,7 @@ describe(title, function () {
     RiScript.RiTaWarnings.silent = !IfRiTa;
   });
 
-  describe('Characters', function () {
-    it('Handles character choice in context', function () {
-      let context, script, res;
 
-      // simple case
-      context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
-      script = {
-        start: "$person.name",
-        "person": "$[a | b]"
-      };
-      res = RiGrammar.expand(script, context);
-      expect(res).to.be.oneOf(['Lucy', 'Sam']);
-
-      // more complex
-      context = {
-        lucy: {
-          name: 'Lucy',
-          pronoun: 'she',
-          car: 'Lexus'
-        },
-        sam: {
-          name: 'Sam',
-          pronoun: 'he',
-          car: 'Subaru'
-        },
-        //getChar: (name) => characters.filter(c => c.name === name)
-      };
-      script = {
-        start: "Meet $person.name. $person.pronoun().cap drives a $person.car().",
-        "#person": "$[sam | lucy]"
-      };
-      res = RiGrammar.expand(script, context);
-      expect(res).to.be.oneOf([
-        'Meet Lucy. She drives a Lexus.',
-        'Meet Sam. He drives a Subaru.',
-      ]);
-    });
-  });
 
   describe('Grammars', function () {
     const rules = {
@@ -103,6 +66,43 @@ describe(title, function () {
       expect(res).matches(/an ox(en)?/);
     });
 
+    it('Handles character choice in context', function () {
+      let context, script, res;
+
+      // simple case
+      context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
+      script = {
+        start: "$person.name",
+        "person": "$[a | b]"
+      };
+      res = RiGrammar.expand(script, context);
+      expect(res).to.be.oneOf(['Lucy', 'Sam']);
+
+      // more complex
+      context = {
+        lucy: {
+          name: 'Lucy',
+          pronoun: 'she',
+          car: 'Lexus'
+        },
+        sam: {
+          name: 'Sam',
+          pronoun: 'he',
+          car: 'Subaru'
+        },
+        //getChar: (name) => characters.filter(c => c.name === name)
+      };
+      script = {
+        start: "Meet $person.name. $person.pronoun().cap drives a $person.car().",
+        "#person": "$[sam | lucy]"
+      };
+      res = RiGrammar.expand(script, context);
+      expect(res).to.be.oneOf([
+        'Meet Lucy. She drives a Lexus.',
+        'Meet Sam. He drives a Subaru.',
+      ]);
+    });
+    
     it('Handles simple character choice in context', function () {
       let context, script, res;
 

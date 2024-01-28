@@ -371,9 +371,8 @@ describe(title, function () {
       expect(riscript.evaluate('[ @{ @and: [ {a: {@gt: 20}}, {b: {@lt: 25}} ] } hello]', { a: 23 })).eq('');
     });
 
-    it('Extract operands from  gate with object operands', function () {
+    it('Extract operands from gate with object operands', function () {
       const obj = { a: 3, $or: [{ b: { $lt: 30 } }, { c: /^p*/ }] };
-      console.log(JSON.stringify(obj));
       const query = new RiScript.Query(riscript, obj);
       const operands = query.operands(riscript, obj);
       expect(operands).eql(['a', 'c', 'b']);
