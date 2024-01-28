@@ -987,10 +987,10 @@ describe(title, function () {
     });
 
 
-    it('Pass scripting as this', function () {
+    it('Pass context as this', function () {
       let checkThis = function (word) {
-        expect(this).eq(riscript);
-        return word + (this == riscript ? ' success' : ' failure');
+        expect(this).eq(riscript.visitor.context);
+        return word + (this === riscript.visitor.context ? ' success' : ' failure');
       }
       let res = riscript.evaluate('[hello].checkThis', { checkThis });
       expect(res).eq('hello success');
@@ -1120,7 +1120,7 @@ describe(title, function () {
       expect(res).eq('The dog.rhymes');
 
       let addRhyme2 = function (word) {
-        return word + ' rhymes with bog' + this.RiTa.randi(1);
+        return word + ' rhymes with bog' + riscript.RiTa.randi(1);
       }
       expect(riscript.transforms.rhymes2).is.undefined;
       riscript.addTransform('rhymes2', addRhyme2);

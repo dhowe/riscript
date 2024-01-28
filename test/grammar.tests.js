@@ -19,7 +19,7 @@ describe(title, function () {
   });
 
   describe('Characters', function () {
-    it('Handles character choice in context', function () { 
+    it('Handles character choice in context', function () {
       let context, script, res;
 
       // simple case
@@ -116,32 +116,98 @@ describe(title, function () {
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
 
-    LTR && it('Should reference context from transforms', function () {
-      const context = {
-        characters: [{
-          name: 'Lucy',
-          pronoun: 'she',
-          car: 'Acura'
+    it('Should reference context from transforms', function () {
+      let ctx, rules, res;
+      ctx = {
+        prop: 42,
+        func: function () {
+          return this.prop;
         },
-        {
-          name: 'Sam',
-          pronoun: 'he',
-          car: 'Subaru'
-        }],
-        chooseChar: function () {
-          console.log('chooseChar:', typeof this);
-          let chars = this.visitor.context.characters;
-          return chars[Math.floor(Math.random() * chars.length)];
+      };
+      rules = { start: "$.func" }
+      res = RiGrammar.expand(rules, ctx);
+      expect(res).eq('42');
+
+      ctx = {
+        prop: { num: 42 },
+        func: function () {
+          return this.prop.num;
+        },
+      };
+      rules = { start: "$.func" }
+      res = RiGrammar.expand(rules, ctx);
+      expect(res).eq('42');
+
+      ctx = {
+        prop: { num: 42 },
+        func: function () {
+          return this.prop;
+        },
+      };
+      rules = { start: "$.func.num" }
+      res = RiGrammar.expand(rules, ctx);
+      expect(res).eq('42');
+
+      ctx = {
+        char: { name: 'bill', age: 42 },
+        func: function () {
+          return this.char;
+        },
+      };
+      rules = { start: "{$chosen=$.func} $chosen.name is $chosen.age years old" }
+      res = RiGrammar.expand(rules, ctx);
+      expect(res).eq('bill is 42 years old');
+
+      ctx = {
+        chars: [{ name: 'bill', age: 42 }, { name: 'dave', age: 43 }],
+        func: function () {
+          return this.chars[Math.floor(Math.random() * this.chars.length)];
+        },
+      };
+      rules = { start: "{#chosen=$.func} $chosen.name is $chosen.age years old" }
+      res = RiGrammar.expand(rules, ctx);
+      expect(res).to.be.oneOf([
+        'bill is 42 years old',
+        'dave is 43 years old',
+      ]);
+
+      ctx = {
+        chars: [{ name: 'bill', age: 42 }, { name: 'dave', age: 43 }],
+        func: function () {
+          return this.chars[Math.floor(Math.random() * this.chars.length)];
+        },
+      };
+      rules = { start: "{#chosen=$.func} $sent", sent: "$chosen.name is $chosen.age years old" }
+      res = RiGrammar.expand(rules, ctx);
+      expect(res).to.be.oneOf([
+        'bill is 42 years old',
+        'dave is 43 years old',
+      ]);
+
+      ctx = {
+        characters: [
+          {
+            name: 'Lucy',
+            pronoun: 'she',
+            car: 'Acura'
+          },
+          {
+            name: 'Sam',
+            pronoun: 'he',
+            car: 'Subaru'
+          }
+        ],
+        subject: function () {
+          return this.characters[Math.floor(Math.random() * this.characters.length)];
         }
       }
-      const rules = {
-        start: "{$person=$chooseChar()} $sentence",
-        sentence: "$Meet $person.name. $person.pronoun.cap() drives $person.car",
-        "#person": "$sam | $lucy"
+      rules = {
+        start: "{#person=$.subject()} $sentence",
+        sentence: "Meet $person.name. $person.pronoun.cap() drives $person.car.art().",
       }
-      let result = RiGrammar.expand(rules, context);
-      expect(result).to.be.oneOf([
-        'Meet Lucy. She drives a Acura.',
+      res = RiGrammar.expand(rules, ctx);
+      expect(res).to.be.oneOf([
+        'Meet Lucy. She drives an Acura.',
         'Meet Sam. He drives a Subaru.',
       ]);
     });

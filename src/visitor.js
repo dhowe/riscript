@@ -62,12 +62,12 @@ class BaseVisitor {
 class RiScriptVisitor extends BaseVisitor {
   constructor(riScript, context = {}) {
     super(riScript);
-    this.context = context;
 
     this.order = 0;
     this.trace = 0;
     this.indent = 0;
     this.choices = {};
+    this.context = context;
     this.isNoRepeat = false;
 
     this.Symbols = this.scripting.Symbols;
@@ -624,6 +624,55 @@ class RiScriptVisitor extends BaseVisitor {
     return value;
   }
 
+  applyTransform(target, transform) {
+
+    const image = transform.image;
+    const raw = target + image;
+    const original = formatAny(target) + image;
+    const tx = image.substring(1).replace(/\(\)$/, '');
+    const RiTa = this.scripting.RiTa;
+
+    let result;
+
+    // function in dynamics
+    if (typeof this.dynamics[tx] === 'function') {
+      result = this.dynamics[tx].bind(this.context)(target);
+    }
+    // function in statics
+    else if (typeof this.statics[tx] === 'function') {
+      result = this.statics[tx].call(this.context, target);
+    }
+    // function in context
+    else if (typeof this.context[tx] === 'function') {
+      result = this.context[tx].call(this.context, target);
+    }
+    // function in transforms
+    else if (typeof this.scripting.transforms[tx] === 'function') {
+      result = this.scripting.transforms[tx].call(this.context, target);
+    }
+    // member functions (usually on String)
+    else if (typeof target[tx] === 'function') {
+      result = target[tx]();// .call() ?
+    } else {
+      // check for property
+      if (target.hasOwnProperty(tx)) {
+        result = target[tx];
+      } else {
+        if (!RiTa.SILENT && !this.silent) {
+          console.warn('[WARN] Unresolved transform: ' + raw);
+        }
+
+        /* Replace transform parens so as not to trigger
+           RiScript.isParseable (for example, in v2) 0 */
+        result = raw.replace(/\(\)$/, '&lpar;&rpar;');
+      }
+    }
+
+    this.print('transform/', `${original} -> '${result}'`);
+
+    return result;
+  }
+
   // value is not yet resolved, so store with transform for later
   restoreTransforms(value, txs) {
     if (typeof value === 'string') {
@@ -661,55 +710,6 @@ class RiScriptVisitor extends BaseVisitor {
       }
     });
     return allResolved;
-  }
-
-  applyTransform(target, transform) {
-
-    const image = transform.image;
-    const raw = target + image;
-    const original = formatAny(target) + image;
-    const tx = image.substring(1).replace(/\(\)$/, '');
-    const RiTa = this.scripting.RiTa;
-
-    let result;
-
-    // function in dynamics
-    if (typeof this.dynamics[tx] === 'function') {
-      result = this.dynamics[tx].call(this.scripting, target);
-    }
-    // function in statics
-    else if (typeof this.statics[tx] === 'function') {
-      result = this.statics[tx].call(this.scripting, target);
-    }
-    // function in context
-    else if (typeof this.context[tx] === 'function') {
-      result = this.context[tx].call(this.scripting, target);
-    }
-    // function in transforms
-    else if (typeof this.scripting.transforms[tx] === 'function') {
-      result = this.scripting.transforms[tx].call(this.scripting, target);
-    }
-    // member functions (usually on String)
-    else if (typeof target[tx] === 'function') {
-      result = target[tx]();// .call() ?
-    } else {
-      // check for property
-      if (target.hasOwnProperty(tx)) {
-        result = target[tx];
-      } else {
-        if (!RiTa.SILENT && !this.silent) {
-          console.warn('[WARN] Unresolved transform: ' + raw);
-        }
-
-        /* Replace transform parens so as not to trigger
-           RiScript.isParseable (for example, in v2) 0 */
-        result = raw.replace(/\(\)$/, '&lpar;&rpar;');
-      }
-    }
-
-    this.print('transform/', `${original} -> '${result}'`);
-
-    return result;
   }
 
   lookupsToString() {
