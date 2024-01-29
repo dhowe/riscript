@@ -102,7 +102,7 @@ describe(title, function () {
         'Meet Sam. He drives a Subaru.',
       ]);
     });
-    
+
     it('Handles simple character choice in context', function () {
       let context, script, res;
 
@@ -444,17 +444,15 @@ describe(title, function () {
       expect(fail).false;
     });
 
-    // QUESTION: can no-repeats be used directly on choice?
-    if (LTR) it('Support norepeat symbol rules', function () {
+    it('Support norepeat inline rules', function () {
       let fail = false;
-      const names = '[a|b|c|d|e].nr()';
-      const g = { start: '$names $names', names };
+      const g = { start: '[$names=[a|b|c|d|e]] $names.nr()' };
       for (let i = 0; i < SEQ_COUNT; i++) {
-        const res = RiGrammar.expand(g)(T);
+        const res = RiGrammar.expand(g);
         expect(/^[a-e] [a-e]$/.test(res)).true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
-        console.log(i + ') ' + parts[0] + ' ' + parts[1]);
+        //console.log(i + ') ' + parts[0] + ' ' + parts[1]);
         if (parts[0] === parts[1]) {
           fail = true;
           break;
@@ -462,26 +460,6 @@ describe(title, function () {
       }
       expect(fail).false;
     });
-
-    // QUESTION: can no-repeats be used inline? No, because they must be assigned to the variable?
-    if (LTR)
-      it('Support norepeat inline rules', function () {
-        // TODO: Prob support this
-        let fail = false;
-        const g = { start: '[$names=[a|b|c|d|e]].nr() $names' };
-        for (let i = 0; i < SEQ_COUNT; i++) {
-          const res = RiGrammar.expand(g)(T);
-          expect(/^[a-e] [a-e]$/.test(res)).true;
-          const parts = res.split(' ');
-          expect(parts.length).eq(2);
-          console.log(i + ') ' + parts[0] + ' ' + parts[1]);
-          if (parts[0] === parts[1]) {
-            fail = true;
-            break;
-          }
-        }
-        expect(fail).false;
-      });
 
     it('Calls constructorJSON', function () {
       const json = JSON.stringify(sentences1);
@@ -998,13 +976,12 @@ describe(title, function () {
       }
     });
 
-    if (LTR)
-      it('Handles custom transforms on statics', function () {
-        // TODO: statics in grammar context
-        const context = { '#randomPosition': () => 'job type' };
-        const rg = new RiGrammar({ start: 'My $.randomPosition().' });
-        expect(rg.expand(context)).eq('My job type.');
-      });
+    LTR && it('Handles custom transforms on statics', function () {
+      // TODO: statics in grammar context
+      const context = { '#randomPosition': () => 'job type' };
+      const rg = new RiGrammar({ start: 'My $.randomPosition().' });
+      expect(rg.expand(context)).eq('My job type.');
+    });
 
     it('Handles custom transforms', function () {
       const context = { randomPosition: () => 'job type' };

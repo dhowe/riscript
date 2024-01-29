@@ -461,60 +461,6 @@ class RiScript {
     return result;
   }
 
-  // ========================= helpers ===============================
-
-  /** @private */
-  _createRegexes(tokens) {
-
-    const Esc = this.Escaped;
-    const open = Esc.OPEN_CHOICE;
-    const close = Esc.CLOSE_CHOICE;
-    const anysym = Esc.STATIC + Esc.DYNAMIC;
-
-    return {
-      LineBreaks: /\r?\n/,
-      EndingBreak: /\r?\n$/,
-      NonGateAtSigns: /([^}])@(?!{)/,
-      AnySymbol: new RegExp(`[${anysym}]`),
-      ParenthesizedWeights: /\((\s*\d+\s*)\)/g,
-      MultiLineComments: /\/\*[^]*?(\r?\n)?\//g,
-      SingleLineComments: /\/\/[^\n]+(\r?\n|$)/g,
-      MarkdownLinks: /\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g,
-      RawAssign: new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`),
-      JSOLIdent: new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g'),
-      ChoiceWrap: new RegExp('^' + open + '[^' + open + close + ']*' + close + '$'),
-      ValidSymbol: new RegExp('(' + Esc.DYNAMIC + '|' + Esc.STATIC + '[A-Za-z_0-9])[A-Za-z_0-9]*'),
-      Entity: tokens.filter(t => t.name === 'Entity')[0].PATTERN,
-      StaticSymbol: new RegExp(Esc.STATIC + '[A-Za-z_0-9][A-Za-z_0-9]*'),
-      Special: new RegExp(`[${Esc.SPECIAL.replace('&', '')}]`),
-      Continue: new RegExp(Esc.CONTINUATION + '\\r?\\n', 'g'),
-      Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
-    };
-  }
-
-  /** @private */
-  _createTransforms() {
-    let transforms = {
-      quotify: (w) => RiScript.quotify(w),
-      pluralize: (w) => RiScript.pluralize(w, this.RiTa),
-      articlize: (w) => RiScript.articlize(w, this.RiTa),
-      capitalize: (w) => RiScript.capitalize(w),
-      uppercase: (w) => RiScript.uppercase(w),
-      norepeat: (w) => RiScript.identity(w),
-    };
-
-    // aliases
-    transforms.art = transforms.articlize;
-    transforms.nr = transforms.norepeat;
-    transforms.cap = transforms.capitalize;
-    transforms.uc = transforms.uppercase;
-    transforms.qq = transforms.quotify;
-    transforms.s = transforms.pluralize;
-    transforms.ucf = transforms.capitalize; // @dep
-
-    return transforms;
-  }
-
   // ========================= statics ===============================
 
   /**
@@ -600,6 +546,60 @@ class RiScript {
    */
   static identity(s) {
     return s;
+  }
+
+    // ========================= helpers ===============================
+
+  /** @private */
+  _createRegexes(tokens) {
+
+    const Esc = this.Escaped;
+    const open = Esc.OPEN_CHOICE;
+    const close = Esc.CLOSE_CHOICE;
+    const anysym = Esc.STATIC + Esc.DYNAMIC;
+
+    return {
+      LineBreaks: /\r?\n/,
+      EndingBreak: /\r?\n$/,
+      NonGateAtSigns: /([^}])@(?!{)/,
+      AnySymbol: new RegExp(`[${anysym}]`),
+      ParenthesizedWeights: /\((\s*\d+\s*)\)/g,
+      MultiLineComments: /\/\*[^]*?(\r?\n)?\//g,
+      SingleLineComments: /\/\/[^\n]+(\r?\n|$)/g,
+      MarkdownLinks: /\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g,
+      RawAssign: new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`),
+      JSOLIdent: new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g'),
+      ChoiceWrap: new RegExp('^' + open + '[^' + open + close + ']*' + close + '$'),
+      ValidSymbol: new RegExp('(' + Esc.DYNAMIC + '|' + Esc.STATIC + '[A-Za-z_0-9])[A-Za-z_0-9]*'),
+      Entity: tokens.filter(t => t.name === 'Entity')[0].PATTERN,
+      StaticSymbol: new RegExp(Esc.STATIC + '[A-Za-z_0-9][A-Za-z_0-9]*'),
+      Special: new RegExp(`[${Esc.SPECIAL.replace('&', '')}]`),
+      Continue: new RegExp(Esc.CONTINUATION + '\\r?\\n', 'g'),
+      Whitespace: /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g,
+    };
+  }
+
+  /** @private */
+  _createTransforms() {
+    let transforms = {
+      quotify: (w) => RiScript.quotify(w),
+      pluralize: (w) => RiScript.pluralize(w, this.RiTa),
+      articlize: (w) => RiScript.articlize(w, this.RiTa),
+      capitalize: (w) => RiScript.capitalize(w),
+      uppercase: (w) => RiScript.uppercase(w),
+      norepeat: (w) => RiScript.identity(w),
+    };
+
+    // aliases
+    transforms.art = transforms.articlize;
+    transforms.nr = transforms.norepeat;
+    transforms.cap = transforms.capitalize;
+    transforms.uc = transforms.uppercase;
+    transforms.qq = transforms.quotify;
+    transforms.s = transforms.pluralize;
+    transforms.ucf = transforms.capitalize; // @dep
+
+    return transforms;
   }
 }
 
