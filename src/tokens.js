@@ -43,59 +43,6 @@ function getTokens(v2Compatible) {
 
   Escaped.SPECIAL = Object.values(Escaped).join('').replace(/[<>@]/g, ''); // allow <> for html, @ for md-links
 
-  const Gate = createToken({
-    name: "Gate",
-    line_breaks: true,
-    // @ts-ignore
-    pattern: bracketMatch
-  });
-
-  function bracketMatch(text, startOffset) {
-
-    if (!/^@/.test(text.substring(startOffset))) return null;
-
-    let endOffset = startOffset + 1;
-
-    let dbug = 0;
-    if (dbug) console.log('bracketMatch', text);
-    let charCode = text.charCodeAt(endOffset);
-
-    // spaces between the @ and the open brace 
-    while (charCode === 32) {
-      endOffset++;
-      charCode = text.charCodeAt(endOffset);
-    }
-    if (charCode !== 123) { // 123 = '{'
-      if (dbug) console.log(`  "${text.substring(startOffset, endOffset)}" -> null1`);
-      return null;
-    }
-    endOffset++;
-    charCode = text.charCodeAt(endOffset);
-    let depth = 1;
-    while (depth > 0) {
-      if (charCode === 123) depth++; // 123 = '{'
-      else if (charCode === 125) depth--; // 123 = '}'
-      // else if (charCode === openGate) {
-      //   if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null2`);
-      //   return null;
-      // }
-      if (dbug) console.log('  depth', depth, text.substring(startOffset, endOffset));
-      endOffset++;
-      charCode = text.charCodeAt(endOffset);
-    }
-
-    // No match, must return null xsto conform with the RegExp.prototype.exec signature
-    if (endOffset === startOffset) {
-      if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null3`);
-      return null;
-    } else {
-      let matchedString = text.substring(startOffset, endOffset);
-      // according to the RegExp.prototype.exec API the first item in the returned array must be the whole matched string.
-      if (dbug) console.log('  returned -> ', [matchedString]);
-      return [matchedString];
-    }
-  }
-
   const DYN = createToken({ name: "DYN", pattern: new RegExp(Escaped.DYNAMIC) });
   const STAT = createToken({ name: "STAT", pattern: new RegExp(Escaped.STATIC) });
   const OC = createToken({ name: "OC", pattern: new RegExp(Escaped.OPEN_CHOICE + '\\s*') });
@@ -107,16 +54,62 @@ function getTokens(v2Compatible) {
   const EQ = createToken({ name: "EQ", pattern: /\s*=\s*/ });
   const AMP = createToken({ name: "AMP", pattern: /&/ });
 
+  // Group placement allows for bare $ symbols here
+  const Symbol = createToken({ name: "Symbol", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*(\\(\\))?`) });
   const Transform = createToken({ name: "Transform", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
-  const Symbol = createToken({ name: "Symbol", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*`) });
   const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
   const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
   const PendingGate = createToken({ name: "PendingGate", pattern: PENDING_GATE_PATTERN });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
 
+  // @ts-ignore
+  const Gate = createToken({ name: "Gate", line_breaks: true, pattern: bracketMatch });
+
   const tokens = [Gate, Entity, Weight, ELSE, OC, CC, OR, EQ, Symbol, DYN, STAT, AMP, Transform, OS, CS, PendingGate, Raw];
 
   return { tokens, Constants: { Symbols, Escaped } };
+}
+
+function bracketMatch(text, startOffset) {
+
+  if (!/^@/.test(text.substring(startOffset))) return null;
+
+  let endOffset = startOffset + 1;
+
+  let dbug = 0;
+  if (dbug) console.log('bracketMatch', text);
+  let charCode = text.charCodeAt(endOffset);
+
+  // spaces between the @ and the open brace 
+  while (charCode === 32) {
+    endOffset++;
+    charCode = text.charCodeAt(endOffset);
+  }
+  if (charCode !== 123) { // 123 = '{'
+    if (dbug) console.log(`  "${text.substring(startOffset, endOffset)}" -> null1`);
+    return null;
+  }
+  endOffset++;
+  charCode = text.charCodeAt(endOffset);
+  let depth = 1;
+  while (depth > 0) {
+    if (charCode === 123) depth++; // 123 = '{'
+    else if (charCode === 125) depth--; // 123 = '}'
+    if (dbug) console.log('  depth', depth, text.substring(startOffset, endOffset));
+    endOffset++;
+    charCode = text.charCodeAt(endOffset);
+  }
+
+  // No match, must return null xsto conform with the RegExp.prototype.exec signature
+  if (endOffset === startOffset) {
+    if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null3`);
+    return null;
+  } else {
+    let matchedString = text.substring(startOffset, endOffset);
+    // according to the RegExp.prototype.exec API the first item in the returned array must be the whole matched string.
+    if (dbug) console.log('  returned -> ', [matchedString]);
+    return [matchedString];
+  }
 }
 
 function escapeRegex(s) {

@@ -153,7 +153,7 @@ class RiScript {
       console.error('Input: ' + opts.input + '\n', lexResult.errors[0].message);
       throw Error('[LEXING] ' + lexResult.errors[0].message);
     }
-    if (opts.trace) this._printTokens(lexResult.tokens);
+    if (opts.traceLex) this._printTokens(lexResult.tokens);
     opts.tokens = lexResult.tokens;
     // return lexResult;
   }
@@ -302,7 +302,7 @@ class RiScript {
       return str + tag + ', ';
     }, '')
       .slice(0, -2);
-    //console.log('\nTokens: [ ' + s + ' ]  Context:', this.visitor.lookupsToString());
+    console.log('\nTokens: [ ' + s + ' ]\n');//  Context:', this.visitor.lookupsToString());
   }
 
   /** @private */

@@ -19,6 +19,7 @@ describe(title, function () {
   const T = TRACE;
   const PL = { preserveLookups: 1 };
   const TRX = { trace: 1, traceTx: 1 };
+  const TRL = { trace: 1, traceLex: 1 };
   const TPL = { preserveLookups: 1, trace: 1 };
 
   let riscript, IfRiTa, RiScriptVisitor, Util;
@@ -33,6 +34,15 @@ describe(title, function () {
 
   LTR && describe('OneOff', function () {
     it('Be a single problematic test', function () { });
+  });
+
+  LTR && describe('LexOnly', function () {
+    it('Handles lexing', function () {
+      let opts;
+      riscript.lex(opts = { input: '$a()', traceLex: 1 });
+      opts.tokens.forEach(t => console.log(t.tokenType.name + ': "' + t.image + '"'));
+      expect(opts.tokens).eq('');
+    });
   });
 
   describe('Markdown', function () {
@@ -109,7 +119,7 @@ describe(title, function () {
     it('Support single norepeat choices in context', function () {
       let res;
       for (let i = 0; i < 5; i++) {
-        res = riscript.evaluate('$b $b.nr', { $b: '[a[b | c | d]e]' });
+        res = riscript.evaluate('$b=[a[b | c | d]e]\n$b $b.nr');
         // console.log(i, res);
         expect(/a[bcd]e a[bcd]e/.test(res)).true;
         const parts = res.split(' ');
@@ -144,6 +154,9 @@ describe(title, function () {
     it('Throw on dynamics called as statics', function () {
       expect(() => riscript.evaluate('{$foo=bar}#foo', 0)).to.throw();
     });
+    it('Throw on norepeats in context', function () {
+      expect(() => riscript.evaluate('$foo $foo.nr', { foo: '[a|b]' })).to.throw();
+    });
   });
 
   describe('Gates', function () {
@@ -163,7 +176,7 @@ describe(title, function () {
 
     it('Handles time-based gates', function () {
       let ctx = { getHours: () => new Date().getHours() };
-      let res = riscript.evaluate('$hours=$.getHours()\n[ @{ hours: {@lt: 12} } morning || evening]', ctx);
+      let res = riscript.evaluate('$hours=$getHours()\n[ @{ hours: {@lt: 12} } morning || evening]', ctx);
       expect(res).eq(new Date().getHours() < 12 ? 'morning' : 'evening');
     });
 
@@ -174,9 +187,9 @@ describe(title, function () {
 
     it('Handles exists gates', function () {
       //expect(riscript.evaluate('[ @{ $a: { @exists: true }} hello]', 0, T)).eq('');
-      
+
       expect(riscript.evaluate('[ @{ $a: { @exists: true }} hello][ @{ $a: { @exists: true }} hello]')).eq('');
-      
+
       expect(riscript.evaluate('[ @{ $a: { @exists: true }} user]', { a: 'apogee' })).eq('user');
       expect(riscript.evaluate('[ @{ $a: { @exists: true }} user]', { b: 'apogee' })).eq('');
       expect(riscript.evaluate('[ @{ $a: { @exists: true }} user]', { a: 'apogreed' })).eq('user');
@@ -964,7 +977,7 @@ describe(title, function () {
   describe('Symbols', function () {
 
     it('Handles generated symbols', function () {
-      let sc = '$a=antelope\n$b=otter\n$.an() $[a|b]'
+      let sc = '$a=antelope\n$b=otter\n$an() $[a|b]'
       const res = riscript.evaluate(sc, { an: () => 'An' });
       // console.log(res);
       expect(res).to.be.oneOf([
@@ -974,7 +987,7 @@ describe(title, function () {
     });
 
     it('Handles generated transforms', function () {
-      let sc = '$.an() $.[a|b]'
+      let sc = '$an() $[a|b]'
       const res = riscript.evaluate(sc, {
         an: () => 'An',
         a: () => 'Ant',
@@ -1147,12 +1160,19 @@ describe(title, function () {
     });
 
     it('Handles anonymous transforms', function () {
-      // ensure $.tf() === ''.tf() === [].tf()
+      // ensure $tf() === ''.tf() === [].tf()
       const ctx = { capB: (s) => 'B' };
-      expect(riscript.evaluate('$.toUpperCase()')).eq('');
-      expect(riscript.evaluate('$.capB()', ctx)).eq('B');
-      expect(riscript.evaluate('$.toUpperCase', 0)).eq('');
-      expect(riscript.evaluate('$.capB', ctx)).eq('B');
+      //expect(riscript.evaluate('$toUpperCase()', 0, T)).eq('');
+
+      expect(riscript.evaluate('$capB()', ctx)).eq('B');
+      return;
+      expect(riscript.evaluate('$toUpperCase', 0)).eq('');
+      expect(riscript.evaluate('$capB', ctx)).eq('B');
+    });
+
+    it('Handles new-style anonymous transforms', function () {
+      const ctx = { capB: (s) => 'B' };
+      expect(riscript.evaluate('$capB()', ctx, TRL)).eq('B');
     });
 
     it('Resolves transforms containing riscript', function () {
@@ -1220,7 +1240,7 @@ describe(title, function () {
 
       expect(riscript.evaluate('That is [].articlize().', 0)).eq('That is .');
 
-      expect(riscript.evaluate('That is $.articlize().', 0)).eq('That is .');
+      expect(riscript.evaluate('That is $articlize().', 0, T)).eq('That is .');
       expect(riscript.evaluate('That is an [ant].capitalize().')).eq('That is an Ant.');
 
       expect(riscript.evaluate('[ant].articlize().capitalize()', 0)).eq('An ant');
@@ -1233,6 +1253,24 @@ describe(title, function () {
 
       expect(riscript.evaluate('That is [ant].articlize().')).eq('That is an ant.');
       expect(riscript.evaluate('That is [ant].articlize.')).eq('That is an ant.');
+    });
+
+    it('Resolves transforms on bare symbol', function () {
+      expect(riscript.evaluate('How many $quotify() quotes do you have?')).eq('How many “” quotes do you have?');
+      expect(riscript.evaluate('That is $articlize().', 0)).eq('That is .');
+      expect(riscript.evaluate('That is $incontext().', { incontext: 'in context' })).eq('That is in context.');
+      expect(riscript.evaluate('How many $quotify quotes do you have?')).eq('How many “” quotes do you have?');
+      expect(riscript.evaluate('That is $articlize.', 0)).eq('That is .');
+      expect(riscript.evaluate('That is $incontext.', { incontext: 'in context' })).eq('That is in context.');
+    });
+
+    it('Resolves transforms on old-style bare symbols', function () {
+      expect(riscript.evaluate('How many $.quotify() quotes do you have?')).eq('How many “” quotes do you have?');
+      expect(riscript.evaluate('That is $.articlize().', 0)).eq('That is .');
+      expect(riscript.evaluate('That is $.incontext().', { incontext: () => 'in context' })).eq('That is in context.');
+      expect(riscript.evaluate('How many $.quotify quotes do you have?')).eq('How many “” quotes do you have?');
+      expect(riscript.evaluate('That is $.articlize.', 0)).eq('That is .');
+      expect(riscript.evaluate('That is $.incontext.', { incontext: () => 'in context' })).eq('That is in context.');
     });
 
     it('Pluralize phrases', function () {

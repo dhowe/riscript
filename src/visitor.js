@@ -213,7 +213,7 @@ class RiScriptVisitor extends BaseVisitor {
 
     const isSilent = opts?.silent;
     const original = this.nodeText;
-    const sym = ctx.Symbol[0].image;
+    const sym = ctx.Symbol[0].image.replace(/\(\)$/, '');
     const ident = sym.replace(this.scripting.regex.AnySymbol, '');
     this.isNoRepeat = this.hasNoRepeat(ctx.Transform);
 
@@ -229,12 +229,14 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
 
+    // if we have a function, call it here (potentially many times)
     for (let i = 0; typeof result === 'function'; i++) {
-      result = result.call(); // call it
+      result = result.call();
       resolved = !this.scripting.isParseable(result);
       if (i === this.maxRecursionDepth) throw Error('Max recursion depth reached');
     }
 
+    // check for norepeat on a non-dynamic symbol and throw if found
     if (this.isNoRepeat && (isStatic || isUser)) {
       this.isNoRepeat = false;
       const msg = 'Attempt to call norepeat() on ' + (isStatic
@@ -245,40 +247,38 @@ class RiScriptVisitor extends BaseVisitor {
       throw Error(msg);
     }
 
-    if (typeof result === 'undefined') {       // nothing found, defer
+    // nothing found thus far, so defer for now
+    if (typeof result === 'undefined') {
       this.print('/symbol', sym + " -> '" + original + "' ctx=" +
         this.lookupsToString(), '[deferred]', opts?.silent ? '{silent}' : '');
       return original;
     }
 
-    let info = `${original} -> ${formatAny(result)} ${opts?.silent ? ' {silent}' : ''}`;
+    let info = opts?.trace ? `${original.replace(/\(\)$/, '')} -> ${formatAny(result)}`
+      + (opts?.silent ? ' {silent}' : '') : null; // for logging
 
-    // defer if we still have unresolved riscript
+    // also defer if we still have unresolved script
     if (typeof result === 'string' && !resolved) {
-
       if (isStatic) {
         result = this.inlineStaticAssign(ident, ctx.Transform, result);
         this.print('/symbol', `${original} -> ${result}`);// :: pending.add(${ident})`);
-
       } else {
         if (ctx.Transform) result = this.restoreTransforms(result, ctx.Transform);
         this.print('/symbol', info);
       }
-
       return result;
     }
 
-    if (isStatic) {
-      // store !untransformed! result in static context
-      this.statics[ident] = result; // ADDED 8/18/23,FIXED 10/8/23
-    }
+    // store untransformed result in static context
+    if (isStatic) this.statics[ident] = result; // ADDED 8/18/23, FIXED 10/8/23
 
+    // finally, apply any transforms
     if (ctx.Transform) {
       result = this.applyTransforms(result, ctx.Transform);
       info += "-> '" + result + "'";
       if (this.isNoRepeat) info += ' (norepeat)';
     }
-    else if (result.length === 0) {
+    else if (result.length === 0 && sym.length === 1) {
       // this is a raw $, without transform, keep it DCH: 1/21/24
       result = sym;
       info = '** $ **';
@@ -295,7 +295,7 @@ class RiScriptVisitor extends BaseVisitor {
     const original = this.nodeText;
     const choiceKey = stringHash(original + ' #' + this.choiceId(ctx));
 
-    let  gateText, gateResult, hasTransforms = ctx.Transform;
+    let gateText, gateResult, hasTransforms = ctx.Transform;
 
     if (!this.isNoRepeat && this.hasNoRepeat(ctx.Transform)) {
       throw Error('noRepeat() not allowed on choice '
@@ -438,7 +438,7 @@ class RiScriptVisitor extends BaseVisitor {
     const resolvedOps = {};
     const unresolvedOps = [];
     const operands = mingoQuery.operands();
-    operands.forEach((sym) => { 
+    operands.forEach((sym) => {
       let { result, resolved, isStatic, isUser } = this.checkContext(sym);
 
       for (let i = 0; typeof result === 'function'; i++) {
@@ -446,7 +446,7 @@ class RiScriptVisitor extends BaseVisitor {
         resolved = !this.scripting.isParseable(result);
         if (i === this.maxRecursionDepth) throw Error('Max recursion depth reached');
       }
-  
+
       if (typeof result === 'undefined' || !resolved) {
         unresolvedOps.push(sym);
       } else {
@@ -531,16 +531,15 @@ class RiScriptVisitor extends BaseVisitor {
     let isUser = false;
     let result;
 
-    if (ident.length === 0) { // empty symbol
+    // empty symbol, just return
+    if (ident.length === 0) { 
       return { result: '', resolved: true, isStatic, isUser };
     }
 
     // check for dynamic symbol: $var
     result = this.dynamics[ident];
     if (typeof result === 'undefined') {
-      // no dynamic
-
-      // check for static symbol: #var
+      // no dynamic, check for static symbol: #var
       result = this.statics[ident];
       if (typeof result !== 'undefined') {
         isStatic = true; // found static
@@ -548,19 +547,16 @@ class RiScriptVisitor extends BaseVisitor {
     }
 
     if (typeof result === 'undefined') {
-      // no static
-      // check for user-defined symbol: context[var]
+      // no static, check for user-defined symbol: context[var]
       result = this.context[ident];
       if (typeof result !== 'undefined') {
         isUser = true; // found user symbol
-      } else {
-        // check for user-defined dynamic? context[$var]
-        result = this.context[this.Symbols.DYNAMIC + ident];
-        if (typeof result !== 'undefined') {
-          // no static
-          // note: treat as normal dynamic, isUser = false
-        }
-      }
+      } 
+    }
+
+    if (typeof result === 'undefined') {
+      // last option: check for bare transform: $var()
+      result = this.scripting.transforms[ident];
     }
 
     // do we have more script to deal with ?
