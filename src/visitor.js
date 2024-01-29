@@ -427,7 +427,7 @@ class RiScriptVisitor extends BaseVisitor {
       mingoQuery = this.scripting.createQuery(raw);
     } catch (e) {
       if (!this.warnOnInvalidGates) {
-        throw Error(`Invalid gate[2]: "@${raw}@"\n\nRootCause -> ${e}`);
+        throw Error(`Invalid gate[2]: "@${raw}"\n\nRootCause -> ${e}`);
       }
       if (!this.scripting.RiTa.SILENT && !this.nowarn) {
         console.warn(`[WARN] Ignoring invalid gate: @${raw}@\n`, e);

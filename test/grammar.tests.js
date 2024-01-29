@@ -323,7 +323,7 @@ describe(title, function () {
     it('Handles gates in grammars', function () {
       const script = {
         '#noun': '[man | woman]',
-        start: '#noun[@{noun: "man"} :boy]'
+        start: '$noun[@{$noun: "man"} :boy]'
       };
       const res = RiGrammar.expand(script);
       // console.log(res);
@@ -421,7 +421,7 @@ describe(title, function () {
 
     const grammars = [sentences1, sentences2, sentences3];
 
-    it('Call constructor', function () {
+    it('Calls constructor', function () {
       expect(typeof new RiGrammar() !== 'undefined');
     });
 
@@ -483,7 +483,7 @@ describe(title, function () {
         expect(fail).false;
       });
 
-    it('Call constructorJSON', function () {
+    it('Calls constructorJSON', function () {
       const json = JSON.stringify(sentences1);
 
       const gr1 = new RiGrammar(JSON.parse(json));
@@ -497,7 +497,7 @@ describe(title, function () {
       expect(() => new RiGrammar("notjson")).to.throw();
     });
 
-    it('Call static expandFrom', function () {
+    it('Calls static expandFrom', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet');
       rg.addRule('pet', '[$bird | $mammal]');
@@ -528,7 +528,7 @@ describe(title, function () {
       }
     });
 
-    it('Allow rules starting with numbers', function () {
+    it('Allows rules starting with numbers', function () {
       let rg, rs;
 
       rg = new RiGrammar({
@@ -549,7 +549,7 @@ describe(title, function () {
       expect(rs).to.be.oneOf(['Dave', 'Jill', 'Pete']);
     });
 
-    it('Allow static rules starting with numbers', function () {
+    it('Allows static rules starting with numbers', function () {
       let rg, rs;
 
       rg = new RiGrammar({
@@ -568,7 +568,7 @@ describe(title, function () {
       expect(rs).to.be.oneOf(['Dave', 'Jill', 'Pete']);
     });
 
-    it('Call setRules', function () {
+    it('Calls setRules', function () {
       let rg = new RiGrammar();
       expect(typeof rg.rules !== 'undefined');
       expect(typeof rg.rules.start === 'undefined');
@@ -588,7 +588,7 @@ describe(title, function () {
       expect(rg.expand().length > 0);
     });
 
-    it('Call fromJSON with string', function () {
+    it('Calls fromJSON with string', function () {
       grammars.forEach((g) => {
         // as JSON strings
         const rg = RiGrammar.fromJSON(JSON.stringify(g));
@@ -599,7 +599,7 @@ describe(title, function () {
       });
     });
 
-    it('Call removeRule', function () {
+    it('Calls removeRule', function () {
       grammars.forEach((g) => {
         const rg1 = new RiGrammar(g);
         expect(rg1.rules.start).not.undefined;
@@ -619,7 +619,7 @@ describe(title, function () {
       });
     });
 
-    it('Call static removeRule', function () {
+    it('Calls static removeRule', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet');
       rg.addRule('pet', '[$bird | $mammal]');
@@ -645,7 +645,7 @@ describe(title, function () {
       expect(rg.rules.mammal).not.undefined;
     });
 
-    it('Throw on missing rules', function () {
+    it('Throws on missing rules', function () {
       let rg = new RiGrammar();
       expect(() => rg.expand()).to.throw();
 
@@ -656,7 +656,7 @@ describe(title, function () {
       expect(() => rg.expand()).to.throw(); // no start rule
     });
 
-    it('Call expandFrom', function () {
+    it('Calls expandFrom', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet');
       rg.addRule('pet', '[$bird | $mammal]');
@@ -669,7 +669,7 @@ describe(title, function () {
       }
     });
 
-    it('Throw on bad grammars', function () {
+    it('Throws on bad grammars', function () {
       expect(() => new RiGrammar({ '': 'pet' })).to.throw();
       expect(() => new RiGrammar({ $start: 'pet' })).to.throw();
       expect(() => new RiGrammar('"{start": "pet" }')).to.throw();
@@ -684,7 +684,7 @@ describe(title, function () {
       expect(() => new RiGrammar().removeRule('nonexistent')).not.to.throw();
     });
 
-    it('Call toString', function () {
+    it('Calls toString', function () {
       let rg = new RiGrammar({ start: 'pet' });
       expect(rg.toString()).eq('{\n  "start": "pet"\n}');
       rg = new RiGrammar({ start: '$pet', pet: 'dog' });
@@ -713,7 +713,7 @@ describe(title, function () {
       expect(rg.toString()).eq('{\n  "start": "$pet.articlize()",\n  "#pet": "[dog | cat]"\n}');
     });
 
-    it('Call toString with arg', function () {
+    it('Calls toString with arg', function () {
       const lb = { linebreak: '<br/>' };
 
       let rg = new RiGrammar({ start: 'pet' });
@@ -740,7 +740,7 @@ describe(title, function () {
         '{<br/>  "start": "$pet.articlize()",<br/>  "#pet": "dog | cat"<br/>}');
     });
 
-    it('Call expand', function () {
+    it('Calls expand', function () {
       let rg = new RiGrammar();
       rg.addRule('start', 'pet');
       expect(rg.expand(), 'pet');
@@ -768,7 +768,7 @@ describe(title, function () {
       expect(() => new RiGrammar().addRule('pet', 'dog').expand()).to.throw(); // no start ule
     });
 
-    it('Override dynamic default', function () {
+    it('Overrides dynamic default', function () {
 
       // here is the normal (dynamic) behavior
       let rg = new RiGrammar();
@@ -799,7 +799,7 @@ describe(title, function () {
       }
     });
 
-    it('Call expand.weights', function () {
+    it('Calls expand.weights', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$rule1');
       rg.addRule('rule1', 'cat | dog | boy');
@@ -816,7 +816,7 @@ describe(title, function () {
       expect(found1 && found2 && found3); // found all
     });
 
-    it('Call expandFrom.weights', function () {
+    it('Calls expandFrom.weights', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet');
       rg.addRule('pet', '$bird (9) | $mammal');
@@ -837,7 +837,7 @@ describe(title, function () {
       expect(hawks > dogs * 2, 'got h=' + hawks + ', ' + dogs);
     });
 
-    it('Call addRule', function () {
+    it('Calls addRule', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet'); // default
       expect(typeof rg.rules.start).not.undefined;
@@ -850,7 +850,7 @@ describe(title, function () {
       expect(() => rg.addRule('start')).to.throw();
     });
 
-    it('Call expandFrom.weights.static', function () {
+    it('Calls expandFrom.weights.static', function () {
       const rg = new RiGrammar();
       rg.addRule('start', '$pet $pet');
       rg.addRule('#pet', '$bird (9) | $mammal');
@@ -952,7 +952,7 @@ describe(title, function () {
       }
     });
 
-    it('Allow context in expand', function () {
+    it('Allows context in expand', function () {
       let ctx, rg;
       ctx = { randomPosition: () => 'job type' };
 
@@ -1205,7 +1205,7 @@ describe(title, function () {
       }
     });
 
-    it('Call to/from JSON', function () {
+    it('Calls to/from JSON', function () {
       let json, rg, rg2, generatedJSON;
 
       // fromJSON Throw on non-json-string

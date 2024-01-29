@@ -19,19 +19,23 @@ const { escapeText, slashEscToEntities, escapeMarkdownLink, escapeJSONRegex } = 
 class RiQuery extends Query {
 
   constructor(scripting, condition, options) {
-    if (typeof condition === 'string') {
-      condition = condition.replace(/\$/g, '').replace(/@/g, '$');
-    }
-    else {
+
+    if (typeof condition !== 'string') {
       try {
         condition = JSON.stringify(condition);
       }
       catch (e) {
-        throw Error(condition.toString().includes('@')
-          ? 'Replace @ with $ when passing a JS object to RiQuery\nRoot: ' + e : e);
+        throw Error(condition.toString().includes('@') ?
+          'Replace @ with $ when passing an object to RiQuery\nRoot: ' + e : e);
       }
     }
+
+    if (!condition.includes('$')) throw Error('Invalid Gate: \''
+      + condition + "' -> operand must include $symbol or $function()");
+
+    condition = condition.replace(/(\$|\(\))/g, '').replace(/@/g, '$');
     condition = scripting.parseJSOL(condition);
+    
     super(condition, options);
   }
 
@@ -452,7 +456,7 @@ class RiScript {
     }
     if (typeof s === 'string') {
       result = this.regex.Special.test(s) || s.includes(this.Symbols.PENDING_GATE)
-       // || this.pendingGateRe.test(s);
+      // || this.pendingGateRe.test(s);
     }
     return result;
   }
