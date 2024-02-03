@@ -58,7 +58,7 @@ function getTokens(v2Compatible) {
   const Symbol = createToken({ name: "Symbol", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*(\\(\\))?`) });
   const Transform = createToken({ name: "Transform", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
   const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
-  const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}.+${Escaped.CLOSE_WEIGHT}\\s*`) });
+  const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}\\d+${Escaped.CLOSE_WEIGHT}\\s*`) }); // TODO: change for negative weights
   const PendingGate = createToken({ name: "PendingGate", pattern: PENDING_GATE_PATTERN });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
 

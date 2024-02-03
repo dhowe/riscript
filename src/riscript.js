@@ -273,10 +273,10 @@ class RiScript {
         + ' Pass#' + i + ' ' + '-'.repeat(20));
 
       options.input = expr;
-      expr = this.lexParseVisit(options); // do it
-
+      expr = this.lexParseVisit(options) ?? '';// do it
+      
       if (trace) {
-        console.log(`Result(${i}) -> "` + `${escapeText(expr)}"`
+        console.log(`Result(${i}) -> "` + `${escapeText(expr||'')}"`
           + ` ctx=${this.visitor.lookupsToString()}`);
       }
 
@@ -563,7 +563,7 @@ class RiScript {
       EndingBreak: /\r?\n$/,
       NonGateAtSigns: /([^}])@(?!{)/,
       AnySymbol: new RegExp(`[${anysym}]`),
-      ParenthesizedWeights: /\((\s*\d+\s*)\)/g,
+      ParenthesizedWeights: /\(\s*(\d+)\s*\)/g, // TODO: change for negative weights
       MultiLineComments: /\/\*[^]*?(\r?\n)?\//g,
       SingleLineComments: /\/\/[^\n]+(\r?\n|$)/g,
       MarkdownLinks: /\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g,
