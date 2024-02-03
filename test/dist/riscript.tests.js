@@ -484,13 +484,23 @@ describe(title, function() {
       ]);
       expect(riscript.evaluate("[ a (2) | a (3) ]", {})).eq("a");
       expect(riscript.evaluate("[ a ( 2) | a (3 ) ]", {})).eq("a");
-      const result = { b: 0, a: 0 };
+      let result = { b: 0, a: 0 };
+      for (let i = 0; i < 100; i++) {
+        const ans = riscript.evaluate("[a(1) | b (3)]");
+        if (!/^[ab]$/.test(ans))
+          throw Error("invalid: " + ans);
+        result[ans]++;
+      }
+      expect(result.a).gt(0);
+      expect(result.b).gt(result.a);
+      result = { b: 0, a: 0 };
       for (let i = 0; i < 100; i++) {
         const ans = riscript.evaluate("[a | b (3)]");
         if (!/^[ab]$/.test(ans))
           throw Error("invalid: " + ans);
         result[ans]++;
       }
+      expect(result.a).gt(0);
       expect(result.b).gt(result.a);
     });
   });
