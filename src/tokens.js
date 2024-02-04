@@ -58,7 +58,7 @@ function getTokens(v2Compatible) {
   const Symbol = createToken({ name: "Symbol", pattern: new RegExp(`(${Escaped.DYNAMIC}|${Escaped.STATIC}[A-Za-z_0-9])[A-Za-z_0-9]*(\\(\\))?`) });
   const Transform = createToken({ name: "Transform", pattern: /\.[A-Za-z_0-9][A-Za-z_0-9]*(\(\))?/ });
   const Entity = createToken({ name: "Entity", pattern: ENTITY_PATTERN });
-  const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}\\d+${Escaped.CLOSE_WEIGHT}\\s*`) }); // TODO: change for negative weights
+  const Weight = createToken({ name: "Weight", pattern: new RegExp(`\\s*${Escaped.OPEN_WEIGHT}-?\\d+${Escaped.CLOSE_WEIGHT}\\s*`) });
   const PendingGate = createToken({ name: "PendingGate", pattern: PENDING_GATE_PATTERN });
   const Raw = createToken({ name: "Raw", pattern: new RegExp(`[^${Escaped.SPECIAL}]+`) });
 
@@ -100,13 +100,13 @@ function bracketMatch(text, startOffset) {
     charCode = text.charCodeAt(endOffset);
   }
 
-  // No match, must return null xsto conform with the RegExp.prototype.exec signature
+  // No match, must return null to conform with the RegExp.prototype.exec
   if (endOffset === startOffset) {
     if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null3`);
     return null;
   } else {
     let matchedString = text.substring(startOffset, endOffset);
-    // according to the RegExp.prototype.exec API the first item in the returned array must be the whole matched string.
+    // according to RegExp.prototype.exec API first item in the returned array must be the whole matched string
     if (dbug) console.log('  returned -> ', [matchedString]);
     return [matchedString];
   }

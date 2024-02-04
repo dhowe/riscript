@@ -328,7 +328,7 @@ describe(title, function () {
     it('Handles boolean gate logic', function () {
       // reject if no valid conditions
       expect(riscript.evaluate('$a=2\n[ @{$a: {}} hello]')).eq('');
-      
+
       // simple AND
       expect(riscript.evaluate('$a=2\n[ @{$a: {@gt: 3}} hello]')).eq('');
       expect(riscript.evaluate('$a=4\n[ @{$a: {@gt: 3}} hello]')).eq('hello');
@@ -375,7 +375,7 @@ describe(title, function () {
     });
 
     it('Extract operands from gate with object operands', function () {
-      const obj = { $a: 3, '@or': [{ $b: {'@lt': 30 } }, { $c: /^p*/ }] };
+      const obj = { $a: 3, '@or': [{ $b: { '@lt': 30 } }, { $c: /^p*/ }] };
       const query = new RiScript.Query(riscript, obj);
       const operands = query.operands(riscript, obj);
       expect(operands).eql(['a', 'c', 'b']);
@@ -389,8 +389,8 @@ describe(title, function () {
     });
 
     it('Calls test on RiQuery', function () {
-    const obj = { $a: 3, '@or': [{ $b: {'@lt': 30 } }, { $c: /^p*/ }] };
-    const query = new RiScript.Query(riscript, obj);
+      const obj = { $a: 3, '@or': [{ $b: { '@lt': 30 } }, { $c: /^p*/ }] };
+      const query = new RiScript.Query(riscript, obj);
       const res = query.test({ a: 3, b: 10 });
       expect(res).true;
     });
@@ -519,17 +519,18 @@ describe(title, function () {
     });
 
     it('Repeat choices with randomSeed', function () {
-      if (!('randomSeed' in riscript.RiTa)) return;
-      const seed = Math.random() * Number.MAX_SAFE_INTEGER;
-      const script = '$a=[1|2|3|4|5|6]\n$a';
-      riscript.RiTa.randomSeed(seed); // TODO: How to handle with no RiTa ?
-      let b;
-      const a = riscript.evaluate(script);
-      for (let i = 0; i < 5; i++) {
+      if ('randomSeed' in riscript.RiTa) {
+        const seed = Math.random() * Number.MAX_SAFE_INTEGER;
+        const script = '$a=[1|2|3|4|5|6]\n$a';
         riscript.RiTa.randomSeed(seed); // TODO: How to handle with no RiTa ?
-        b = riscript.evaluate(script);
-        // console.log(i + ') ', a, b);
-        expect(a).eq(b);
+        let b;
+        const a = riscript.evaluate(script);
+        for (let i = 0; i < 5; i++) {
+          riscript.RiTa.randomSeed(seed); // TODO: How to handle with no RiTa ?
+          b = riscript.evaluate(script);
+          // console.log(i + ') ', a, b);
+          expect(a).eq(b);
+        }
       }
     });
 
@@ -1175,7 +1176,8 @@ describe(title, function () {
       expect(riscript.evaluate('$.uppercase()')).eq('');
       expect(riscript.evaluate('$.capB()', ctx)).eq('B');
       expect(riscript.evaluate('$.uppercase', 0)).eq('');
-      expect(riscript.evaluate('[].capB', ctx)).eq('B');    });
+      expect(riscript.evaluate('[].capB', ctx)).eq('B');
+    });
 
     it('Resolves transforms containing riscript', function () {
       let ctx;

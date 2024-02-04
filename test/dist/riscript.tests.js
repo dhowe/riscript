@@ -393,17 +393,17 @@ describe(title, function() {
       expect(/(man|boy):(man|boy)/.test(res)).true;
     });
     it("Repeat choices with randomSeed", function() {
-      if (!("randomSeed" in riscript.RiTa))
-        return;
-      const seed = Math.random() * Number.MAX_SAFE_INTEGER;
-      const script = "$a=[1|2|3|4|5|6]\n$a";
-      riscript.RiTa.randomSeed(seed);
-      let b;
-      const a = riscript.evaluate(script);
-      for (let i = 0; i < 5; i++) {
+      if ("randomSeed" in riscript.RiTa) {
+        const seed = Math.random() * Number.MAX_SAFE_INTEGER;
+        const script = "$a=[1|2|3|4|5|6]\n$a";
         riscript.RiTa.randomSeed(seed);
-        b = riscript.evaluate(script);
-        expect(a).eq(b);
+        let b;
+        const a = riscript.evaluate(script);
+        for (let i = 0; i < 5; i++) {
+          riscript.RiTa.randomSeed(seed);
+          b = riscript.evaluate(script);
+          expect(a).eq(b);
+        }
       }
     });
     it("Selects non-weighted choices evenly", function() {

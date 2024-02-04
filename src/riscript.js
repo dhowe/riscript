@@ -563,7 +563,7 @@ class RiScript {
       EndingBreak: /\r?\n$/,
       NonGateAtSigns: /([^}])@(?!{)/,
       AnySymbol: new RegExp(`[${anysym}]`),
-      ParenthesizedWeights: /\(\s*(\d+)\s*\)/g, // TODO: change for negative weights
+      ParenthesizedWeights: /\(\s*(-?\d+)\s*\)/g,
       MultiLineComments: /\/\*[^]*?(\r?\n)?\//g,
       SingleLineComments: /\/\/[^\n]+(\r?\n|$)/g,
       MarkdownLinks: /\[([^\]]+)\]\(([^)"]+)(?: \"([^\"]+)\")?\)/g,
