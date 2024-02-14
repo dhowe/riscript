@@ -75,7 +75,7 @@ describe(title, function() {
         expect(parts[0], parts[1]).not.eq;
       }
     });
-    it("Supports single norepeat choices ", function() {
+    it("Supports single norepeat choices", function() {
       let res;
       for (let i = 0; i < 10; i++) {
         res = riscript.evaluate("$b=a[b|c|d]e\n$b $b.nr");
@@ -84,9 +84,6 @@ describe(title, function() {
         expect(parts.length).eq(2);
         expect(parts[0], parts[1]).not.eq;
       }
-    });
-    it("Supports single norepeat choices in context", function() {
-      let res;
       for (let i = 0; i < 5; i++) {
         res = riscript.evaluate("$b=[a[b | c | d]e]\n$b $b.nr");
         expect(/a[bcd]e a[bcd]e/.test(res)).true;

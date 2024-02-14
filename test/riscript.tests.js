@@ -103,21 +103,17 @@ describe(title, function () {
       }
     });
 
-    it('Supports single norepeat choices ', function () {
+    it('Supports single norepeat choices', function () {
       // FIX FOR rita#157
       let res;
       for (let i = 0; i < 10; i++) {
         res = riscript.evaluate('$b=a[b|c|d]e\n$b $b.nr');
-        // console.log(i,res);
+        //console.log(i,res);
         expect(/a[bdc]e a[bdc]e/.test(res)).true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
         expect(parts[0], parts[1]).not.eq;
       }
-    });
-
-    it('Supports single norepeat choices in context', function () {
-      let res;
       for (let i = 0; i < 5; i++) {
         res = riscript.evaluate('$b=[a[b | c | d]e]\n$b $b.nr');
         // console.log(i, res);

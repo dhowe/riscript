@@ -532,7 +532,7 @@ class RiScriptVisitor extends BaseVisitor {
     let result;
 
     // empty symbol, just return
-    if (ident.length === 0) { 
+    if (ident.length === 0) {
       return { result: '', resolved: true, isStatic, isUser };
     }
 
@@ -551,7 +551,7 @@ class RiScriptVisitor extends BaseVisitor {
       result = this.context[ident];
       if (typeof result !== 'undefined') {
         isUser = true; // found user symbol
-      } 
+      }
     }
 
     if (typeof result === 'undefined') {
@@ -586,18 +586,20 @@ class RiScriptVisitor extends BaseVisitor {
       for (let i = 0; i < wexprs.length; i++) {
         const wexpr = wexprs[i];
         const expr = wexpr.children.expr;
-        if (expr && expr.length != 1) { throw Error('invalid choice-expr: ' + expr.length); }
+        if (expr && expr.length != 1) {
+          throw Error('invalid choice-expr: ' + expr.length);
+        }
 
         const weight = wexpr.children.Weight;
         if (weight) {
-          if (weight.length != 1) { throw Error('invalid weight: ' + weight.length); }
+          if (weight.length != 1) {
+            throw Error('invalid weight: ' + weight.length);
+          }
           let mult = 1;
           try {
-            mult = parseInt(
-              this.Symbols.CLOSE_WEIGHT.length
+            mult = parseInt(this.Symbols.CLOSE_WEIGHT.length
                 ? weight[0].image.trim().slice(1, -1)
-                : weight[0].image.trim().slice(1)
-            );
+                : weight[0].image.trim().slice(1));
           } catch (e) {
             console.log('EX: ' + mult);
           }

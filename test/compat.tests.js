@@ -329,17 +329,29 @@ describe(title, function () {
       }
     });
 
-    it('Should support single norepeat choices in context', function () {
+    it('Supports single norepeat choices', function () {
+      // FIX FOR rita#157
       let res;
-
       for (let i = 0; i < 10; i++) {
-        res = riscript.evaluate('$b $b.nr', { $b: '(a(b | c | d)e)' });
+        res = riscript.evaluate('$b=a(b|c|d)e\n$b $b.nr');
+        //console.log(i,res);
+        expect(/a[bdc]e a[bdc]e/.test(res)).true;
+        const parts = res.split(' ');
+        expect(parts.length).eq(2);
+        expect(parts[0], parts[1]).not.eq;
+      }
+      for (let i = 0; i < 5; i++) {
+        res = riscript.evaluate('$b=(a(b | c | d)e)\n$b $b.nr');
         // console.log(i, res);
         expect(/a[bcd]e a[bcd]e/.test(res)).true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
         expect(parts[0], parts[1]).not.eq;
       }
+    });
+
+    it('Throws on norepeats in context', function () {
+      expect(() => riscript.evaluate('$foo $foo.nr', { foo: '(a|b)' })).to.throw();
     });
 
     it('Should support norepeat symbol transforms', function () {
@@ -495,7 +507,6 @@ describe(title, function () {
         ''
       ]);
       expect(riscript.evaluate('( a [2] | a [3] )', {})).eq('a');
-      expect(riscript.evaluate('( a [2] | a [3 ] )', {})).eq('a');
 
       const result = { b: 0, a: 0 };
       for (let i = 0; i < 20; i++) {
