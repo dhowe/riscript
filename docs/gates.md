@@ -85,8 +85,8 @@ The following operators assist in evaluating documents:
 The @exists operator will look for values that do or do not exist:  
 
 ```
-@{ $secret: { @exists: true}
-@{ $secret: { @exists: false}
+@{ $secret: { @exists: true} }
+@{ $secret: { @exists: false} }
 ```
 
 The @eq and @ne operator will look for values match or do not match a value:  
