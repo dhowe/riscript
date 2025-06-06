@@ -62,8 +62,8 @@ class Util {
     s = Util.replaceAll(s, '\\}', '&rcqb;');
     s = Util.replaceAll(s, '\\@', '&commat;');
     s = Util.replaceAll(s, '\\#', '&num;');
-    s = Util.replaceAll(s, '\\|', ' &vert');
-    s = Util.replaceAll(s, '\\=', ' &equals');
+    s = Util.replaceAll(s, '\\|', ' &vert;');
+    s = Util.replaceAll(s, '\\=', ' &equals;');
     return s;
   }
 
