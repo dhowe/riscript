@@ -35,7 +35,7 @@ class RiQuery extends Query {
 
     condition = condition.replace(/(\$|\(\))/g, '').replace(/@/g, '$');
     condition = scripting.parseJSOL(condition);
-    
+
     super(condition, options);
   }
 
@@ -54,14 +54,16 @@ class RiQuery extends Query {
     const keys = new Set();
     while (stack?.length > 0) {
       const currentObj = stack.pop();
-      Object.keys(currentObj).forEach((key) => {
-        const value = currentObj[key];
-        if (!key.startsWith('$')) keys.add(key);
-        if (typeof value === 'object' && value !== null) {
-          const eles = Array.isArray(value) ? value : [value];
-          eles.forEach((ele) => stack.push(ele));
-        }
-      });
+      if (currentObj) {
+        Object.keys(currentObj).forEach((key) => {
+          const value = currentObj[key];
+          if (!key.startsWith('$')) keys.add(key);
+          if (typeof value === 'object' && value !== null) {
+            const eles = Array.isArray(value) ? value : [value];
+            eles.forEach((ele) => stack.push(ele));
+          }
+        });
+      }
     }
     return Array.from(keys);
   }
@@ -274,9 +276,9 @@ class RiScript {
 
       options.input = expr;
       expr = this.lexParseVisit(options) ?? '';// do it
-      
+
       if (trace) {
-        console.log(`Result(${i}) -> "` + `${escapeText(expr||'')}"`
+        console.log(`Result(${i}) -> "` + `${escapeText(expr || '')}"`
           + ` ctx=${this.visitor.lookupsToString()}`);
       }
 
@@ -548,7 +550,7 @@ class RiScript {
     return s;
   }
 
-    // ========================= helpers ===============================
+  // ========================= helpers ===============================
 
   /** @private */
   _createRegexes(tokens) {
