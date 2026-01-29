@@ -55,7 +55,7 @@
   "dependencies": {
     "chevrotain": "^11.0.3",
     "he": "^1.2.0",
-    "mingo": "^6.4.8"
+    "mingo": "6.4.9"
   },
   "peerDependencies": {
     "rita": "^3.0"
