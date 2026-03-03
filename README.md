@@ -9,7 +9,7 @@ For more documentation and examples see this interactive [notebook](https://obse
 ### Installation
 
 * For [esm](#an-esm-browser-sketch): ```import { RiScript } from "https://esm.sh/riscript";```
-* For [browsers](#a-simple-browser-sketch): ```<script src="https://unpkg.com/riscript"></script>```
+* For [browsers](#a-simple-browser-sketch): ```<script src="https://cdn.jsdelivr.net/npm/riscript"></script>```
 * For [node](#with-nodejs-and-npm): `$ npm install riscript`  
  ```let { RiScript }  = require('riscript');```
 * For [developers](#developing)
@@ -69,7 +69,7 @@ Create a new file on your desktop called 'test.html' with the following lines, s
 
 ```html
 <html>
-<script src="https://unpkg.com/riscript"></script>
+<script src="https://cdn.jsdelivr.net/npm/riscript"></script>
 <script>
   window.onload = function () {
     let script = "[#name=[Jane | Bill]] was from [#place=[New York | Berlin | Shanghai]]."
@@ -110,8 +110,8 @@ Create a new file on your desktop called 'test.html' with the following lines,, 
 
 ```html
 <html>
-  <script src="https://unpkg.com/p5"></script>
-  <script src="https://unpkg.com/riscript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/riscript"></script>
   <script>
   function setup() {
 

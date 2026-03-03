@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "test": "NODE_ENV=dev mocha",
+    "test:antlr": "NODE_ENV=dev USE_ANTLR=true mocha",
     "test:dist": "NODE_ENV=dev mocha test/dist",
     "build": "npx tsup && cp -r types/riscript.d.* dist/",
     "pub": "./npnb/source/cli.js --no-release-draft --test-script test:dist patch",
@@ -49,10 +50,12 @@
     "esbuild-plugin-umd-wrapper": "^2.0.0",
     "esbuild-plugin-version-injector": "^1.2.1",
     "mocha": "^10.2.0",
+    "nyc": "^18.0.0",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "antlr4": "^4.13.0",
     "chevrotain": "^11.0.3",
     "he": "^1.2.0",
     "mingo": "6.4.9"

@@ -12,7 +12,7 @@ class RiScriptParser extends CstParser {
     super(allTokens, { nodeLocationTracking: "full" });
     this.atomTypes = ['silent', 'assign', 'symbol', 'choice', 'pgate', 'text', 'entity'];
     this.textTypes = textTypes; // defined in tokens.js
-    this.buildRules();
+    this.buildRules();    
   }
 
   parse(opts) {

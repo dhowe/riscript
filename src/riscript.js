@@ -9,6 +9,7 @@ import { RiScriptVisitor } from './visitor.js';
 import { getTokens, TextTypes } from './tokens.js';
 import { RiGrammar } from './grammar.js';
 import { Util } from './util.js';
+import { USE_ANTLR } from './parsers.js';
 
 const { decode } = he;
 const Vowels = /[aeiou]/;
@@ -114,6 +115,7 @@ class RiScript {
    * @param {object} [options] - options for the object
    * @param {object} [options.RiTa] - optionals RiTa object to use in transforms
    * @param {number} [options.compatibility] - the RiTa compatibility level
+   * @param {boolean} [options.useAntlr] - use ANTLR parser instead of Chevrotain
    */
   constructor(options = {}) {
 
@@ -124,6 +126,8 @@ class RiScript {
     /** @type {RiScriptVisitor} */this.visitor = undefined;
 
     /** @type {boolean} */ this.v2Compatible = (options.compatibility === 2);
+    
+    /** @type {boolean} */ this.useAntlr = options.useAntlr || USE_ANTLR;
 
     const { Constants, tokens } = getTokens(this.v2Compatible);
 
