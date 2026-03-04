@@ -288,7 +288,9 @@ class RiScript {
 
     // check for unresolved symbols ([$#]) after removing HTML entities
     if (!silent && !this.RiTa.SILENT) {
-      if (this.regex.ValidSymbol.test(expr.replace(HtmlEntities, ''))) {
+      // remove dollar/hash entities first to avoid false positives
+      let check = expr.replace(/&(dollar|num)];/g, '');
+      if (this.regex.ValidSymbol.test(check.replace(HtmlEntities, ''))) {
         console.warn('[WARN] Unresolved symbol(s) in "'
           + expr.replace(/\n/g, '\\n') + '" ');
       }
@@ -606,6 +608,7 @@ class RiScript {
 }
 
 function charCount(str, c) {
+  if (!str || !c) return 0;
   let count = 0;
   for (let i = 0; i < str.length; i++) {
     if (str[i] === c) count++;

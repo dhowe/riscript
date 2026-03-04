@@ -54,16 +54,25 @@ class Util {
   }
 
   static slashEscToEntities(s) {
-    s = Util.replaceAll(s, '\\(', '&lpar;');
-    s = Util.replaceAll(s, '\\)', '&rpar;');
-    s = Util.replaceAll(s, '\\[', '&lsqb;');
-    s = Util.replaceAll(s, '\\]', '&rsqb;');
-    s = Util.replaceAll(s, '\\{', '&lcqb;');
-    s = Util.replaceAll(s, '\\}', '&rcqb;');
-    s = Util.replaceAll(s, '\\@', '&commat;');
-    s = Util.replaceAll(s, '\\#', '&num;');
-    s = Util.replaceAll(s, '\\|', ' &vert;');
-    s = Util.replaceAll(s, '\\=', ' &equals;');
+    [
+      ['\\(', '&lpar;'],
+      ['\\)', '&rpar;'],
+      ['\\[', '&lsqb;'],
+      ['\\]', '&rsqb;'],
+      ['\\{', '&lcub;'],
+      ['\\}', '&rcub;'],
+      ['\\@', '&commat;'],
+      ['\\#', '&num;'],
+      ['\\|', '&vert;'],
+      ['\\$', '&dollar;'],
+      ['\\=', '&equals;'],
+      ['\\.', '&period;'],
+      ['\\\\', '&bsol;'],
+      ['\\/', '&sol;'],
+      ['\\^', '&circ;'],
+      ['\\&', '&amp;'],
+      ['\\~', '&tilde;']
+    ].forEach(([slash, entity]) => s = s.replaceAll(slash, entity));
     return s;
   }
 

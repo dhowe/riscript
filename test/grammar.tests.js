@@ -1101,6 +1101,24 @@ describe(title, function () {
       }
     });
 
+    it('Handles inline specials', function () {
+      let rg;
+
+      rg = new RiGrammar({
+        start: '&lcub;$tmpl&rcub;',
+        '#tmpl': '$jrSr.capitalize()',
+        '#jrSr': '[junior|junior]'
+      });
+      expect(rg.expand()).eq('{Junior}');
+
+      rg = new RiGrammar({
+        start: '\\{$tmpl\\}',
+        '#tmpl': '$jrSr.capitalize()',
+        '#jrSr': '[junior|junior]'
+      });
+      expect(rg.expand()).eq('{Junior}');
+    });
+
     it('Handles special characters', function () {
       let rg, res, s;
 
@@ -1243,6 +1261,108 @@ describe(title, function () {
       const res = rg.expand();
       expect(res === 'bad feelings').to.be.true;
     });
+
+    it('Should handle special chars in grammars', function () {
+
+      const start = "Meet Sam";
+
+      let entitySingles = [
+        ['&amp;', '&'],
+        ['&dollar;', '$'],
+        ['&vert;', '|'],
+        ['&num;', '#'],
+        ['&period;', '.'],
+        ['&bsol;', '\\'],
+        ['&equals;', '='],
+        ['&commat;', '@'],
+        ['&lpar;', '('],
+        ['&rpar;', ')'],
+        ['&lsqb;', '['],
+        ['&rsqb;', ']'],
+        ['&lcub;', '{'],
+        ['&rcub;', '}'],
+        ['&sol;', '/'],
+        ['&bsol;', '\\'],
+        ['&quot;', '"'],
+        ['&apos;', '\''],
+        ['&lt;', '<'],
+        ['&gt;', '>'],
+        ['&apos;', '\''],
+        ['&#96;', '`'],
+        ['&#8220;', '“'],
+        ['&#8221;', '”'],
+        ['&#8216;', '‘'],
+        ['&#8217;', '’'],
+        ['&nbsp;', ' '],
+        ['&copy;', '©'],
+        ['&reg;', '®'],
+        ['&trade;', '™']
+      ];
+
+      let slashSingles = [
+        ['\\$', '$'],
+        ['\\(', '('],
+        ['\\)', ')'],
+        ['\\{', '{'],
+        ['\\}', '}'],
+        ['\\[', '['],
+        ['\\]', ']'],
+        ['\\&', '&'],
+        ['\\|', '|'],
+        ['\\#', '#'],
+        ['\\.', '.'],
+        ['\\=', '='],
+        ['\\@', '@'],
+        // backslash is tricky in JS strings, use &bsol; instead
+        //['\\\\', '\\'], 
+      ];
+ 
+      let entityPairs = [
+        ['&lpar;', '&rpar;', '(', ')'],
+        ['&lsqb;', '&rsqb;', '[', ']'],
+        ['&lcub;', '&rcub;', '{', '}'],
+      ]
+
+      let slashPairs = [
+        ['\\(', '\\)', '(', ')'],
+        ['\\[', '\\]', '[', ']'],
+        ['\\{', '\\}', '{', '}']
+      ];
+
+      entitySingles.forEach((pair, i) => {
+        let [entity, char] = pair;
+        let rules = { start: start + entity };
+        let result = new RiGrammar(rules).expand();
+        //console.log(i, '"' + rules.start + '": "' + result + '"');
+        expect(result).to.equal(start + char);
+      });
+
+      slashSingles.forEach((pair, i) => {
+        let [slashed, char] = pair;
+        let rules = { start: start + slashed };
+        let result = new RiGrammar(rules).expand();
+        //console.log(i, rules.start + ': "' + result + '"');
+        expect(result).to.equal(start + char);
+      });
+
+      entityPairs.forEach(pair => {
+        let [entityL, entityR, charL, charR] = pair;
+        let rules = { start: entityL + start + entityR };
+        let result = new RiGrammar(rules).expand();
+        //console.log(rules.start, result);
+        expect(result).to.equal(charL + start + charR);
+      });
+
+      slashPairs.forEach((pair, i) => {
+        let [slashL, slashR, charL, charR] = pair;
+        let rules = { start: slashL + start + slashR };
+        let result = new RiGrammar(rules).expand();
+        //console.log(i, rules.start + ': "' + result + '"');
+        expect(result).to.equal(charL + start + charR);
+      });
+
+    });
+
   });
 
 });
