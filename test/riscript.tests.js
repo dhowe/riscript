@@ -95,7 +95,7 @@ describe(title, function () {
       const count = 5;
       for (let i = 0; i < count; i++) {
         const res = riscript.evaluate('$names=[a|b]\n$names $names.norepeat()');
-        expect(/^[a-e] [a-e]$/.test(res)).true;
+        expect(/^[a-e] [a-e]$/.test(res)).to.be.true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
         // console.log(i + ") " + parts[0] + " :: " + parts[1]);
@@ -109,7 +109,7 @@ describe(title, function () {
       for (let i = 0; i < 10; i++) {
         res = riscript.evaluate('$b=a[b|c|d]e\n$b $b.nr');
         //console.log(i,res);
-        expect(/a[bdc]e a[bdc]e/.test(res)).true;
+        expect(/a[bdc]e a[bdc]e/.test(res)).to.be.true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
         expect(parts[0], parts[1]).not.eq;
@@ -117,7 +117,7 @@ describe(title, function () {
       for (let i = 0; i < 5; i++) {
         res = riscript.evaluate('$b=[a[b | c | d]e]\n$b $b.nr');
         // console.log(i, res);
-        expect(/a[bcd]e a[bcd]e/.test(res)).true;
+        expect(/a[bcd]e a[bcd]e/.test(res)).to.be.true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
         expect(parts[0], parts[1]).not.eq;
@@ -130,7 +130,7 @@ describe(title, function () {
       for (let i = 0; i < count; i++) {
         const res = riscript.evaluate('$rule=[a|b|c|d|e]\n$rule.nr $rule.nr');
         // console.log(i,res);
-        expect(/^[a-e] [a-e]$/.test(res)).true;
+        expect(/^[a-e] [a-e]$/.test(res)).to.be.true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
         // console.log(i + ") " + parts[0] + " " + parts[1]);
@@ -388,7 +388,7 @@ describe(title, function () {
       const obj = { $a: 3, '@or': [{ $b: { '@lt': 30 } }, { $c: /^p*/ }] };
       const query = new RiScript.Query(riscript, obj);
       const res = query.test({ a: 3, b: 10 });
-      expect(res).true;
+      expect(res).to.be.true;
     });
 
     it('Handles complex boolean gate logic', function () {
@@ -511,7 +511,7 @@ describe(title, function () {
     it('Resolves choices in context', function () {
       const res = riscript.evaluate('$bar:$bar', { bar: '[man | boy]' });
       // console.log(res);
-      expect(/(man|boy):(man|boy)/.test(res)).true;
+      expect(/(man|boy):(man|boy)/.test(res)).to.be.true;
     });
 
     it('Repeat choices with randomSeed', function () {
@@ -868,10 +868,10 @@ describe(title, function () {
 
     it('Resolves statics', function () {
       let res = riscript.evaluate('{#bar=[man | boy]}$bar'); // silent
-      expect(res === 'man' || res === 'boy').true;
+      expect(res === 'man' || res === 'boy').to.be.true;
 
       res = riscript.evaluate('#bar=[man | boy]\n$foo=$bar:$bar\n$foo', {});
-      expect(res === 'man:man' || res === 'boy:boy').true;
+      expect(res === 'man:man' || res === 'boy:boy').to.be.true;
     });
 
 
@@ -898,12 +898,12 @@ describe(title, function () {
       visitor = new RiScriptVisitor(riscript);
       visitor.statics = { b: 'a [b | c | d] e' };
       res = riscript._evaluate({ input: '$b', visitor });
-      expect(/a [bdc] e/.test(res)).true;
+      expect(/a [bdc] e/.test(res)).to.be.true;
 
       visitor = new RiScriptVisitor(riscript);
       visitor.statics = { bar: '[man | boy]' };
       res = riscript._evaluate({ input: '$bar:$bar', visitor, trace: 0 });
-      expect(res === 'man:man' || res === 'boy:boy').true;
+      expect(res === 'man:man' || res === 'boy:boy').to.be.true;
 
       visitor = new RiScriptVisitor(riscript); // is this a real scenario?
       visitor.statics = { bar: '[$man | $boy]' };
@@ -933,7 +933,7 @@ describe(title, function () {
 
       expect(/[abcde] [abcde]/.test(
         riscript.evaluate('$names=[a|b|c|d|e]\n$names $names'))
-      ).true;
+      ).to.be.true;
 
       expect(riscript.evaluate('foo.bar', {}, { silent: 1 })).eq('foo.bar'); // KNOWN ISSUE
     });
@@ -1055,16 +1055,16 @@ describe(title, function () {
       let res;
 
       res = riscript.evaluate('[#bar=[boy]]:$bar');
-      expect(res === 'boy:boy').true;
+      expect(res === 'boy:boy').to.be.true;
 
       res = riscript.evaluate('[#bar=[$boy]]:$bar\n$boy=boy');
-      expect(res === 'boy:boy').true;
+      expect(res === 'boy:boy').to.be.true;
 
       res = riscript.evaluate('#foo=[cat | dog]\n$foo $foo');
-      expect(res === 'cat cat' || res === 'dog dog').true;
+      expect(res === 'cat cat' || res === 'dog dog').to.be.true;
 
       res = riscript.evaluate('#foo=[cat | dog]\n$foo $foo');
-      expect(res === 'cat cat' || res === 'dog dog').true;
+      expect(res === 'cat cat' || res === 'dog dog').to.be.true;
 
       res = riscript.evaluate('#bar=[$man | $boy]\n$man=[MAN|man]\n$boy=[BOY|boy]\n#bar:#bar');
       expect(
@@ -1072,7 +1072,7 @@ describe(title, function () {
         res === 'BOY:BOY' ||
         res === 'man:man' ||
         res === 'boy:boy'
-      ).true;
+      ).to.be.true;
 
       res = riscript.evaluate('#bar=[$man | $boy]\n$man=[MAN|man]\n$boy=[BOY|boy]\n$bar:$bar');
       expect(
@@ -1080,14 +1080,14 @@ describe(title, function () {
         res === 'BOY:BOY' ||
         res === 'man:man' ||
         res === 'boy:boy'
-      ).true;
+      ).to.be.true;
     });
 
     it('Handles norepeats', function () {
       let res;
       for (let i = 0; i < 5; i++) {
         res = riscript.evaluate('$foo=[cat|dog]\n$foo $foo.nr');
-        expect(res === 'cat dog' || res === 'dog cat').true;
+        expect(res === 'cat dog' || res === 'dog cat').to.be.true;
       }
     });
 
@@ -1396,7 +1396,7 @@ describe(title, function () {
         }
       };
       res = riscript.evaluate(s, gameState);
-      expect(/Wing has [0-9]{1,2} secs left\./.test(res)).true;
+      expect(/Wing has [0-9]{1,2} secs left\./.test(res)).to.be.true;
     });
 
     it('Resolves object properties', function () {

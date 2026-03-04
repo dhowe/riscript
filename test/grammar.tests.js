@@ -361,7 +361,7 @@ describe(title, function () {
           break;
         }
       }
-      expect(ok).true;
+      expect(ok).to.be.true;
     });
 
     it('Reuse statics', function () {
@@ -373,7 +373,7 @@ describe(title, function () {
       for (let i = 0; i < 5; i++) {
         const res = RiGrammar.expand(script); //, TRACE);
         // console.log(i, 'res=' + res, ctx);
-        expect(res === 'man:man' || res === 'woman:woman').true;
+        expect(res === 'man:man' || res === 'woman:woman').to.be.true;
       }
     });
 
@@ -386,7 +386,7 @@ describe(title, function () {
       for (let i = 0; i < 5; i++) {
         res = RiGrammar.expand(script);
         // console.log(i, 'res=' + res);
-        expect(res === 'man:woman' || res === 'woman:man').true;
+        expect(res === 'man:woman' || res === 'woman:man').to.be.true;
       }
     });
 
@@ -422,7 +422,7 @@ describe(title, function () {
     const grammars = [sentences1, sentences2, sentences3];
 
     it('Calls constructor', function () {
-      expect(typeof new RiGrammar() !== 'undefined').true;
+      expect(typeof new RiGrammar() !== 'undefined').to.be.true;
     });
 
     it('Support norepeat rules', function () {
@@ -432,7 +432,7 @@ describe(title, function () {
       // console.log(g);
       for (let i = 0; i < SEQ_COUNT; i++) {
         const res = RiGrammar.expand(g);
-        expect(/^[a-e] [a-e]$/.test(res)).true;
+        expect(/^[a-e] [a-e]$/.test(res)).to.be.true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
         // console.log(i + ") " + parts[0] + " :: " + parts[1]);
@@ -449,7 +449,7 @@ describe(title, function () {
       const g = { start: '[$names=[a|b|c|d|e]] $names.nr()' };
       for (let i = 0; i < SEQ_COUNT; i++) {
         const res = RiGrammar.expand(g);
-        expect(/^[a-e] [a-e]$/.test(res)).true;
+        expect(/^[a-e] [a-e]$/.test(res)).to.be.true;
         const parts = res.split(' ');
         expect(parts.length).eq(2);
         //console.log(i + ') ' + parts[0] + ' ' + parts[1]);
@@ -465,10 +465,10 @@ describe(title, function () {
       const json = JSON.stringify(sentences1);
 
       const gr1 = new RiGrammar(JSON.parse(json));
-      expect(gr1 instanceof RiGrammar).true;
+      expect(gr1 instanceof RiGrammar).to.be.true;
 
       const gr2 = RiGrammar.fromJSON(json);
-      expect(gr2 instanceof RiGrammar).true;
+      expect(gr2 instanceof RiGrammar).to.be.true;
       expect(gr1.toString()).eq(gr2.toString(),
         'FAIL\n' + gr1 + '\n' + gr2 + '\n');
 
@@ -484,7 +484,7 @@ describe(title, function () {
       expect(rg.expand({ start: 'mammal' })).eq('dog');
       for (let i = 0; i < 5; i++) {
         const res = rg.expand({ start: 'bird' });
-        expect(res === 'hawk' || res === 'crow').true;
+        expect(res === 'hawk' || res === 'crow').to.be.true;
       }
     });
 
@@ -548,32 +548,32 @@ describe(title, function () {
 
     it('Calls setRules', function () {
       let rg = new RiGrammar();
-      expect(typeof rg.rules !== 'undefined').true;
-      expect(typeof rg.rules.start === 'undefined').true;
-      expect(typeof rg.rules.noun_phrase === 'undefined').true;
+      expect(typeof rg.rules !== 'undefined').to.be.true;
+      expect(typeof rg.rules.start === 'undefined').to.be.true;
+      expect(typeof rg.rules.noun_phrase === 'undefined').to.be.true;
 
       grammars.forEach((g) => {
         // as JS objects
         rg.setRules(g);
-        expect(typeof rg.rules !== 'undefined').true;
-        expect(typeof rg.rules.start !== 'undefined').true;
-        expect(typeof rg.rules.noun_phrase !== 'undefined').true;
-        expect(rg.expand().length > 0).true;
+        expect(typeof rg.rules !== 'undefined').to.be.true;
+        expect(typeof rg.rules.start !== 'undefined').to.be.true;
+        expect(typeof rg.rules.noun_phrase !== 'undefined').to.be.true;
+        expect(rg.expand().length > 0).to.be.true;
       });
 
       rg = new RiGrammar();
       rg.setRules('{"start":"a"}'); // as JSON string
-      expect(rg.expand().length > 0).true;
+      expect(rg.expand().length > 0).to.be.true;
     });
 
     it('Calls fromJSON with string', function () {
       grammars.forEach((g) => {
         // as JSON strings
         const rg = RiGrammar.fromJSON(JSON.stringify(g));
-        expect(typeof rg.rules !== 'undefined').true;
-        expect(typeof rg.rules.start !== 'undefined').true;
-        expect(typeof rg.rules.noun_phrase !== 'undefined').true;
-        expect(rg.expand().length > 0).true;
+        expect(typeof rg.rules !== 'undefined').to.be.true;
+        expect(typeof rg.rules.start !== 'undefined').to.be.true;
+        expect(typeof rg.rules.noun_phrase !== 'undefined').to.be.true;
+        expect(rg.expand().length > 0).to.be.true;
       });
     });
 
@@ -643,7 +643,7 @@ describe(title, function () {
       expect(rg.expand({ start: 'mammal' })).eq('dog');
       for (let i = 0; i < 5; i++) {
         const res = rg.expand({ start: 'bird' });
-        expect(res === 'hawk' || res === 'crow').true;
+        expect(res === 'hawk' || res === 'crow').to.be.true;
       }
     });
 
@@ -786,13 +786,13 @@ describe(title, function () {
       let found3 = false;
       for (let i = 0; i < 100; i++) {
         const res = rg.expand();
-        expect(res === 'cat' || res === 'dog' || res === 'boy').true;
+        expect(res === 'cat' || res === 'dog' || res === 'boy').to.be.true;
         if (res === 'cat') found1 = true;
         else if (res === 'dog') found2 = true;
         else if (res === 'boy') found3 = true;
         if (found1 && found2 && found3) break;
       }
-      expect(found1 && found2 && found3).true; // found all
+      expect(found1 && found2 && found3).to.be.true; // found all
     });
 
     it('Calls expandFrom.weights', function () {
@@ -806,14 +806,15 @@ describe(title, function () {
 
       let hawks = 0;
       let dogs = 0;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 100; i++) {
         // could fail
         const res = rg.expand({ start: 'pet' });
-        expect(res === 'hawk' || res === 'dog').true;
+        expect(res === 'hawk' || res === 'dog').to.be.true;
         if (res === 'dog') dogs++;
         if (res === 'hawk') hawks++;
+        if (i > 10 && dogs > hawks * 2 && hawks > 0) break; // stop early if both found 
       }
-      expect(hawks > dogs * 2, 'got h=' + hawks + ', ' + dogs).true;
+      expect(hawks > dogs * 2, 'got h=' + hawks + ', d=' + dogs).to.be.true;
     });
 
     it('Calls addRule', function () {
@@ -841,15 +842,15 @@ describe(title, function () {
 
       let hawks = 0;
       let dogs = 0;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 100; i++) {
         const res = rg.expand({ start: 'start' });
-        expect(res === 'hawk hawk' || res === 'dog dog').true;
-
+        expect(res === 'hawk hawk' || res === 'dog dog').to.be.true;
         if (res === 'dog dog') dogs++;
         if (res === 'hawk hawk') hawks++;
+        if (i > 10 && dogs > hawks * 2 && hawks > 0) break; // stop early if both found
       }
       // console.log(hawks, dogs);
-      expect(hawks > dogs).true;
+      expect(hawks > dogs).to.be.true;
     });
 
     it('Handles transforms', function () {
@@ -1107,12 +1108,12 @@ describe(title, function () {
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
       // console.log(res);
-      expect(res === 'hello | name').true;
+      expect(res === 'hello | name').to.be.true;
 
       s = '{ "start": "hello: name" }';
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
-      expect(res === 'hello: name').true;
+      expect(res === 'hello: name').to.be.true;
 
       s = '{ "start": "&#8220;hello!&#8221;" }';
       rg = RiGrammar.fromJSON(s);
@@ -1121,24 +1122,24 @@ describe(title, function () {
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
       // console.log(res);
-      expect(res === '<start>').true;
+      expect(res === '<start>').to.be.true;
 
       s = '{ "start": "I don&#96;t want it." }';
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
       // console.log(res);
-      expect(res === 'I don`t want it.').true;
+      expect(res === 'I don`t want it.').to.be.true;
 
       s = '{ "start": "&#39;I really don&#39;t&#39;" }';
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
-      expect(res === "'I really don't'").true;
+      expect(res === "'I really don't'").to.be.true;
 
       s = '{ "start": "hello | name" }';
       rg = RiGrammar.fromJSON(s);
       for (let i = 0; i < 5; i++) {
         res = rg.expand();
-        expect(res === 'hello' || res === 'name').true;
+        expect(res === 'hello' || res === 'name').to.be.true;
       }
     });
 
@@ -1149,18 +1150,18 @@ describe(title, function () {
       // rg = RiGrammar.fromJSON(s);
       // res = rg.expand();
       // console.log(res);
-      // expect(res === '{wait}').true;
+      // expect(res === '{wait}').to.be.true;
 
       s = '{ "start": "hello &#124; name" }';
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
       // console.log(res);
-      expect(res === 'hello | name').true;
+      expect(res === 'hello | name').to.be.true;
 
       s = '{ "start": "hello: name" }';
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
-      expect(res === 'hello: name').true;
+      expect(res === 'hello: name').to.be.true;
 
       s = '{ "start": "&#8220;hello!&#8221;" }';
       rg = RiGrammar.fromJSON(s);
@@ -1169,24 +1170,24 @@ describe(title, function () {
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
       // console.log(res);
-      expect(res === '<start>').true;
+      expect(res === '<start>').to.be.true;
 
       s = '{ "start": "I don&#96;t want it." }';
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
       // console.log(res);
-      expect(res === 'I don`t want it.').true;
+      expect(res === 'I don`t want it.').to.be.true;
 
       s = '{ "start": "&#39;I really don&#39;t&#39;" }';
       rg = RiGrammar.fromJSON(s);
       res = rg.expand();
-      expect(res === "'I really don't'").true;
+      expect(res === "'I really don't'").to.be.true;
 
       s = '{ "start": "hello | name" }';
       rg = RiGrammar.fromJSON(s);
       for (let i = 0; i < 5; i++) {
         res = rg.expand();
-        expect(res === 'hello' || res === 'name').true;
+        expect(res === 'hello' || res === 'name').to.be.true;
       }
     });
 
@@ -1219,8 +1220,8 @@ describe(title, function () {
 
       rg2 = RiGrammar.fromJSON(generatedJSON);
       expect(rg.toString()).eq(rg2.toString());
-      // expect(rg.equals(rg2)).true;
-      // expect(rg2.equals(rg)).true;
+      // expect(rg.equals(rg2)).to.be.true;
+      // expect(rg2.equals(rg)).to.be.true;
     });
 
     it('Correctly pluralize phrases', function () {
@@ -1230,7 +1231,7 @@ describe(title, function () {
       };
       const rg = new RiGrammar(json);
       const res = rg.expand();
-      expect(res === 'bad feelings').true;
+      expect(res === 'bad feelings').to.be.true;
     });
 
     it('Correctly pluralize static phrases', function () {
@@ -1240,7 +1241,7 @@ describe(title, function () {
       };
       const rg = new RiGrammar(json);
       const res = rg.expand();
-      expect(res === 'bad feelings').true;
+      expect(res === 'bad feelings').to.be.true;
     });
   });
 
