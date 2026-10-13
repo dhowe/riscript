@@ -9,9 +9,11 @@
   "scripts": {
     "test": "NODE_ENV=dev mocha",
     "test:dist": "NODE_ENV=dev mocha test/dist",
+    "lint": "eslint src/",
+    "coverage": "c8 --all --src=src --reporter=text --reporter=lcov mocha",
     "build": "npx tsup",
-    "pub": "./npnb/source/cli.js --no-release-draft --test-script test:dist patch",
-    "prepub": "npm version patch && npm run build",
+    "pub": "npm whoami && npm test && npm run test:dist && npm version patch && npm publish && git push --follow-tags",
+    "prepublishOnly": "npm run build",
     "types": "rm -rf types/generated && npx tsc"
   },
   "main": "./dist/riscript.js",
@@ -47,13 +49,17 @@
     "url": "https://github.com/dhowe/riscript/issues"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/chai": "^4.3.9",
     "@types/mocha": "^10.0.3",
     "@types/node": "^20.8.9",
+    "c8": "^12.0.0",
     "chai": "^4.3.10",
     "esbuild-plugin-umd-wrapper": "^2.0.0",
     "esbuild-plugin-version-injector": "^1.2.1",
+    "eslint": "^10.12.0",
     "mocha": "^11.8.0",
+    "rita": "^3.2.16",
     "tsup": "^8.5.1",
     "typescript": "^5.2.2"
   },
@@ -71,6 +77,8 @@
     }
   },
   "overrides": {
-    "lodash-es": "^4.18.1"
+    "lodash-es": "^4.18.1",
+    "serialize-javascript": "^7.1.2",
+    "diff": "^8.0.4"
   }
 }

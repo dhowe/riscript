@@ -19,8 +19,9 @@ class RiScriptParser extends CstParser {
     this.input = opts.tokens; // superclass member (dont change)
 
     let cst = this.script();
-    if (this.errors.length > 0) throw Error
-      ("[PARSING]\n" + this.errors[0].message);
+    if (this.errors.length > 0) {
+      throw Error('[PARSING]\n' + this.errors[0].message);
+    }
     return cst;
   }
 

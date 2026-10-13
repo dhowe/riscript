@@ -273,7 +273,7 @@ function parseJSON(json) {
       return JSON.parse(json);
     } catch (e) {
       throw Error('RiGrammar appears to be invalid JSON,' +
-        ' please check it at http://jsonlint.com/\n' + json);
+        ' please check it at http://jsonlint.com/\n' + json, { cause: e });
     }
   }
 }
