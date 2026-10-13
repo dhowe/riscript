@@ -254,8 +254,11 @@ class RiGrammar {
     }
 
     // rule names are interpolated into the generated script, so validate them
-    // to prevent syntax corruption / injection from untrusted rule keys
-    if (!/^[A-Za-z_0-9]+$/.test(name.replace(Symbols.STATIC, ''))) {
+    // to prevent syntax corruption / injection from untrusted rule keys.
+    // NB: strip a single *leading* STATIC marker (String.replace would leave
+    // any interior '#' in place, letting "foo#bar" slip through)
+    const bare = name.startsWith(Symbols.STATIC) ? name.substring(Symbols.STATIC.length) : name;
+    if (!/^[A-Za-z_0-9]+$/.test(bare)) {
       throw Error('invalid rule name: "' + name + '" (use letters, numbers, _' +
         ' and an optional leading ' + Symbols.STATIC + ')');
     }

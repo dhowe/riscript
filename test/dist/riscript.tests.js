@@ -407,8 +407,7 @@ describe(title, function() {
       const map = {};
       for (let i = 0; i < 1e3; i++) {
         const res = riscript.evaluate("[quite|]");
-        if (!(res in map))
-          map[res] = 0;
+        if (!(res in map)) map[res] = 0;
         map[res]++;
       }
       expect(map.quite).greaterThan(400);
@@ -484,8 +483,7 @@ describe(title, function() {
       let result = { b: 0, a: 0 };
       for (let i = 0; i < 100; i++) {
         const ans = riscript.evaluate("[a(1) | b (3)]");
-        if (!/^[ab]$/.test(ans))
-          throw Error("invalid: " + ans);
+        if (!/^[ab]$/.test(ans)) throw Error("invalid: " + ans);
         result[ans]++;
       }
       expect(result.a).gt(0);
@@ -493,8 +491,7 @@ describe(title, function() {
       result = { b: 0, a: 0 };
       for (let i = 0; i < 100; i++) {
         const ans = riscript.evaluate("[a | b (3)]");
-        if (!/^[ab]$/.test(ans))
-          throw Error("invalid: " + ans);
+        if (!/^[ab]$/.test(ans)) throw Error("invalid: " + ans);
         result[ans]++;
       }
       expect(result.a).gt(0);
@@ -1332,7 +1329,7 @@ describe(title, function() {
       expect(() => riscript.evaluate("@{")).to.throw();
       expect(() => riscript.evaluate("hi @{x == 1")).to.throw();
     });
-    it("Does not hang on unterminated choice in assignment",   function() {
+    it("Does not hang on unterminated choice in assignment", function() {
       expect(() => riscript.evaluate("$x=[a")).to.throw();
       expect(() => riscript.evaluate("$x=[a\n")).to.throw();
     });
@@ -1343,7 +1340,7 @@ describe(title, function() {
     it("Does not resolve Object.prototype members as transforms", function() {
       expect(riscript.evaluate("$x=[hi]\n$x.constructor")).eq("hi.constructor");
     });
-    it("Accepts a null context with transforms", function() {
+    it("Accepts a null context for transforms", function() {
       expect(() => riscript.evaluate("$x=[a|b]\n$x.bogus()", null)).not.to.throw();
     });
     it("Rejects out-of-range choice weights", function() {

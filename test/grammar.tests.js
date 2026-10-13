@@ -667,6 +667,7 @@ describe(title, function () {
       expect(() => new RiGrammar({ start: 'ok', 'bad name=x': 'y' })).to.throw();
       expect(() => new RiGrammar({ start: 'ok', 'bad\nname': 'y' })).to.throw();
       expect(() => new RiGrammar({ start: 'ok', 'bad[name]': 'y' })).to.throw();
+      expect(() => new RiGrammar({ start: 'ok', 'foo#bar': 'y' })).to.throw();
       expect(() => new RiGrammar({ start: 'ok', good_name: 'y' })).not.to.throw();
       expect(() => new RiGrammar({ start: 'ok', '#static_rule': 'y' })).not.to.throw();
     });
