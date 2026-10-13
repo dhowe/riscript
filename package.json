@@ -19,9 +19,9 @@
   "browser": "./dist/riscript.min.js",
   "exports": {
     ".": {
+      "types": "./dist/riscript.d.ts",
       "import": "./dist/riscript.js",
-      "require": "./dist/riscript.cjs",
-      "types": "./dist/riscript.d.ts"
+      "require": "./dist/riscript.cjs"
     }
   },
   "files": [
