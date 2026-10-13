@@ -769,6 +769,12 @@ describe(title, function() {
     });
   });
   describe("Symbols", function() {
+    it("Rejects a self-referential assignment", function() {
+      expect(riscript.evaluate("$x=[apple]\n$x")).eq("apple");
+      expect(riscript.evaluate("$x=[apple] $x")).eq("");
+      expect(() => riscript.evaluate("$x=[apple] $x\n$x")).to.throw(/self-referential|recursion/i);
+      expect(() => riscript.evaluate("$a=$a\n$a")).to.throw(/self-referential|recursion/i);
+    });
     it("Handles generated symbols", function() {
       let sc = "$a=antelope\n$b=otter\n$an() $[a|b]";
       const res = riscript.evaluate(sc, { an: () => "An" });

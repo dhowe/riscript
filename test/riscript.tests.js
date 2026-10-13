@@ -974,6 +974,18 @@ describe(title, function () {
 
   describe('Symbols', function () {
 
+    it('Rejects a self-referential assignment', function () {
+      // §2.1/§2.2: a raw assignment's RHS ends at the line break, so the
+      // trailing $x here is part of the definition, not output — $x is defined
+      // as "apple" plus its own value. The RHS is silent and never forced
+      // unless something references $x, so the plain form is '' and the
+      // referencing form must throw a clear error rather than overflow.
+      expect(riscript.evaluate('$x=[apple]\n$x')).eq('apple');
+      expect(riscript.evaluate('$x=[apple] $x')).eq('');
+      expect(() => riscript.evaluate('$x=[apple] $x\n$x')).to.throw(/self-referential|recursion/i);
+      expect(() => riscript.evaluate('$a=$a\n$a')).to.throw(/self-referential|recursion/i);
+    });
+
     it('Handles generated symbols', function () {
       let sc = '$a=antelope\n$b=otter\n$an() $[a|b]'
       const res = riscript.evaluate(sc, { an: () => 'An' });

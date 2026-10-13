@@ -25,6 +25,11 @@ class BaseVisitor {
     /**@type {object}*/this.scripting = riScript;
     /**@type {boolean}*/this.warnOnInvalidGates = false;
     /**@type {number}*/this.maxRecursionDepth = 10;
+    /**
+     * Symbols currently being resolved, to detect self/mutual references.
+     * @type {Set<string>}
+     */
+    this.resolving = new Set();
   }
 
   textFromCstNode(node) {
@@ -96,6 +101,7 @@ class RiScriptVisitor extends BaseVisitor {
     this.trace = opts.trace;
     this.nowarn = opts.silent;
     this.traceTx = opts.traceTx;
+    this.resolving.clear(); // fresh resolution stack per evaluation
     if (!opts.cst) throw Error('no cst');
     return super.visit(opts.cst);
   }
@@ -238,11 +244,23 @@ class RiScriptVisitor extends BaseVisitor {
       }
     }
 
-    // if we have a function, call it here (potentially many times)
-    for (let i = 0; typeof result === 'function'; i++) {
-      result = result.call();
-      resolved = !this.scripting.isParseable(result);
-      if (i === this.maxRecursionDepth) throw Error('Max recursion depth reached');
+    // If we have a function, call it here (potentially many times)
+    // Note: a dynamic symbol's closure re-enters visit(), so guard 
+    // against a symbol resolving to itself — otherwise stack overflow
+    if (typeof result === 'function') {
+      if (this.resolving.has(ident)) {
+        throw Error(`Self-referential symbol: ${sym}`);
+      }
+      this.resolving.add(ident);
+      try {
+        for (let i = 0; typeof result === 'function'; i++) {
+          result = result.call();
+          resolved = !this.scripting.isParseable(result);
+          if (i === this.maxRecursionDepth) throw Error('Max recursion depth reached');
+        }
+      } finally {
+        this.resolving.delete(ident);
+      }
     }
 
     // check for norepeat on a non-dynamic symbol and throw if found
@@ -450,10 +468,21 @@ class RiScriptVisitor extends BaseVisitor {
     operands.forEach((sym) => {
       let { result, resolved, isStatic, isUser } = this.checkContext(sym);
 
-      for (let i = 0; typeof result === 'function'; i++) {
-        result = result.call(); // call it
-        resolved = !this.scripting.isParseable(result);
-        if (i === this.maxRecursionDepth) throw Error('Max recursion depth reached');
+      // same self-reference guard as symbol()
+      if (typeof result === 'function') {
+        if (this.resolving.has(sym)) {
+          throw Error(`Self-referential symbol: ${this.Symbols.DYNAMIC}${sym}`);
+        }
+        this.resolving.add(sym);
+        try {
+          for (let i = 0; typeof result === 'function'; i++) {
+            result = result.call(); // call it
+            resolved = !this.scripting.isParseable(result);
+            if (i === this.maxRecursionDepth) throw Error('Max recursion depth reached');
+          }
+        } finally {
+          this.resolving.delete(sym);
+        }
       }
 
       if (typeof result === 'undefined' || !resolved) {
