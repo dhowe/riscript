@@ -24,6 +24,7 @@ const baseConfig: Options = {
 const esm: Options = {
   ...baseConfig,
   format: ['esm'],
+  dts: true,
 }
 
 const cjs: Options = {
@@ -33,6 +34,7 @@ const cjs: Options = {
   platform: "node",
   cjsInterop: true,
   splitting: true,
+  dts: true,
   outExtension({ format }) { return { js: `.cjs` } },
 }
 

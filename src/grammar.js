@@ -37,7 +37,7 @@ class RiGrammar {
 
   /**
    * Creates a new RiGrammar from the `rules`, `context` and `options`, then calls `expand()` on it.
-   * @param {string} rules - an object containing the rules
+   * @param {object|string} rules - an object (or JSON string) containing the rules
    * @param {object} [context] - the context (or world-state) for the expansion
    * @param {object} [options] - options for the expansion
    * @param {string} [options.start='$start'] - the rule to start from
