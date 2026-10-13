@@ -47,7 +47,7 @@ class RiGrammar {
    * @returns {string} - the expanded text
    */
   static expand(rules, context, options) {
-    return new RiGrammar(rules, context).expand(options);
+    return new RiGrammar(rules, context, options).expand(options);
   }
 
   /**
@@ -251,6 +251,13 @@ class RiGrammar {
       throw Error('Grammar rules are dynamic by default;' +
         " if you need a static rule, use '" + Symbols.STATIC +
         name + "', otherwise just use '" + name + "'.");
+    }
+
+    // rule names are interpolated into the generated script, so validate them
+    // to prevent syntax corruption / injection from untrusted rule keys
+    if (!/^[A-Za-z_0-9]+$/.test(name.replace(Symbols.STATIC, ''))) {
+      throw Error('invalid rule name: "' + name + '" (use letters, numbers, _' +
+        ' and an optional leading ' + Symbols.STATIC + ')');
     }
   }
 }

@@ -662,6 +662,21 @@ describe(title, function () {
       expect(() => new RiGrammar().removeRule('nonexistent')).not.to.throw();
     });
 
+    it('Rejects rule names with syntax characters', function () {
+      // rule names are interpolated into the generated script, so they must be validated
+      expect(() => new RiGrammar({ start: 'ok', 'bad name=x': 'y' })).to.throw();
+      expect(() => new RiGrammar({ start: 'ok', 'bad\nname': 'y' })).to.throw();
+      expect(() => new RiGrammar({ start: 'ok', 'bad[name]': 'y' })).to.throw();
+      expect(() => new RiGrammar({ start: 'ok', good_name: 'y' })).not.to.throw();
+      expect(() => new RiGrammar({ start: 'ok', '#static_rule': 'y' })).not.to.throw();
+    });
+
+    it('Passes options through static expand', function () {
+      const fake = { VERSION: '3', randi: (k) => Math.floor(Math.random() * k), pluralize: (s) => 'PLZ:' + s };
+      const rules = { start: '[$x.pluralize()]', x: 'cat' };
+      expect(RiGrammar.expand(rules, {}, { RiTa: fake })).eq('PLZ:cat');
+    });
+
     it('Calls toString', function () {
       let rg = new RiGrammar({ start: 'pet' });
       expect(rg.toString()).eq('{\n  "start": "pet"\n}');

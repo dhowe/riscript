@@ -1679,6 +1679,58 @@ bb', {})).eq('aa bb');
     });
   });
 
+  describe('Regressions', function () {
+
+    it('Does not hang on unterminated gate', function () {
+      expect(() => riscript.evaluate('@{abc')).to.throw();
+      expect(() => riscript.evaluate('@{')).to.throw();
+      expect(() => riscript.evaluate('hi @{x == 1')).to.throw();
+    });
+
+    it('Does not hang on unterminated choice in assignment', function () {
+      expect(() => riscript.evaluate('$x=[a')).to.throw();
+      expect(() => riscript.evaluate('$x=[a\n')).to.throw();
+    });
+
+    it('Does not resolve Object.prototype members as symbols', function () {
+      expect(riscript.evaluate('hello $toString world')).eq('hello $toString world');
+      expect(riscript.evaluate('$x=[hi]\n$x.toString()')).eq('hi');
+    });
+
+    it('Does not resolve Object.prototype members as transforms', function () {
+      // blocked members fall through to the normal unresolved-transform path
+      expect(riscript.evaluate('$x=[hi]\n$x.constructor')).eq('hi.constructor');
+    });
+
+    it('Accepts a null context for transforms', function () {
+      expect(() => riscript.evaluate('$x=[a|b]\n$x.bogus()', null)).not.to.throw();
+    });
+
+    it('Rejects out-of-range choice weights', function () {
+      expect(() => riscript.evaluate('[a|b(99999999)]')).to.throw();
+      expect(() => riscript.evaluate('[a|b(0)]')).to.throw();
+      expect(() => riscript.evaluate('[a|b(-2)]')).to.throw();
+      expect(riscript.evaluate('[a|b(3)]')).to.be.oneOf(['a', 'b']);
+    });
+
+    it('Does not cast partial numbers in gates', function () {
+      expect(riscript.evaluate('[@{$a: {@gt: 11}} yes||no]', { a: '12abc' })).eq('no');
+      expect(riscript.evaluate('[@{$a: {@gt: 11}} yes||no]', { a: '12' })).eq('yes');
+    });
+
+    it('Honors silent for unresolved transforms', function () {
+      const warn = console.warn;
+      let count = 0;
+      console.warn = () => count++;
+      try {
+        riscript.evaluate('That is $x.bogus().', { x: 'ant' }, { silent: true });
+      } finally {
+        console.warn = warn;
+      }
+      expect(count).eq(0);
+    });
+  });
+
   function regexEquals(x, y) {
     return (
       x instanceof RegExp &&

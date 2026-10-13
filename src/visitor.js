@@ -5,6 +5,15 @@ import { Util } from './util.js';
 const { escapeText, stringHash, formatAny, transformNames } = Util;
 
 /**
+ * Object.prototype members that shouldn't resolve as symbols/transforms,
+ * @private
+ */
+const BLOCKED_MEMBERS = new Set([
+  'constructor', 'valueOf', '__proto__', 'hasOwnProperty',
+  'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString'
+]);
+
+/**
  * @class
  * @memberof module:riscript
  */
@@ -67,15 +76,15 @@ class RiScriptVisitor extends BaseVisitor {
     this.trace = 0;
     this.indent = 0;
     this.choices = {};
-    this.context = context;
+    this.context = context || {}; // guard against null context (see applyTransform)
     this.isNoRepeat = false;
 
     this.Symbols = this.scripting.Symbols;
     this.Escaped = this.scripting.Escaped;
 
-    // lookups
-    this.statics = {}; // store static symbols as values, set once and re-used
-    this.dynamics = {}; // store dynamic symbols as functions to be re-evaluated each time
+    // lookups (null-prototype so Object.prototype members never leak through)
+    this.statics = Object.create(null); // store static symbols as values, set once and re-used
+    this.dynamics = Object.create(null); // store dynamic symbols as functions to be re-evaluated each time
     this.pendingGates = {}; // store gates for which operands are not resolved
 
     this.validateVisitor(); // keep
@@ -548,15 +557,18 @@ class RiScriptVisitor extends BaseVisitor {
 
     if (typeof result === 'undefined') {
       // no static, check for user-defined symbol: context[var]
-      result = this.context[ident];
-      if (typeof result !== 'undefined') {
+      // (own-property only, so inherited members like toString don't leak)
+      if (Object.hasOwn(this.context, ident)) {
+        result = this.context[ident];
         isUser = true; // found user symbol
       }
     }
 
     if (typeof result === 'undefined') {
       // last option: check for bare transform: $var()
-      result = this.scripting.transforms[ident];
+      if (Object.hasOwn(this.scripting.transforms, ident)) {
+        result = this.scripting.transforms[ident];
+      }
     }
 
     // do we have more script to deal with ?
@@ -603,6 +615,10 @@ class RiScriptVisitor extends BaseVisitor {
           } catch (e) {
             console.log('EX: ' + mult);
           }
+          // cap weights to prevent memory issues via Array.from({length})
+          if (!Number.isInteger(mult) || mult < 1 || mult > 999) {
+            throw Error('invalid weight: ' + mult + ' (must be 1-999)');
+          }
           Array.from({ length: mult }, () => options.push(expr));
         } else {
           options.push(expr || '');
@@ -641,22 +657,23 @@ class RiScriptVisitor extends BaseVisitor {
       result = this.statics[tx].call(this.context, target);
     }
     // function in context
-    else if (typeof this.context[tx] === 'function') {
+    else if (Object.hasOwn(this.context, tx) && typeof this.context[tx] === 'function') {
       result = this.context[tx].call(this.context, target);
     }
     // function in transforms
-    else if (typeof this.scripting.transforms[tx] === 'function') {
+    else if (Object.hasOwn(this.scripting.transforms, tx) &&
+      typeof this.scripting.transforms[tx] === 'function') {
       result = this.scripting.transforms[tx].call(this.context, target);
     }
-    // member functions (usually on String)
-    else if (typeof target[tx] === 'function') {
+    // member functions (usually on String); blocklist prevents prototype leaks
+    else if (!BLOCKED_MEMBERS.has(tx) && typeof target[tx] === 'function') {
       result = target[tx]();// .call() ?
     } else {
       // check for property
-      if (target.hasOwnProperty(tx)) {
+      if (Object.hasOwn(target, tx)) {
         result = target[tx];
       } else {
-        if (!RiTa.SILENT && !this.silent) {
+        if (!RiTa.SILENT && !this.nowarn) {
           console.warn('[WARN] Unresolved transform: ' + raw);
         }
 
@@ -691,8 +708,8 @@ class RiScriptVisitor extends BaseVisitor {
   castValues(obj) {
     let madeCast = false;
     Object.entries(obj).forEach(([k, v]) => {
-      const num = parseFloat(v);
-      if (!isNaN(num)) {
+      const num = Number(v); // full-string parse
+      if (v !== '' && v !== null && v !== undefined && !Number.isNaN(num)) {
         madeCast = true;
         obj[k] = num; // update object with casted value
       }

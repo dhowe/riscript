@@ -93,6 +93,7 @@ function bracketMatch(text, startOffset) {
   charCode = text.charCodeAt(endOffset);
   let depth = 1;
   while (depth > 0) {
+    if (Number.isNaN(charCode)) return null; // unterminated gate: hit EOF
     if (charCode === 123) depth++; // 123 = '{'
     else if (charCode === 125) depth--; // 123 = '}'
     if (dbug) console.log('  depth', depth, text.substring(startOffset, endOffset));

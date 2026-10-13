@@ -346,10 +346,10 @@ class RiScript {
         let opens = charCount(rhs, $.OPEN_CHOICE);
         let closes = charCount(rhs, $.CLOSE_CHOICE);
         while (opens > closes) {
-          let line = lines[++i];
-          rhs += '\n' + line;
-          opens += charCount(line, $.OPEN_CHOICE);
-          closes += charCount(line, $.CLOSE_CHOICE);
+          if (++i >= lines.length) break; // unterminated group: stop, let parser error
+          rhs += '\n' + lines[i];
+          opens += charCount(lines[i], $.OPEN_CHOICE);
+          closes += charCount(lines[i], $.CLOSE_CHOICE);
         }
         result += $.OPEN_SILENT + (lhs + '=' + rhs) + $.CLOSE_SILENT;
 
