@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { CstParser } from "chevrotain"
 
 /**
@@ -18,7 +17,8 @@ class RiScriptParser extends CstParser {
   parse(opts) {
     this.input = opts.tokens; // superclass member (dont change)
 
-    let cst = this.script();
+    // `script` is created dynamically by RULE("script") in buildRules()
+    let cst = /** @type {any} */ (this).script();
     if (this.errors.length > 0) {
       throw Error('[PARSING]\n' + this.errors[0].message);
     }
@@ -44,7 +44,8 @@ class RiScriptParser extends CstParser {
   */
   buildRules() {
 
-    const $ = this, Tokens = this.tokensMap;
+    // Rule methods and tokensMap are created dynamically by chevrotain's RULE()/performSelfAnalysis()
+    const $ = /** @type {any} */ (this), Tokens = /** @type {any} */ (this).tokensMap;
 
     $.RULE("script", () => {
       $.MANY(() => $.SUBRULE($.expr));

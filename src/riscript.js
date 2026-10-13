@@ -250,8 +250,6 @@ class RiScript {
     if (!input) throw Error('no input');
     if (!visitor) throw Error('no visitor');
 
-    // onepass = true; // TMP
-
     let last, endingBreak = this.regex.EndingBreak.test(input); // keep
 
     let expr = this._preParse(input, options);
@@ -616,8 +614,11 @@ function charCount(str, c) {
   return count;
 }
 
-// Class ref hacks for testing
-RiScript.Visitor = RiScriptVisitor;
-RiScript.Util = Util;
+/*
+ * `RiScript.Visitor` lets tests construct a visitor directly to seed
+ * `statics` before `_evaluate`, and `RiScript.Util` exposes `stringHash`. Both
+ * are needed by the `test:dist` harness; not part of the public API
+ */
+Object.assign(RiScript, { Visitor: RiScriptVisitor, Util });
 
 export { RiScript };

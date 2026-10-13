@@ -717,16 +717,6 @@ class RiScriptVisitor extends BaseVisitor {
     return madeCast;
   }
 
-  contextIsResolved(table) {
-    let allResolved = true;
-    Object.entries(table).forEach(([key, val]) => {
-      if (!this.scripting.isParseable(val)) {
-        allResolved = false;
-      }
-    });
-    return allResolved;
-  }
-
   lookupsToString() {
     const dyns = {}, stats = {};
     Object.entries(this.dynamics || {}).forEach(([k, v]) => (dyns[`$${k}`] = v));
@@ -736,7 +726,8 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   formatTxs(value, txs) {
-    return value + txs.map((tx) => tx.image.replace(/()/, '') + '()').join('');
+    // normalize each transform to a single trailing "()" for trace output
+    return value + txs.map((tx) => tx.image.replace(/\(\)$/, '') + '()').join('');
   }
 
   print(s, ...args) {

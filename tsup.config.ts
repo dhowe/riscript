@@ -1,7 +1,6 @@
 import type { Options } from 'tsup';
 import { defineConfig } from 'tsup';
 import { esbuildPluginVersionInjector } from 'esbuild-plugin-version-injector';
-// import { umdWrapper } from "esbuild-plugin-umd-wrapper"
 
 const baseConfig: Options = {
   name: "riscript",
@@ -16,7 +15,6 @@ const baseConfig: Options = {
   target: 'es2020',
   esbuildPlugins: [
     esbuildPluginVersionInjector(),
-    // umdWrapper(),
   ],
   outExtension({ format }) { return { js: `.js` } },
 }

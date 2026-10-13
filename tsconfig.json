@@ -9,7 +9,6 @@
     "declaration": true,
     "declarationMap": false,
     "emitDeclarationOnly": true,
-    "removeComments": true, // tmp 
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "target": "ESNext",

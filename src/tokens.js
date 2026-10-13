@@ -76,8 +76,6 @@ function bracketMatch(text, startOffset) {
 
   let endOffset = startOffset + 1;
 
-  let dbug = 0;
-  if (dbug) console.log('bracketMatch', text);
   let charCode = text.charCodeAt(endOffset);
 
   // spaces between the @ and the open brace 
@@ -86,7 +84,6 @@ function bracketMatch(text, startOffset) {
     charCode = text.charCodeAt(endOffset);
   }
   if (charCode !== 123) { // 123 = '{'
-    if (dbug) console.log(`  "${text.substring(startOffset, endOffset)}" -> null1`);
     return null;
   }
   endOffset++;
@@ -96,19 +93,16 @@ function bracketMatch(text, startOffset) {
     if (Number.isNaN(charCode)) return null; // unterminated gate: hit EOF
     if (charCode === 123) depth++; // 123 = '{'
     else if (charCode === 125) depth--; // 123 = '}'
-    if (dbug) console.log('  depth', depth, text.substring(startOffset, endOffset));
     endOffset++;
     charCode = text.charCodeAt(endOffset);
   }
 
   // No match, must return null to conform with the RegExp.prototype.exec
   if (endOffset === startOffset) {
-    if (dbug) console.log(`"${text.substring(startOffset, endOffset)}" -> null3`);
     return null;
   } else {
     let matchedString = text.substring(startOffset, endOffset);
     // according to RegExp.prototype.exec API first item in the returned array must be the whole matched string
-    if (dbug) console.log('  returned -> ', [matchedString]);
     return [matchedString];
   }
 }
