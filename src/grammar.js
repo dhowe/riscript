@@ -37,8 +37,8 @@ class RiGrammar {
 
   /**
    * Creates a new RiGrammar from the `rules`, `context` and `options`, then calls `expand()` on it.
-   * @param {object|string} rules - an object (or JSON string) containing the rules
-   * @param {object} [context] - the context (or world-state) for the expansion
+   * @param {Object<string, string>|string} rules - an object (or JSON string) containing the rules
+   * @param {Object<string, any>} [context] - the context (or world-state) for the expansion
    * @param {object} [options] - options for the expansion
    * @param {string} [options.start='$start'] - the rule to start from
    * @param {boolean} [options.trace=false] - whether to trace the evaluation to the console
@@ -190,6 +190,7 @@ class RiGrammar {
   /**
    * Converts grammar to inline rules; rules are dynamic, unless otherwise specified with leading #
    * @private
+   * @param {{ start?: string, trace?: boolean }} opts
    */
   _toScript(opts) {
 
@@ -235,6 +236,8 @@ class RiGrammar {
   /**
    * Validates a grammar rule
    * @private
+   * @param {string} name - the rule name
+   * @param {*} def - the rule definition
    */
   _validateRule(name, def) {
     if (typeof name !== 'string' || name.length === 0) {
@@ -267,6 +270,12 @@ class RiGrammar {
 
 //////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Parses a JSON string into a rules object
+ * @private
+ * @param {string} json - a JSON string
+ * @returns the parsed rules
+ */
 function parseJSON(json) {
   if (typeof json === 'string') {
     try {
