@@ -59,7 +59,7 @@
     "esbuild-plugin-version-injector": "^1.2.1",
     "eslint": "^10.12.0",
     "mocha": "^11.8.0",
-    "rita": "^3.2.16",
+    "rita": "^4.0.2-beta",
     "tsup": "^8.5.1",
     "typescript": "^5.2.2"
   },
