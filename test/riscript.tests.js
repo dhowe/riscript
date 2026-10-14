@@ -1018,7 +1018,7 @@ describe(title, function () {
       expect(res).to.be.oneOf(['Lucy']);
 
       context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
-      res = riscript.evaluate("$[a | b].name", context);
+      res = riscript.evaluate("$[a | b].name", context, { silent: 1 });
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
     });
 
@@ -1051,7 +1051,7 @@ describe(title, function () {
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
 
       context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
-      res = riscript.evaluate('$[a|b].name', context);
+      res = riscript.evaluate('$[a|b].name', context, { silent: 1 });
       expect(res).to.be.oneOf(['Lucy', 'Sam']);
 
       context = { a: { name: 'Lucy' }, b: { name: 'Sam' } };
@@ -1705,17 +1705,17 @@ bb', {})).eq('aa bb');
     });
 
     it('Does not resolve Object.prototype members as symbols', function () {
-      expect(riscript.evaluate('hello $toString world')).eq('hello $toString world');
+      expect(riscript.evaluate('hello $toString world', 0, { silent: 1 })).eq('hello $toString world');
       expect(riscript.evaluate('$x=[hi]\n$x.toString()')).eq('hi');
     });
 
     it('Does not resolve Object.prototype members as transforms', function () {
       // blocked members fall through to the normal unresolved-transform path
-      expect(riscript.evaluate('$x=[hi]\n$x.constructor')).eq('hi.constructor');
+      expect(riscript.evaluate('$x=[hi]\n$x.constructor', 0, { silent: 1 })).eq('hi.constructor');
     });
 
     it('Accepts a null context for transforms', function () {
-      expect(() => riscript.evaluate('$x=[a|b]\n$x.bogus()', null)).not.to.throw();
+      expect(() => riscript.evaluate('$x=[a|b]\n$x.bogus()', null, { silent: 1 })).not.to.throw();
     });
 
     it('Rejects out-of-range choice weights', function () {
