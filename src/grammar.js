@@ -281,8 +281,8 @@ function parseJSON(json) {
     try {
       return JSON.parse(json);
     } catch (e) {
-      throw Error('RiGrammar appears to be invalid JSON,' +
-        ' please check it at http://jsonlint.com/\n' + json, { cause: e });
+      throw Object.assign(Error('RiGrammar appears to be invalid JSON,' +
+        ' please check it at http://jsonlint.com/\n' + json), { cause: e });
     }
   }
 }

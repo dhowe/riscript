@@ -25,8 +25,8 @@ class RiQuery extends Query {
         condition = JSON.stringify(condition);
       }
       catch (e) {
-        throw Error(condition.toString().includes('@') ?
-          'Replace @ with $ when passing an object to RiQuery\nRoot: ' + e : e, { cause: e });
+        throw Object.assign(Error(condition.toString().includes('@') ?
+          'Replace @ with $ when passing an object to RiQuery\nRoot: ' + e : e), { cause: e });
       }
     }
 
